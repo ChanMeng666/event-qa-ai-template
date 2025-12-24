@@ -16,9 +16,9 @@ export default function TestimonialsPage() {
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center gap-4">
             <Link
-              href="/"
+              href="/chat"
               className="flex h-10 w-10 items-center justify-center border-2 border-border bg-background transition-colors hover:bg-primary hover:text-primary-foreground hover:border-primary"
-              aria-label="Back to home"
+              aria-label="Back to AI Assistant"
             >
               <ArrowLeft size={20} />
             </Link>
