@@ -49,8 +49,8 @@ export function InfoModal({ isOpen, onClose }: InfoModalProps) {
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
             className={cn(
-              "bg-card text-card-foreground",
-              "border-2 border-border",
+              "bg-primary text-white",
+              "border-2 border-white/20",
               "shadow-stagger-lg",
               "max-w-2xl w-full mx-4 max-h-[85vh] overflow-auto"
             )}
@@ -59,21 +59,21 @@ export function InfoModal({ isOpen, onClose }: InfoModalProps) {
             {/* Modal Header */}
             <div className={cn(
               "sticky top-0 z-10",
-              "bg-card/95 backdrop-blur-sm",
-              "border-b border-border",
+              "bg-primary/95 backdrop-blur-sm",
+              "border-b border-white/20",
               "px-6 py-4"
             )}>
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-foreground">
+                <h2 className="text-lg font-semibold text-white">
                   Project Information
                 </h2>
                 <button
                   onClick={onClose}
                   className={cn(
                     "p-2 transition-colors",
-                    "border-2 border-border",
-                    "hover:bg-primary hover:text-primary-foreground hover:border-primary",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    "border-2 border-white/30",
+                    "hover:bg-white/20 hover:border-white/50",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
                   )}
                   aria-label="Close modal"
                 >

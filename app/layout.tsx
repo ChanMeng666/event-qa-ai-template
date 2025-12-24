@@ -24,7 +24,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <head>
-        <link rel="icon" href="/images/chan_logo.svg" type="image/svg+xml" />
+        <link rel="icon" href="/images/AI-Hackathon-logo.svg" type="image/svg+xml" />
       </head>
       <body className={`${inter.className} h-full antialiased`}>
         {children}
