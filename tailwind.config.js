@@ -56,6 +56,21 @@ module.exports = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      boxShadow: {
+        'stagger': '0px 8px 0px 4px hsl(var(--border))',
+        'stagger-primary': '0px 8px 0px 4px hsl(var(--primary))',
+        'stagger-hover': '0px 12px 0px 4px hsl(var(--border))',
+      },
+      rotate: {
+        'stagger-1': '-2.5deg',
+        'stagger-2': '2.5deg',
+        'stagger-3': '-1deg',
+        'stagger-4': '1deg',
+      },
+      translate: {
+        'stagger-up': '-15px',
+        'stagger-down': '15px',
+      },
       keyframes: {
         "accordion-down": {
           from: { height: 0 },

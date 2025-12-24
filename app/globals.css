@@ -134,4 +134,51 @@ html {
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #9ca3af;
   }
+
+  /* Clip-path polygon corner shapes - Stagger Design System */
+  .clip-corner-sm {
+    clip-path: polygon(
+      16px 0%,
+      calc(100% - 16px) 0%,
+      100% 16px,
+      100% 100%,
+      0 100%,
+      0 0
+    );
+  }
+
+  .clip-corner-md {
+    clip-path: polygon(
+      30px 0%,
+      calc(100% - 30px) 0%,
+      100% 30px,
+      100% 100%,
+      0 100%,
+      0 0
+    );
+  }
+
+  .clip-corner-lg {
+    clip-path: polygon(
+      50px 0%,
+      calc(100% - 50px) 0%,
+      100% 50px,
+      100% 100%,
+      0 100%,
+      0 0
+    );
+  }
+
+  /* Stagger box shadows */
+  .shadow-stagger {
+    box-shadow: 0px 8px 0px 4px hsl(var(--border));
+  }
+
+  .shadow-stagger-primary {
+    box-shadow: 0px 8px 0px 4px hsl(var(--primary));
+  }
+
+  .shadow-stagger-hover {
+    box-shadow: 0px 12px 0px 4px hsl(var(--border));
+  }
 }

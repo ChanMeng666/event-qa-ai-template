@@ -1,14 +1,15 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { 
-  Github, 
-  ExternalLink, 
-  Code2, 
-  Globe, 
+import {
+  Github,
+  ExternalLink,
+  Code2,
+  Globe,
   Heart,
   Sparkles
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export function FooterContent() {
   const currentYear = new Date().getFullYear();
@@ -55,8 +56,11 @@ export function FooterContent() {
         transition={{ duration: 0.5 }}
         className="text-center mb-8"
       >
-        <div className="bg-gradient-to-r from-gray-900 via-blue-900 to-purple-900 p-4 rounded-lg shadow-lg">
-          <img 
+        <div className={cn(
+          "bg-gradient-to-r from-gray-900 via-blue-900 to-purple-900 p-4",
+          "clip-corner-md shadow-stagger"
+        )}>
+          <img
             src="/images/AI-Hackathon-Master-Branding-06-2048x1003.svg"
             alt="AI Hackathon Festival 2025"
             className="mx-auto max-h-16 w-auto object-contain"
@@ -66,7 +70,7 @@ export function FooterContent() {
             }}
           />
         </div>
-        <p className="text-sm text-gray-600 mt-3 font-medium">
+        <p className="text-sm text-muted-foreground mt-3 font-medium">
           AI Hackathon Festival 2025 - Interactive Assistant
         </p>
       </motion.div>
@@ -79,8 +83,8 @@ export function FooterContent() {
         className="space-y-4"
       >
         <div className="flex items-center space-x-2">
-          <Code2 className="w-5 h-5 text-blue-600" />
-          <h3 className="text-lg font-semibold text-gray-900">Developer</h3>
+          <Code2 className="w-5 h-5 text-primary" />
+          <h3 className="text-lg font-semibold text-foreground">Developer</h3>
         </div>
         
         <div className="space-y-3">
@@ -101,12 +105,12 @@ export function FooterContent() {
                 href={links.developer.github}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 font-medium flex items-center space-x-1 transition-colors"
+                className="text-primary hover:text-primary/80 font-medium flex items-center space-x-1 transition-colors"
               >
                 <span>{links.developer.name}</span>
                 <ExternalLink className="w-3 h-3" />
               </a>
-              <p className="text-sm text-gray-600 mt-1">{links.developer.description}</p>
+              <p className="text-sm text-muted-foreground mt-1">{links.developer.description}</p>
             </div>
           </div>
         </div>
@@ -120,27 +124,27 @@ export function FooterContent() {
         className="space-y-4"
       >
         <div className="flex items-center space-x-2">
-          <Github className="w-5 h-5 text-gray-700" />
-          <h3 className="text-lg font-semibold text-gray-900">Project</h3>
+          <Github className="w-5 h-5 text-foreground" />
+          <h3 className="text-lg font-semibold text-foreground">Project</h3>
         </div>
-        
+
         <div className="space-y-3">
           <a
             href={links.project.repository}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition-colors group"
+            className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors group"
           >
             <Github className="w-4 h-4" />
             <span className="text-sm group-hover:underline">View Source Code</span>
             <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
           </a>
-          
+
           <a
             href={links.project.deployment}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition-colors group"
+            className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors group"
           >
             <Globe className="w-4 h-4" />
             <span className="text-sm group-hover:underline">Live Demo</span>
@@ -158,9 +162,9 @@ export function FooterContent() {
       >
         <div className="flex items-center space-x-2">
           <Heart className="w-5 h-5 text-red-500" />
-          <h3 className="text-lg font-semibold text-gray-900">Event Organizers</h3>
+          <h3 className="text-lg font-semibold text-foreground">Event Organizers</h3>
         </div>
-        
+
         <div className="grid grid-cols-1 gap-4">
           {links.organizers.map((organizer, index) => {
             return (
@@ -169,13 +173,17 @@ export function FooterContent() {
                 href={organizer.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-50 transition-colors group border border-gray-100"
+                className={cn(
+                  "flex items-center space-x-4 p-3 transition-colors group",
+                  "clip-corner-sm border-2 border-border",
+                  "hover:bg-muted hover:border-primary/50"
+                )}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.3 + index * 0.1 }}
               >
                 <div className="flex-shrink-0">
-                  <img 
+                  <img
                     src={organizer.logo}
                     alt={`${organizer.name} Logo`}
                     className="w-12 h-12 object-contain drop-shadow-sm"
@@ -187,10 +195,10 @@ export function FooterContent() {
                 </div>
                 <div className="flex-grow">
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors">{organizer.name}</span>
-                    <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-gray-400" />
+                    <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">{organizer.name}</span>
+                    <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground" />
                   </div>
-                  <span className="text-xs text-gray-500">{organizer.description}</span>
+                  <span className="text-xs text-muted-foreground">{organizer.description}</span>
                 </div>
               </motion.a>
             );
@@ -203,10 +211,10 @@ export function FooterContent() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.4 }}
-        className="pt-6 border-t border-gray-200"
+        className="pt-6 border-t border-border"
       >
         <div className="text-center">
-          <div className="text-sm text-gray-500 flex items-center justify-center space-x-2">
+          <div className="text-sm text-muted-foreground flex items-center justify-center space-x-2">
             <span>© {currentYear} Chan Meng</span>
             <span>•</span>
             <span className="flex items-center space-x-1">

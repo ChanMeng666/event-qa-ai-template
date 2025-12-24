@@ -6,6 +6,7 @@ import { presetQuestions, getCategoryDisplayName, getAllCategories } from './pre
 import { PresetQuestion } from './types';
 import { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface QuickActionsProps {
   onQuestionSelect: (question: PresetQuestion) => void;
@@ -20,16 +21,16 @@ export function QuickActions({ onQuestionSelect }: QuickActionsProps) {
   };
 
   return (
-    <div className="p-4 border-b">
-      <h3 className="text-sm font-medium text-gray-700 mb-3">
+    <div className="p-4 border-b border-border">
+      <h3 className="text-sm font-medium text-foreground mb-3">
         Quick Questions
       </h3>
-      
+
       <div className="space-y-2">
         {categories.slice(0, 4).map((category) => {
           const categoryQuestions = presetQuestions.filter(q => q.category === category);
           const isExpanded = expandedCategory === category;
-          
+
           return (
             <div key={category} className="space-y-1">
               <Button
@@ -41,7 +42,7 @@ export function QuickActions({ onQuestionSelect }: QuickActionsProps) {
                 {getCategoryDisplayName(category)}
                 {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
               </Button>
-              
+
               {isExpanded && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
@@ -65,10 +66,10 @@ export function QuickActions({ onQuestionSelect }: QuickActionsProps) {
             </div>
           );
         })}
-        
+
         {/* Most common questions always visible */}
-        <div className="pt-2 border-t">
-          <p className="text-xs text-gray-500 mb-2">Most Common:</p>
+        <div className="pt-2 border-t border-border">
+          <p className="text-xs text-muted-foreground mb-2">Most Common:</p>
           {presetQuestions.slice(0, 2).map((question) => (
             <Button
               key={question.id}

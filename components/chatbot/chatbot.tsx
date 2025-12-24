@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useChat } from 'ai/react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -10,7 +10,8 @@ import { ChatMessage } from './chat-message';
 import { TypingIndicator } from './typing-indicator';
 import { QuickActions } from './quick-actions';
 import { Message, PresetQuestion } from './types';
-import { MessageCircle, Send, Trash2, X, Minimize2 } from 'lucide-react';
+import { MessageCircle, Send, Trash2, X } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const STORAGE_KEY = 'hackathon-chat-history';
 const MAX_STORED_MESSAGES = 50;
@@ -142,25 +143,26 @@ export function Chatbot() {
       >
         <Button
           onClick={() => setIsOpen(true)}
-          size="lg"
-          className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 bg-blue-600 hover:bg-blue-700"
+          variant="staggerPrimary"
+          size="square"
+          className="transition-all duration-200"
         >
           <MessageCircle size={24} />
           <span className="sr-only">Open AI Assistant</span>
         </Button>
-        
+
         {/* Keyboard shortcut hint */}
-        <div className="absolute -top-12 right-0 bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 hover:opacity-100 transition-opacity pointer-events-none">
+        <div className="absolute -top-12 right-0 bg-foreground/80 text-background text-xs px-2 py-1 opacity-0 hover:opacity-100 transition-opacity pointer-events-none">
           Press ⌘K to open
         </div>
       </motion.div>
 
       {/* Chat Dialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="h-[600px] max-w-md p-0 gap-0">
-          <DialogHeader className="p-4 pb-2 border-b">
+        <DialogContent variant="stagger" className="h-[600px] max-w-md p-0 gap-0">
+          <DialogHeader className="p-4 pb-2 border-b border-border">
             <div className="flex items-center justify-between">
-              <DialogTitle className="text-lg font-semibold">
+              <DialogTitle className="text-lg font-semibold text-foreground">
                 AI Hackathon Assistant
               </DialogTitle>
               <div className="flex gap-2">
@@ -186,7 +188,7 @@ export function Chatbot() {
                 </Button>
               </div>
             </div>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               Get instant answers about the AI Hackathon Festival 2025
             </p>
           </DialogHeader>
@@ -201,7 +203,7 @@ export function Chatbot() {
             <ScrollArea className="flex-1 px-0">
               <div className="min-h-full">
                 {messages.length === 0 && !showQuickActions && (
-                  <div className="flex items-center justify-center h-64 text-gray-500">
+                  <div className="flex items-center justify-center h-64 text-muted-foreground">
                     <div className="text-center">
                       <MessageCircle size={48} className="mx-auto mb-4 opacity-50" />
                       <p className="text-sm">
@@ -211,29 +213,36 @@ export function Chatbot() {
                     </div>
                   </div>
                 )}
-                
+
                 {messages.map((message) => (
                   <ChatMessage key={message.id} message={message} />
                 ))}
-                
+
                 {isLoading && <TypingIndicator />}
                 <div ref={messagesEndRef} />
               </div>
             </ScrollArea>
 
             {/* Input Form */}
-            <form onSubmit={onSubmit} className="p-4 border-t">
+            <form onSubmit={onSubmit} className="p-4 border-t border-border">
               <div className="flex gap-2">
                 <input
                   ref={inputRef}
                   value={input}
                   onChange={handleInputChange}
                   placeholder="Ask about teams, schedule, judging..."
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={cn(
+                    "flex-1 px-3 py-2 text-sm",
+                    "border-2 border-input bg-background text-foreground",
+                    "clip-corner-sm",
+                    "focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary",
+                    "disabled:opacity-50"
+                  )}
                   disabled={isLoading}
                 />
                 <Button
                   type="submit"
+                  variant="stagger"
                   size="sm"
                   disabled={isLoading || !input.trim()}
                   className="px-3"
@@ -242,14 +251,14 @@ export function Chatbot() {
                   <span className="sr-only">Send message</span>
                 </Button>
               </div>
-              
+
               {!showQuickActions && messages.length > 0 && (
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowQuickActions(true)}
-                  className="mt-2 text-xs"
+                  className="mt-2 text-xs text-muted-foreground"
                 >
                   Show quick questions
                 </Button>
