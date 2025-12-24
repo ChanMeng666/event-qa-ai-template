@@ -2,52 +2,74 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { FAQVote, FAQStats, EnhancedPresetQuestion, PresetQuestion } from '@/components/chatbot/types';
-import { presetQuestions } from '@/components/chatbot/preset-questions';
+import { presetQuestions as fallbackQuestions } from '@/components/chatbot/preset-questions';
+import {
+  fetchFAQQuestions,
+  fetchFAQStats,
+  submitVote,
+  recordView,
+} from '@/lib/notion-faq';
 
 const VOTES_STORAGE_KEY = 'hackathon-faq-votes';
-const STATS_STORAGE_KEY = 'hackathon-faq-stats';
 
-// Initialize default stats for all questions
+// Initialize default stats for questions
 const initializeDefaultStats = (questions: PresetQuestion[]): FAQStats[] => {
   return questions.map(q => ({
     questionId: q.id,
-    upVotes: 0, // Start with 0 votes for production
+    upVotes: 0,
     downVotes: 0,
-    totalViews: 0, // Start with 0 views for production
-    score: 0 // Will be calculated (0 - 0 = 0)
+    totalViews: 0,
+    score: 0,
   }));
 };
 
 export function useFAQVoting() {
   const [votes, setVotes] = useState<FAQVote[]>([]);
   const [stats, setStats] = useState<FAQStats[]>([]);
+  const [questions, setQuestions] = useState<PresetQuestion[]>(fallbackQuestions);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Load data from localStorage
+  // Load data from API and localStorage
   useEffect(() => {
-    try {
-      const savedVotes = localStorage.getItem(VOTES_STORAGE_KEY);
-      const savedStats = localStorage.getItem(STATS_STORAGE_KEY);
-      
-      if (savedVotes) {
-        setVotes(JSON.parse(savedVotes));
+    async function loadData() {
+      try {
+        // Load user votes from localStorage (privacy: keep local)
+        const savedVotes = localStorage.getItem(VOTES_STORAGE_KEY);
+        if (savedVotes) {
+          setVotes(JSON.parse(savedVotes));
+        }
+
+        // Fetch questions and stats from API
+        const [questionsData, statsData] = await Promise.all([
+          fetchFAQQuestions().catch(() => null),
+          fetchFAQStats().catch(() => null),
+        ]);
+
+        if (questionsData) {
+          setQuestions(questionsData);
+        }
+
+        if (statsData) {
+          setStats(statsData);
+        } else {
+          // Initialize with default stats if API fails
+          setStats(initializeDefaultStats(questionsData || fallbackQuestions));
+        }
+
+        setError(null);
+      } catch (err) {
+        console.error('Error loading FAQ data:', err);
+        setError('Failed to load FAQ data');
+        // Use fallback data
+        setQuestions(fallbackQuestions);
+        setStats(initializeDefaultStats(fallbackQuestions));
+      } finally {
+        setIsLoading(false);
       }
-      
-      if (savedStats) {
-        setStats(JSON.parse(savedStats));
-      } else {
-        // Initialize with default stats if none exist
-        const defaultStats = initializeDefaultStats(presetQuestions);
-        setStats(defaultStats);
-        localStorage.setItem(STATS_STORAGE_KEY, JSON.stringify(defaultStats));
-      }
-    } catch (error) {
-      console.error('Error loading FAQ data:', error);
-      // Initialize with defaults on error
-      const defaultStats = initializeDefaultStats(presetQuestions);
-      setStats(defaultStats);
     }
-    setIsLoading(false);
+
+    loadData();
   }, []);
 
   // Save votes to localStorage
@@ -59,24 +81,14 @@ export function useFAQVoting() {
     }
   }, []);
 
-  // Save stats to localStorage
-  const saveStats = useCallback((newStats: FAQStats[]) => {
-    try {
-      localStorage.setItem(STATS_STORAGE_KEY, JSON.stringify(newStats));
-    } catch (error) {
-      console.error('Error saving stats:', error);
-    }
-  }, []);
-
   // Vote on a question
-  const voteOnQuestion = useCallback((questionId: string, voteType: 'up' | 'down') => {
+  const voteOnQuestion = useCallback(async (questionId: string, voteType: 'up' | 'down') => {
     const existingVoteIndex = votes.findIndex(v => v.questionId === questionId);
     const existingVote = existingVoteIndex >= 0 ? votes[existingVoteIndex] : null;
-    
+    const previousVoteType = existingVote?.vote || null;
+
+    // Calculate new votes state
     let newVotes = [...votes];
-    let newStats = [...stats];
-    
-    // Update votes
     if (existingVote) {
       if (existingVote.vote === voteType) {
         // Remove vote if clicking the same vote type
@@ -86,7 +98,7 @@ export function useFAQVoting() {
         newVotes[existingVoteIndex] = {
           questionId,
           vote: voteType,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         };
       }
     } else {
@@ -94,75 +106,88 @@ export function useFAQVoting() {
       newVotes.push({
         questionId,
         vote: voteType,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
     }
-    
-    // Update stats
-    const statsIndex = newStats.findIndex(s => s.questionId === questionId);
-    if (statsIndex >= 0) {
-      const currentStats = newStats[statsIndex];
-      let upVotes = currentStats.upVotes;
-      let downVotes = currentStats.downVotes;
-      
-      // Adjust vote counts based on old and new votes
-      if (existingVote) {
-        // Remove old vote
-        if (existingVote.vote === 'up') upVotes--;
-        if (existingVote.vote === 'down') downVotes--;
-      }
-      
-      // Only add new vote if it's different or if removing existing vote
-      if (!existingVote || existingVote.vote !== voteType) {
+
+    // Optimistic update for stats
+    const newStats = stats.map(stat => {
+      if (stat.questionId !== questionId) return stat;
+
+      let upVotes = stat.upVotes;
+      let downVotes = stat.downVotes;
+
+      // Remove previous vote
+      if (previousVoteType === 'up') upVotes--;
+      if (previousVoteType === 'down') downVotes--;
+
+      // Add new vote if different from previous
+      if (previousVoteType !== voteType) {
         if (voteType === 'up') upVotes++;
         if (voteType === 'down') downVotes++;
       }
-      
-      newStats[statsIndex] = {
-        ...currentStats,
+
+      return {
+        ...stat,
         upVotes: Math.max(0, upVotes),
         downVotes: Math.max(0, downVotes),
-        score: upVotes - downVotes
+        score: upVotes - downVotes,
       };
-    }
-    
+    });
+
+    // Update UI immediately (optimistic update)
     setVotes(newVotes);
     setStats(newStats);
     saveVotes(newVotes);
-    saveStats(newStats);
-  }, [votes, stats, saveVotes, saveStats]);
+
+    // Submit to API in background
+    try {
+      await submitVote(questionId, voteType, previousVoteType);
+    } catch (err) {
+      console.error('Failed to submit vote to API:', err);
+      // Vote is already saved locally, so we don't need to rollback
+    }
+  }, [votes, stats, saveVotes]);
 
   // Increment view count
-  const incrementViews = useCallback((questionId: string) => {
-    const newStats = stats.map(stat => 
-      stat.questionId === questionId 
-        ? { ...stat, totalViews: stat.totalViews + 1 }
-        : stat
+  const incrementViews = useCallback(async (questionId: string) => {
+    // Optimistic update
+    setStats(prevStats =>
+      prevStats.map(stat =>
+        stat.questionId === questionId
+          ? { ...stat, totalViews: stat.totalViews + 1 }
+          : stat
+      )
     );
-    setStats(newStats);
-    saveStats(newStats);
-  }, [stats, saveStats]);
+
+    // Submit to API in background (silent failure)
+    try {
+      await recordView(questionId);
+    } catch (err) {
+      console.error('Failed to record view:', err);
+    }
+  }, []);
 
   // Get enhanced questions with voting data
   const getEnhancedQuestions = useCallback((): EnhancedPresetQuestion[] => {
-    return presetQuestions.map(question => {
+    return questions.map(question => {
       const questionStats = stats.find(s => s.questionId === question.id) || {
         questionId: question.id,
         upVotes: 0,
         downVotes: 0,
         totalViews: 0,
-        score: 0
+        score: 0,
       };
-      
+
       const userVote = votes.find(v => v.questionId === question.id)?.vote || null;
-      
+
       return {
         ...question,
         stats: questionStats,
-        userVote
+        userVote,
       };
     }).sort((a, b) => b.stats.score - a.stats.score); // Sort by score (highest first)
-  }, [stats, votes]);
+  }, [questions, stats, votes]);
 
   // Get user's vote for a specific question
   const getUserVote = useCallback((questionId: string): 'up' | 'down' | null => {
@@ -171,10 +196,11 @@ export function useFAQVoting() {
 
   return {
     isLoading,
+    error,
     enhancedQuestions: getEnhancedQuestions(),
     voteOnQuestion,
     incrementViews,
     getUserVote,
-    stats
+    stats,
   };
 }
