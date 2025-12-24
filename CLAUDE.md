@@ -2,17 +2,19 @@
 
 ## Project Overview
 
-This is an AI-powered assistant for the AI Hackathon Festival 2025 event. Built with Next.js 15, React, and TypeScript, featuring a chat interface powered by Google Gemini and a FAQ voting system backed by Notion.
+This is an AI-powered assistant for the AI Hackathon Festival 2025 event. Built with Next.js 16, React, and TypeScript, featuring a full-screen chat interface powered by Google Gemini 2.5 Flash and a community-driven FAQ voting system backed by Notion database.
+
+For detailed Notion integration documentation, see: **[docs/NOTION-INTEGRATION.md](docs/NOTION-INTEGRATION.md)**
 
 ## Tech Stack
 
-- **Framework**: Next.js 15 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **UI Components**: shadcn/ui (customized)
-- **Animation**: Framer Motion
-- **AI**: Google Gemini Pro via Vercel AI SDK
-- **Database**: Notion API (for FAQ voting)
+- **Framework**: Next.js 16.1.1 (App Router)
+- **Language**: TypeScript 5.2.2
+- **Styling**: Tailwind CSS v3
+- **UI Components**: shadcn/ui (customized) + Radix UI primitives
+- **Animation**: Framer Motion v12
+- **AI**: Google Gemini 2.5 Flash via Vercel AI SDK v4.3
+- **Backend**: Notion API (@notionhq/client ^2.3.0) for FAQ voting & statistics
 
 ## UI Design System
 
@@ -64,28 +66,51 @@ className="border-white/30 text-white/80 bg-transparent hover:bg-white/20"
 ## Project Structure
 
 ```
-├── app/                  # Next.js App Router pages
-│   ├── api/             # API routes (chat, FAQ)
-│   ├── chat/            # Chat page
-│   └── page.tsx         # Home page
+├── app/                      # Next.js App Router
+│   ├── api/
+│   │   ├── chat/            # AI chat streaming endpoint (Gemini)
+│   │   └── faq/             # FAQ endpoints
+│   │       ├── questions/   # GET - Fetch FAQ with stats
+│   │       ├── vote/        # POST - Record up/down votes
+│   │       └── view/        # POST - Track view counts
+│   ├── chat/                # Main chat page (70/30 layout)
+│   ├── testimonials/        # Testimonials page
+│   └── page.tsx             # Home/landing page
 ├── components/
-│   ├── chat/            # Chat-related components
-│   ├── chatbot/         # Chatbot core components
-│   ├── faq/             # FAQ components
-│   ├── layout/          # Layout components (header, footer, modals)
-│   └── ui/              # shadcn/ui base components
-├── docs/                # Documentation
-│   └── UI-DESIGN-SYSTEM.md  # Full UI design guide
-├── hooks/               # Custom React hooks
-├── lib/                 # Utilities
-└── public/images/       # Static assets
+│   ├── chat/                # EmbeddedChat, ChatSuggestions
+│   ├── chatbot/             # Chatbot, ChatMessage, QuickActions, types
+│   ├── faq/                 # FAQList, FAQCard (voting UI)
+│   ├── layout/              # FloatingInfoButton, InfoModal, FooterContent
+│   └── ui/                  # shadcn/ui base components
+├── docs/                    # Documentation
+│   ├── UI-DESIGN-SYSTEM.md  # Full UI design guide
+│   └── NOTION-INTEGRATION.md # Notion backend documentation
+├── hooks/
+│   ├── use-faq-voting.ts    # FAQ voting logic with Notion sync
+│   └── use-scroll-direction.ts  # Header visibility on scroll
+├── lib/
+│   ├── notion-faq.ts        # Notion client & FAQ operations
+│   ├── testimonials-data.ts # Static testimonials data
+│   └── utils.ts             # cn() utility function
+└── public/images/           # Static assets
 ```
 
 ## Key Files
 
+### Core Configuration
 - `app/globals.css` - CSS variables, stagger shadow utilities
 - `tailwind.config.js` - Tailwind configuration with stagger shadows
 - `components/ui/button.tsx` - Button variants including stagger styles
+
+### AI Chat
+- `app/api/chat/route.ts` - Gemini streaming endpoint with system prompt
+- `components/chat/embedded-chat.tsx` - Full-screen chat interface
+- `components/chatbot/chat-message.tsx` - Markdown message renderer
+
+### Notion Integration
+- `lib/notion-faq.ts` - Notion client, CRUD operations, caching
+- `hooks/use-faq-voting.ts` - Client-side voting with optimistic updates
+- `components/chatbot/types.ts` - TypeScript interfaces (FAQStats, FAQVote, etc.)
 
 ## Development Commands
 
@@ -98,14 +123,42 @@ npm run lint    # Run ESLint
 ## Environment Variables
 
 Required in `.env.local`:
-- `GOOGLE_GENERATIVE_AI_API_KEY` - Google Gemini API key
-- `NOTION_API_KEY` - Notion API key for FAQ voting
-- `NOTION_FAQ_DATABASE_ID` - Notion database ID
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Google Gemini API key | Yes |
+| `NOTION_TOKEN` | Notion Integration token | Yes (for FAQ) |
+| `NOTION_FAQ_DATABASE_ID` | Notion FAQ database ID | Yes (for FAQ) |
+
+> **Note**: If Notion is not configured, the app falls back to static preset questions.
+
+## Architecture Overview
+
+### Data Flow
+
+```
+Chat Flow:
+User Input → EmbeddedChat → /api/chat → Gemini 2.5 Flash → Streaming Response
+
+FAQ Flow:
+Page Load → useFAQVoting → /api/faq/questions → Notion DB (or static fallback)
+User Vote → Optimistic UI Update → /api/faq/vote → Notion DB
+View Track → /api/faq/view → Notion DB (silent, non-blocking)
+```
+
+### Key Features
+- **AI Chat**: Real-time streaming, 50-message history in localStorage
+- **FAQ Voting**: Upvote/downvote with Notion persistence, 5-min client cache
+- **Responsive**: Desktop 70/30 split layout, mobile tabbed interface
+- **Fallback**: Static questions when Notion unavailable
+
+For detailed Notion architecture, see: [docs/NOTION-INTEGRATION.md](docs/NOTION-INTEGRATION.md)
 
 ## Best Practices
 
 1. **Always read UI-DESIGN-SYSTEM.md** before making visual changes
-2. Use existing component patterns from the codebase
-3. Maintain the stagger shadow aesthetic throughout
-4. Test on both desktop and mobile layouts
-5. Use Framer Motion for animations following existing patterns
+2. **Read NOTION-INTEGRATION.md** before modifying FAQ/voting features
+3. Use existing component patterns from the codebase
+4. Maintain the stagger shadow aesthetic throughout
+5. Test on both desktop and mobile layouts
+6. Use Framer Motion for animations following existing patterns

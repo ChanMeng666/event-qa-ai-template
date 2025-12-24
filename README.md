@@ -56,7 +56,7 @@ One-click **FREE** deployment on Vercel.
 </div>
 
 > [!IMPORTANT]
-> This project demonstrates modern full-stack development with Next.js 15, TypeScript, and Google Gemini Pro AI. It combines full-screen chat interface with community-driven FAQ voting system to provide comprehensive hackathon support.
+> This project demonstrates modern full-stack development with Next.js 16, TypeScript, and Google Gemini 2.5 Flash AI. It combines full-screen chat interface with community-driven FAQ voting system backed by Notion database to provide comprehensive hackathon support.
 
 <details>
 <summary><kbd>📑 Table of Contents</kbd></summary>
@@ -110,7 +110,7 @@ One-click **FREE** deployment on Vercel.
 
 ### `1` Full-Screen AI Chat Experience
 
-Transform your hackathon experience with our revolutionary AI assistant powered by Google Gemini Pro. Unlike traditional popup chatbots, our full-screen interface puts AI conversation at the center of your experience.
+Transform your hackathon experience with our revolutionary AI assistant powered by Google Gemini 2.5 Flash. Unlike traditional popup chatbots, our full-screen interface puts AI conversation at the center of your experience.
 
 Key capabilities include:
 - 🚀 **Real-time Streaming**: Character-by-character live responses
@@ -148,12 +148,13 @@ Beyond the core functionality, this project includes:
 
 - [x] 💨 **Instant Setup**: Deploy in under 1 minute with one-click Vercel deployment
 - [x] 🌐 **Responsive Design**: Perfect experience on desktop (70/30 split) and mobile (tabs)
-- [x] 🔒 **Privacy First**: All chat data stored locally, no server persistence
+- [x] 🔒 **Privacy First**: Chat data stored locally, votes synced to Notion
 - [x] 💎 **Modern Animations**: Framer Motion powered micro-interactions
 - [x] 🎨 **Beautiful UI**: shadcn/ui components with Tailwind CSS
-- [x] 📊 **Real-time Updates**: Live vote counts and instant FAQ integration
-- [x] 🔌 **Extensible**: Easy to add new question categories and features
-- [x] ⚡ **Performance Optimized**: Lazy loading, efficient state management
+- [x] 📊 **Notion Backend**: Real-time vote counts persisted to Notion database
+- [x] 🔌 **Extensible**: Update FAQ through Notion UI without code changes
+- [x] ⚡ **Performance Optimized**: 5-min caching, optimistic updates, lazy loading
+- [x] 🛡️ **Graceful Fallback**: Works without Notion (static questions)
 
 > ✨ Built specifically for the AI Hackathon Festival 2025 with hackathon-specific Q&A database.
 
@@ -170,7 +171,7 @@ Beyond the core functionality, this project includes:
     <tr>
       <td align="center" width="96">
         <img src="https://cdn.simpleicons.org/nextdotjs" width="48" height="48" alt="Next.js" />
-        <br>Next.js 15
+        <br>Next.js 16
       </td>
       <td align="center" width="96">
         <img src="https://cdn.simpleicons.org/react" width="48" height="48" alt="React" />
@@ -186,28 +187,34 @@ Beyond the core functionality, this project includes:
       </td>
       <td align="center" width="96">
         <img src="https://cdn.simpleicons.org/googlegemini" width="48" height="48" alt="Gemini" />
-        <br>Gemini Pro
+        <br>Gemini 2.5
       </td>
       <td align="center" width="96">
-        <img src="https://cdn.simpleicons.org/vercel" width="48" height="48" alt="Vercel" />
-        <br>Vercel
+        <img src="https://cdn.simpleicons.org/notion" width="48" height="48" alt="Notion" />
+        <br>Notion API
       </td>
     </tr>
   </table>
 </div>
 
 **Frontend Stack:**
-- **Framework**: Next.js 15.4.0 with App Router
+- **Framework**: Next.js 16.1.1 with App Router
 - **Language**: TypeScript for type safety
 - **Styling**: Tailwind CSS v3 + Framer Motion v12
 - **UI Components**: shadcn/ui + Radix UI primitives
 - **State Management**: React hooks + Local Storage
 
 **AI Integration:**
-- **AI SDK**: Vercel AI SDK v4.3.19 for streaming
-- **AI Provider**: Google Gemini Pro via @ai-sdk/google
+- **AI SDK**: Vercel AI SDK v4.3 for streaming
+- **AI Provider**: Google Gemini 2.5 Flash via @ai-sdk/google
 - **Features**: Real-time streaming, context awareness
 - **Performance**: Optimized for low-latency responses
+
+**Backend Integration:**
+- **Database**: Notion API (@notionhq/client v2.3)
+- **FAQ System**: Community-driven voting with real-time stats
+- **Caching**: 5-minute client-side cache with optimistic updates
+- **Fallback**: Static questions when Notion unavailable
 
 **DevOps & Performance:**
 - **Deployment**: Vercel with automatic CI/CD
@@ -227,50 +234,83 @@ graph TB
         B --> C[Tailwind Styling]
         C --> D[Framer Animations]
     end
-    
+
     subgraph "AI Integration"
-        E[Vercel AI SDK] --> F[Google Gemini Pro]
+        E[Vercel AI SDK] --> F[Google Gemini 2.5 Flash]
         F --> G[Streaming Responses]
     end
-    
+
+    subgraph "Notion Backend"
+        N1[Notion API Client]
+        N2[(FAQ Database)]
+        N3[Vote & View Tracking]
+        N1 --> N2
+        N1 --> N3
+    end
+
+    subgraph "API Routes"
+        R1[/api/chat]
+        R2[/api/faq/questions]
+        R3[/api/faq/vote]
+        R4[/api/faq/view]
+    end
+
     subgraph "Data Layer"
         H[Local Storage] --> I[Chat History]
-        H --> J[FAQ Votes]
-        H --> K[User Preferences]
+        H --> J[User Votes Cache]
+        H --> K[FAQ Cache 5min]
     end
-    
+
     subgraph "Deployment"
         L[Vercel Platform]
         M[Edge Functions]
-        N[Static Generation]
     end
-    
+
     A --> E
     B --> H
+    B --> R1
+    B --> R2
+    B --> R3
+    B --> R4
+    R1 --> F
+    R2 --> N1
+    R3 --> N1
+    R4 --> N1
     L --> A
     L --> M
-    M --> F
 ```
 
 ### Component Architecture
 
 ```
-src/
-├── app/                    # Next.js App Router
-│   ├── api/chat/          # AI streaming endpoint
-│   ├── globals.css        # Global styles
-│   ├── layout.tsx         # Root layout
-│   └── page.tsx           # Main interface
-├── components/            # React components
-│   ├── chat/             # Chat interface
-│   ├── faq/              # FAQ system
-│   ├── chatbot/          # Shared components
-│   └── ui/               # Base UI components
-├── hooks/                # Custom React hooks
-│   └── use-faq-voting.ts # FAQ voting logic
-├── lib/                  # Utilities
-│   └── utils.ts          # Helper functions
-└── public/               # Static assets
+app/                           # Next.js App Router
+├── api/
+│   ├── chat/                 # AI streaming endpoint (Gemini)
+│   └── faq/                  # FAQ endpoints
+│       ├── questions/        # GET - Fetch FAQ with stats
+│       ├── vote/             # POST - Record votes
+│       └── view/             # POST - Track views
+├── chat/                     # Chat page (70/30 layout)
+├── testimonials/             # Testimonials page
+├── globals.css               # Global styles
+├── layout.tsx                # Root layout
+└── page.tsx                  # Home/landing page
+components/                   # React components
+├── chat/                    # EmbeddedChat, ChatSuggestions
+├── faq/                     # FAQList, FAQCard (voting UI)
+├── chatbot/                 # Chatbot, ChatMessage, types
+└── ui/                      # shadcn/ui base components
+hooks/                       # Custom React hooks
+├── use-faq-voting.ts       # FAQ voting with Notion sync
+└── use-scroll-direction.ts # Header visibility
+lib/                         # Utilities
+├── notion-faq.ts           # Notion client & operations
+├── testimonials-data.ts    # Static testimonials
+└── utils.ts                # Helper functions (cn)
+docs/                        # Documentation
+├── UI-DESIGN-SYSTEM.md     # Visual design guide
+└── NOTION-INTEGRATION.md   # Notion backend docs
+public/                      # Static assets
 ```
 
 ## 🚀 Getting Started
@@ -321,8 +361,12 @@ nano .env.local
 Create `.env.local` file with the following variables:
 
 ```bash
-# Required: Google Gemini Pro API Key
+# Required: Google Gemini API Key
 GOOGLE_GENERATIVE_AI_API_KEY=your_google_gemini_api_key_here
+
+# Required for FAQ Backend: Notion Integration
+NOTION_TOKEN=your_notion_integration_token
+NOTION_FAQ_DATABASE_ID=your_notion_database_id
 
 # Optional: Application settings
 NODE_ENV=development
@@ -331,7 +375,10 @@ NEXTAUTH_SECRET=your_secret_key_here
 ```
 
 > [!TIP]
-> Get your Google Gemini API key from [Google AI Studio](https://aistudio.google.com/app/apikey). Use `openssl rand -base64 32` to generate secure random secrets.
+> - Get your Google Gemini API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
+> - Get Notion token from [Notion Integrations](https://www.notion.so/my-integrations)
+> - See [docs/NOTION-INTEGRATION.md](docs/NOTION-INTEGRATION.md) for database setup
+> - The app works without Notion (falls back to static questions)
 
 **4. Start Development**
 
@@ -381,13 +428,17 @@ vercel --prod
 
 | Variable | Description | Required | Example |
 |----------|-------------|----------|---------|
-| `GOOGLE_GENERATIVE_AI_API_KEY` | Google Gemini Pro API key | ✅ | `AIza...` |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Google Gemini API key | ✅ | `AIza...` |
+| `NOTION_TOKEN` | Notion Integration token | ✅ FAQ | `secret_xxx...` |
+| `NOTION_FAQ_DATABASE_ID` | Notion FAQ database ID | ✅ FAQ | `abc123-...` |
 | `NEXTAUTH_SECRET` | Session encryption secret | 🔶 | `generated-secret-key` |
 | `NEXTAUTH_URL` | Application URL | 🔶 | `https://your-domain.vercel.app` |
 | `NODE_ENV` | Environment mode | 🔶 | `production` |
 
 > [!NOTE]
-> ✅ Required, 🔶 Optional
+> ✅ Required, ✅ FAQ = Required for FAQ voting feature, 🔶 Optional
+>
+> Without Notion variables, the app uses static FAQ questions (no voting persistence).
 
 ## 📖 Usage Guide
 
@@ -420,7 +471,7 @@ vercel --prod
 2. **Advanced Features**:
    - **Multi-line Input**: Use Shift+Enter for line breaks
    - **Context Awareness**: AI remembers conversation history
-   - **Instant Responses**: Real-time streaming from Google Gemini Pro
+   - **Instant Responses**: Real-time streaming from Google Gemini 2.5 Flash
 
 **Example Interactions:**
 ```
@@ -433,15 +484,19 @@ AI: [Provides specific advice for non-technical participants]
 
 ### FAQ Voting System
 
-**Community-Driven Ranking:**
+**Community-Driven Ranking (Powered by Notion):**
 
 | Feature | Description | Benefit |
 |---------|-------------|---------|
 | 👍 **Upvote** | Mark questions as helpful | Valuable content rises to top |
 | 👎 **Downvote** | Flag less useful content | Improves overall quality |
+| 📊 **Real-time Stats** | Vote counts synced to Notion | Persistent across sessions |
 | 🔍 **Search** | Find by keywords | Quick access to specific topics |
 | 🏷️ **Filter** | Browse by category | Organized content discovery |
 | 💬 **Send to Chat** | One-click integration | Seamless AI follow-up |
+
+> [!TIP]
+> Votes are stored locally for privacy and synced to Notion for persistence. The system uses optimistic updates for instant feedback.
 
 **Available Categories:**
 - 📅 **Event Information**: Dates, schedule, logistics
@@ -472,20 +527,22 @@ flowchart TD
     B -->|Quick Help| C[Click FAQ Card]
     B -->|Custom Question| D[Type in Chat]
     B -->|Browse Topics| E[Explore FAQ Categories]
-    
+
     C --> F[Read FAQ Answer]
     F --> G[Send to Chat for More]
-    
+    F --> V[Vote Helpful/Not]
+
     D --> H[AI Streaming Response]
     H --> I[Ask Follow-up Questions]
-    
-    E --> J[Vote on Helpful Questions]
-    J --> K[Discover Related Topics]
-    
+
+    E --> J[Search & Filter]
+    J --> K[Discover Questions]
+
     G --> H
     I --> L[Continue Conversation]
     K --> C
-    L --> M[Auto-saved Progress]
+    L --> M[Auto-saved to localStorage]
+    V --> N[Synced to Notion DB]
 ```
 
 > [!TIP]
