@@ -7,6 +7,21 @@ module.exports = {
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
 	],
+  safelist: [
+    // Stagger shadow variants
+    'shadow-stagger',
+    'shadow-stagger-sm',
+    'shadow-stagger-lg',
+    'shadow-stagger-primary',
+    'shadow-stagger-sm-primary',
+    'shadow-stagger-lg-primary',
+    'shadow-stagger-hover',
+    // Hover/Focus variants
+    'hover:shadow-stagger-sm-primary',
+    'hover:shadow-stagger-primary',
+    'focus:shadow-stagger-primary',
+    'focus-within:shadow-stagger-primary',
+  ],
   theme: {
     container: {
       center: true,
@@ -57,9 +72,16 @@ module.exports = {
         sm: "calc(var(--radius) - 4px)",
       },
       boxShadow: {
+        // Small size - for small buttons, tags, badges
+        'stagger-sm': '0px 4px 0px 2px hsl(var(--border))',
+        'stagger-sm-primary': '0px 4px 0px 2px hsl(var(--primary))',
+        // Default size - for regular buttons, cards
         'stagger': '0px 8px 0px 4px hsl(var(--border))',
         'stagger-primary': '0px 8px 0px 4px hsl(var(--primary))',
         'stagger-hover': '0px 12px 0px 4px hsl(var(--border))',
+        // Large size - for dialogs, large cards
+        'stagger-lg': '0px 12px 0px 6px hsl(var(--border))',
+        'stagger-lg-primary': '0px 12px 0px 6px hsl(var(--primary))',
       },
       rotate: {
         'stagger-1': '-2.5deg',

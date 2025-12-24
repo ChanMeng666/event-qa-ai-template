@@ -53,7 +53,7 @@ export function QuickActions({ onQuestionSelect }: QuickActionsProps) {
                   {categoryQuestions.map((question) => (
                     <Button
                       key={question.id}
-                      variant="outline"
+                      variant="staggerSm"
                       size="sm"
                       onClick={() => onQuestionSelect(question)}
                       className="w-full text-left h-auto py-2 px-3 text-xs whitespace-normal"
@@ -73,7 +73,7 @@ export function QuickActions({ onQuestionSelect }: QuickActionsProps) {
           {presetQuestions.slice(0, 2).map((question) => (
             <Button
               key={question.id}
-              variant="outline"
+              variant="staggerSm"
               size="sm"
               onClick={() => onQuestionSelect(question)}
               className="w-full text-left h-auto py-2 px-3 text-xs mb-1 whitespace-normal"

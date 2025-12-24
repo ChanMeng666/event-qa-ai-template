@@ -55,10 +55,10 @@ export function ChatMessage({ message }: ChatMessageProps) {
         <div className={cn(
           "px-4 py-2",
           isUser
-            ? "bg-primary text-primary-foreground clip-corner-sm"
+            ? "bg-background text-foreground border-2 border-primary shadow-stagger-sm-primary"
             : isSystem
-            ? "bg-yellow-50 text-yellow-800 border border-yellow-200 rounded-lg"
-            : "bg-muted text-foreground border-2 border-border clip-corner-sm shadow-stagger"
+            ? "bg-yellow-50 text-yellow-800 border border-yellow-200"
+            : "bg-muted text-foreground border-2 border-border shadow-stagger"
         )}>
           <div className="text-sm prose prose-sm max-w-none">
             {!isUser ? (

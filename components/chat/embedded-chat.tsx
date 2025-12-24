@@ -259,8 +259,8 @@ export function EmbeddedChat({ onHandlerReady }: EmbeddedChatProps) {
                 className={cn(
                   "w-full px-4 py-3 text-sm resize-none transition-all duration-200",
                   "border-2 border-input bg-background text-foreground",
-                  "clip-corner-md",
-                  "focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary",
+                  "shadow-stagger",
+                  "focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary focus:shadow-stagger-primary",
                   "disabled:opacity-50"
                 )}
                 style={{ height: `${inputHeight}px` }}

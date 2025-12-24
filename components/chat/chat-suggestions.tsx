@@ -63,7 +63,7 @@ export function ChatSuggestions({ onSuggestionClick }: ChatSuggestionsProps) {
                 className={cn(
                   "w-full h-[120px] p-4 cursor-pointer group flex flex-col",
                   "border-2 border-border bg-card",
-                  "clip-corner-sm shadow-stagger",
+                  "shadow-stagger",
                   "hover:border-primary/50 hover:bg-muted/50",
                   "transition-all duration-200"
                 )}

@@ -51,7 +51,7 @@ export function InfoModal({ isOpen, onClose }: InfoModalProps) {
             className={cn(
               "bg-card text-card-foreground",
               "border-2 border-border",
-              "clip-corner-md shadow-stagger",
+              "shadow-stagger-lg",
               "max-w-2xl w-full mx-4 max-h-[85vh] overflow-auto"
             )}
             onClick={(e) => e.stopPropagation()}

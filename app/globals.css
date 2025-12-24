@@ -169,7 +169,16 @@ html {
     );
   }
 
-  /* Stagger box shadows */
+  /* Stagger box shadows - Small size */
+  .shadow-stagger-sm {
+    box-shadow: 0px 4px 0px 2px hsl(var(--border));
+  }
+
+  .shadow-stagger-sm-primary {
+    box-shadow: 0px 4px 0px 2px hsl(var(--primary));
+  }
+
+  /* Stagger box shadows - Default size */
   .shadow-stagger {
     box-shadow: 0px 8px 0px 4px hsl(var(--border));
   }
@@ -180,5 +189,51 @@ html {
 
   .shadow-stagger-hover {
     box-shadow: 0px 12px 0px 4px hsl(var(--border));
+  }
+
+  /* Stagger box shadows - Large size */
+  .shadow-stagger-lg {
+    box-shadow: 0px 12px 0px 6px hsl(var(--border));
+  }
+
+  .shadow-stagger-lg-primary {
+    box-shadow: 0px 12px 0px 6px hsl(var(--primary));
+  }
+
+  /* Stagger card with clip-path - uses pseudo element for shadow */
+  .stagger-card-sm {
+    position: relative;
+  }
+  .stagger-card-sm::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: inherit;
+    border: inherit;
+    border-color: inherit;
+    clip-path: polygon(16px 0%, calc(100% - 16px) 0%, 100% 16px, 100% 100%, 0 100%, 0 0);
+    z-index: -1;
+    box-shadow: 0px 4px 0px 2px hsl(var(--border));
+  }
+  .stagger-card-sm.stagger-primary::before {
+    box-shadow: 0px 4px 0px 2px hsl(var(--primary));
+  }
+
+  .stagger-card {
+    position: relative;
+  }
+  .stagger-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: inherit;
+    border: inherit;
+    border-color: inherit;
+    clip-path: polygon(16px 0%, calc(100% - 16px) 0%, 100% 16px, 100% 100%, 0 100%, 0 0);
+    z-index: -1;
+    box-shadow: 0px 8px 0px 4px hsl(var(--border));
+  }
+  .stagger-card.stagger-primary::before {
+    box-shadow: 0px 8px 0px 4px hsl(var(--primary));
   }
 }

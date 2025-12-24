@@ -56,10 +56,9 @@ export default function WelcomePage() {
         <motion.div variants={itemVariants} className="mb-8">
           <div className={cn(
             "border-2 border-white/20 bg-white/10 backdrop-blur-sm p-8",
-            "clip-corner-md",
             "shadow-[0px_8px_0px_4px_rgba(255,255,255,0.15)]"
           )}>
-            <div className="bg-gradient-to-r from-gray-900 via-blue-900 to-purple-900 clip-corner-sm p-4">
+            <div className="bg-gradient-to-r from-gray-900 via-blue-900 to-purple-900 p-4">
               <img
                 src="/images/AI-Hackathon-Master-Branding-06-2048x1003.svg"
                 alt="AI Hackathon Festival 2025"
@@ -97,7 +96,6 @@ export default function WelcomePage() {
                 className={cn(
                   "flex flex-col items-center p-4",
                   "border-2 border-white/20 bg-white/10 backdrop-blur-sm",
-                  "clip-corner-sm",
                   "shadow-[0px_6px_0px_3px_rgba(255,255,255,0.1)]",
                   "hover:bg-white/20 hover:border-white/30 transition-colors"
                 )}
@@ -130,7 +128,7 @@ export default function WelcomePage() {
             <button className={cn(
               "inline-flex items-center justify-center",
               "border-2 border-white bg-white text-primary",
-              "clip-corner-sm px-10 py-4 text-base font-semibold",
+              "px-10 py-4 text-base font-semibold",
               "shadow-[0px_6px_0px_3px_rgba(0,0,0,0.15)]",
               "hover:bg-white/90 hover:shadow-[0px_8px_0px_3px_rgba(0,0,0,0.15)]",
               "transition-all duration-200"

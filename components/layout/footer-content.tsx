@@ -58,7 +58,7 @@ export function FooterContent() {
       >
         <div className={cn(
           "bg-gradient-to-r from-gray-900 via-blue-900 to-purple-900 p-4",
-          "clip-corner-md shadow-stagger"
+          "shadow-stagger"
         )}>
           <img
             src="/images/AI-Hackathon-Master-Branding-06-2048x1003.svg"
@@ -175,7 +175,7 @@ export function FooterContent() {
                 rel="noopener noreferrer"
                 className={cn(
                   "flex items-center space-x-4 p-3 transition-colors group",
-                  "clip-corner-sm border-2 border-border",
+                  "border-2 border-border shadow-stagger-sm",
                   "hover:bg-muted hover:border-primary/50"
                 )}
                 initial={{ opacity: 0, y: 10 }}

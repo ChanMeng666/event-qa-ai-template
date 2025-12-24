@@ -49,7 +49,7 @@ export function FAQCard({ question, onVote, onView }: FAQCardProps) {
       whileHover={{ y: -4 }}
       className={cn(
         "bg-card text-card-foreground border-2 border-border",
-        "clip-corner-sm shadow-stagger",
+        "shadow-stagger",
         "hover:border-primary/50 transition-all duration-200 overflow-hidden group"
       )}
     >

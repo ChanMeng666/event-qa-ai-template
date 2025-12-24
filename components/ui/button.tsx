@@ -21,7 +21,11 @@ const buttonVariants = cva(
         stagger:
           "border-2 border-border bg-background text-foreground shadow-stagger hover:bg-primary hover:text-primary-foreground hover:border-primary",
         staggerPrimary:
-          "border-2 border-primary bg-primary text-primary-foreground shadow-stagger-primary hover:bg-primary/90",
+          "border-2 border-primary bg-background text-foreground shadow-stagger-primary hover:bg-primary hover:text-primary-foreground",
+        staggerSm:
+          "border-2 border-border bg-background text-foreground shadow-stagger-sm hover:bg-primary hover:text-primary-foreground hover:border-primary hover:shadow-stagger-sm-primary",
+        staggerSmPrimary:
+          "border-2 border-primary bg-background text-foreground shadow-stagger-sm-primary hover:bg-primary hover:text-primary-foreground",
       },
       size: {
         default: "h-10 px-4 py-2",

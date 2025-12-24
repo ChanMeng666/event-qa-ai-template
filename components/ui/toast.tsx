@@ -56,7 +56,7 @@ export function ToastComponent({ toast, onRemove }: ToastProps) {
       initial={{ opacity: 0, y: 50, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 20, scale: 0.95 }}
-      className={`max-w-sm w-full border rounded-lg shadow-lg p-4 ${colors[toast.type]}`}
+      className={`max-w-sm w-full border-2 shadow-stagger-sm p-4 ${colors[toast.type]}`}
     >
       <div className="flex items-start gap-3">
         <Icon size={20} className={`flex-shrink-0 mt-0.5 ${iconColors[toast.type]}`} />
