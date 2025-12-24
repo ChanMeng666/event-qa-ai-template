@@ -1,9 +1,9 @@
+/* Highlight.js GitHub theme for code blocks - must be at top */
+@import url('https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Highlight.js GitHub theme for code blocks */
-@import url('https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css');
 
 /* Performance optimizations */
 * {
