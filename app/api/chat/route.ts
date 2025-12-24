@@ -57,7 +57,7 @@ const systemPrompt = `You are an AI assistant for the AI Hackathon Festival 2025
 export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
-    
+
     // Clean messages and filter system messages
     const cleanedMessages = messages
       .filter((msg: any) => msg.id !== 'system')
@@ -65,9 +65,10 @@ export async function POST(req: Request) {
         role: msg.role,
         content: msg.content
       }));
-    
-    const model = google('gemini-1.5-flash');
-    
+
+    // Use gemini-2.5-flash - officially free tier model per Google pricing docs
+    const model = google('gemini-2.5-flash');
+
     const result = await streamText({
       model,
       system: systemPrompt,
@@ -75,7 +76,7 @@ export async function POST(req: Request) {
       temperature: 0.7,
       maxTokens: 800,
     });
-    
+
     return result.toDataStreamResponse();
   } catch (error) {
     console.error('Chat API Error:', error);
