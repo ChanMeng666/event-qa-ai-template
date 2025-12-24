@@ -25,27 +25,18 @@ export function ChatMessage({ message }: ChatMessageProps) {
     >
       {!isSystem && (
         <div className={cn(
-          "flex-shrink-0 w-8 h-8 flex items-center justify-center",
+          "flex-shrink-0 w-9 h-9 flex items-center justify-center border-2",
           isUser
-            ? "bg-primary clip-corner-sm"
-            : "bg-gradient-to-r from-primary to-purple-600 rounded-full"
+            ? "bg-primary border-primary shadow-[0px_3px_0px_1px_hsl(var(--primary))]"
+            : "bg-gradient-to-br from-primary to-blue-700 border-white/30 shadow-[0px_3px_0px_1px_rgba(59,130,246,0.5)]"
         )}>
           {isUser ? (
             <User size={16} className="text-primary-foreground" />
           ) : (
             <img
-              src="/images/AI-Hackathon-Master-Branding-06-2048x1003.svg"
+              src="/images/AI-Hackathon-logo.svg"
               alt="AI Assistant"
-              className="w-5 h-5 object-contain filter brightness-0 invert"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.style.display = 'none';
-                const parent = target.parentElement!;
-                parent.innerHTML = '';
-                const botIcon = document.createElement('div');
-                botIcon.innerHTML = '<svg width="16" height="16" fill="currentColor" class="text-primary-foreground"><path d="M12 2h-2a2 2 0 0 0-2 2v2H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2V4a2 2 0 0 0-2-2z"></path></svg>';
-                parent.appendChild(botIcon);
-              }}
+              className="w-6 h-6 object-contain"
             />
           )}
         </div>

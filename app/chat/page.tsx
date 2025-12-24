@@ -13,8 +13,6 @@ import {
   HelpCircle,
   Menu,
   X,
-  Calendar,
-  MapPin,
   Quote
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -73,23 +71,21 @@ export default function ChatPage() {
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
           {/* Logo and Title */}
-          <div className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <img
+              src="/images/AI-Hackathon-logo.svg"
+              alt="AI Hackathon Festival 2025"
+              className="w-10 h-10 object-contain"
+            />
             <div>
               <h1 className="text-lg font-semibold text-foreground">
-                AI Hackathon Festival 2025
+                AI Assistant
               </h1>
-              <div className="hidden sm:flex items-center gap-4 text-xs text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <Calendar size={12} />
-                  <span>Aug 15-16, 2025</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <MapPin size={12} />
-                  <span>AUT City Campus</span>
-                </div>
+              <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground">
+                <span>Powered by Gemini</span>
               </div>
             </div>
-          </div>
+          </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-2">

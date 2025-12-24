@@ -68,26 +68,58 @@ export function FAQList({ questions, onVote, onView }: FAQListProps) {
   const hasActiveFilters = searchTerm !== '' || selectedCategory !== 'all' || sortBy !== 'score';
 
   return (
-    <div className="h-full flex flex-col faq-container bg-card">
+    <div className="h-full flex flex-col faq-container bg-gradient-to-br from-primary via-primary to-blue-700">
       {/* Header */}
-      <div className="flex-shrink-0 p-4 border-b border-border bg-card">
+      <div className="flex-shrink-0 p-4 border-b border-white/20 bg-gradient-to-r from-primary/95 to-blue-700/95 backdrop-blur-sm">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-foreground">
+          <h2 className="text-lg font-semibold text-white">
             Frequently Asked Questions
           </h2>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setShowFilters(!showFilters)}
-            className="text-muted-foreground hover:text-foreground transition-colors duration-200"
+            className="text-white/70 hover:text-white hover:bg-white/20 transition-colors duration-200"
           >
             <Filter size={16} />
           </Button>
         </div>
 
+        {/* Sort Buttons - Always Visible */}
+        <div className="flex gap-2 mb-3">
+          <Button
+            variant={sortBy === 'score' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setSortBy('score')}
+            className={cn(
+              "text-xs h-7 flex-1",
+              sortBy === 'score'
+                ? "bg-white text-primary hover:bg-white/90 border-white"
+                : "border-white/30 text-white/80 hover:bg-white/20 hover:text-white bg-transparent"
+            )}
+          >
+            <TrendingUp size={12} className="mr-1" />
+            Popular
+          </Button>
+          <Button
+            variant={sortBy === 'views' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setSortBy('views')}
+            className={cn(
+              "text-xs h-7 flex-1",
+              sortBy === 'views'
+                ? "bg-white text-primary hover:bg-white/90 border-white"
+                : "border-white/30 text-white/80 hover:bg-white/20 hover:text-white bg-transparent"
+            )}
+          >
+            <Clock size={12} className="mr-1" />
+            Most Viewed
+          </Button>
+        </div>
+
         {/* Search Bar */}
         <div className="relative">
-          <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+          <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60" />
           <input
             type="text"
             placeholder="Search questions..."
@@ -95,9 +127,9 @@ export function FAQList({ questions, onVote, onView }: FAQListProps) {
             onChange={(e) => setSearchTerm(e.target.value)}
             className={cn(
               "w-full pl-10 pr-4 py-2 text-sm transition-all duration-200",
-              "border-2 border-input bg-background text-foreground",
+              "border-2 border-white/30 bg-white/10 text-white placeholder:text-white/50",
               "clip-corner-sm",
-              "focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary"
+              "focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50"
             )}
           />
         </div>
@@ -113,7 +145,7 @@ export function FAQList({ questions, onVote, onView }: FAQListProps) {
             >
               {/* Category Filter */}
               <div>
-                <label className="block text-xs font-medium text-foreground mb-1">
+                <label className="block text-xs font-medium text-white/90 mb-1">
                   Category
                 </label>
                 <select
@@ -121,13 +153,13 @@ export function FAQList({ questions, onVote, onView }: FAQListProps) {
                   onChange={(e) => setSelectedCategory(e.target.value)}
                   className={cn(
                     "w-full px-3 py-1.5 text-sm",
-                    "border-2 border-input bg-background text-foreground",
-                    "focus:outline-none focus:ring-2 focus:ring-ring"
+                    "border-2 border-white/30 bg-white/10 text-white",
+                    "focus:outline-none focus:ring-2 focus:ring-white/50"
                   )}
                 >
-                  <option value="all">All Categories</option>
+                  <option value="all" className="bg-primary text-white">All Categories</option>
                   {categories.map(category => (
-                    <option key={category} value={category}>
+                    <option key={category} value={category} className="bg-primary text-white">
                       {getCategoryDisplayName(category)}
                     </option>
                   ))}
@@ -136,7 +168,7 @@ export function FAQList({ questions, onVote, onView }: FAQListProps) {
 
               {/* Sort Options */}
               <div>
-                <label className="block text-xs font-medium text-foreground mb-1">
+                <label className="block text-xs font-medium text-white/90 mb-1">
                   Sort by
                 </label>
                 <div className="flex gap-2">
@@ -144,7 +176,12 @@ export function FAQList({ questions, onVote, onView }: FAQListProps) {
                     variant={sortBy === 'score' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setSortBy('score')}
-                    className="text-xs h-7"
+                    className={cn(
+                      "text-xs h-7",
+                      sortBy === 'score'
+                        ? "bg-white text-primary hover:bg-white/90"
+                        : "border-white/30 text-white/80 hover:bg-white/20 hover:text-white"
+                    )}
                   >
                     <TrendingUp size={12} className="mr-1" />
                     Popular
@@ -153,7 +190,12 @@ export function FAQList({ questions, onVote, onView }: FAQListProps) {
                     variant={sortBy === 'views' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setSortBy('views')}
-                    className="text-xs h-7"
+                    className={cn(
+                      "text-xs h-7",
+                      sortBy === 'views'
+                        ? "bg-white text-primary hover:bg-white/90"
+                        : "border-white/30 text-white/80 hover:bg-white/20 hover:text-white"
+                    )}
                   >
                     <Clock size={12} className="mr-1" />
                     Most Viewed
@@ -168,7 +210,7 @@ export function FAQList({ questions, onVote, onView }: FAQListProps) {
                     variant="ghost"
                     size="sm"
                     onClick={resetFilters}
-                    className="text-xs text-muted-foreground hover:text-foreground h-7"
+                    className="text-xs text-white/60 hover:text-white hover:bg-white/20 h-7"
                   >
                     <RotateCcw size={12} className="mr-1" />
                     Reset filters
@@ -180,7 +222,7 @@ export function FAQList({ questions, onVote, onView }: FAQListProps) {
         </AnimatePresence>
 
         {/* Results Count */}
-        <div className="mt-3 text-xs text-muted-foreground">
+        <div className="mt-3 text-xs text-white/70">
           {filteredQuestions.length} of {questions.length} questions
           {hasActiveFilters && ' (filtered)'}
         </div>
@@ -202,10 +244,10 @@ export function FAQList({ questions, onVote, onView }: FAQListProps) {
 
           {filteredQuestions.length === 0 && (
             <div className="text-center py-12">
-              <div className="text-muted-foreground mb-2">
+              <div className="text-white/50 mb-2">
                 <Search size={48} className="mx-auto mb-3 opacity-50" />
               </div>
-              <p className="text-muted-foreground text-sm">
+              <p className="text-white/70 text-sm">
                 No questions found matching your criteria.
               </p>
               {hasActiveFilters && (
@@ -213,7 +255,7 @@ export function FAQList({ questions, onVote, onView }: FAQListProps) {
                   variant="ghost"
                   size="sm"
                   onClick={resetFilters}
-                  className="mt-2 text-xs"
+                  className="mt-2 text-xs text-white/70 hover:text-white hover:bg-white/20"
                 >
                   Clear filters
                 </Button>

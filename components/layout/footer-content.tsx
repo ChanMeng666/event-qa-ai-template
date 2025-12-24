@@ -43,20 +43,15 @@ export function FooterContent() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Hackathon Event Logo */}
+    <div className="p-6 space-y-5">
+      {/* Event Info Banner */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
-        className="text-center mb-6"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="text-center py-3 px-4 bg-white/10 border-2 border-white/20 shadow-[0px_4px_0px_2px_rgba(255,255,255,0.15)]"
       >
-        <img
-          src="/images/AI-Hackathon-logo.svg"
-          alt="AI Hackathon Festival 2025"
-          className="mx-auto w-20 h-20 object-contain"
-        />
-        <p className="text-base text-white mt-4 font-medium">
+        <p className="text-sm text-white/90 font-medium">
           AI Hackathon Festival 2025 - Interactive Assistant
         </p>
       </motion.div>
@@ -75,7 +70,8 @@ export function FooterContent() {
 
         <div className={cn(
           "flex items-center space-x-4 p-3",
-          "bg-white/5 border border-white/10 rounded-lg"
+          "bg-white/10 border-2 border-white/20",
+          "shadow-[0px_4px_0px_2px_rgba(255,255,255,0.15)]"
         )}>
           <div className="flex-shrink-0">
             <img
@@ -117,8 +113,9 @@ export function FooterContent() {
           rel="noopener noreferrer"
           className={cn(
             "flex items-center space-x-3 p-3 transition-all group",
-            "bg-white/5 border border-white/10 rounded-lg",
-            "hover:bg-white/10 hover:border-white/20"
+            "bg-white/10 border-2 border-white/20",
+            "shadow-[0px_4px_0px_2px_rgba(255,255,255,0.15)]",
+            "hover:bg-white/15 hover:border-white/30 hover:translate-y-[-2px]"
           )}
         >
           <Globe className="w-5 h-5 text-green-300" />
@@ -148,8 +145,9 @@ export function FooterContent() {
               rel="noopener noreferrer"
               className={cn(
                 "flex items-center space-x-4 p-3 transition-all group",
-                "bg-white/5 border border-white/10 rounded-lg",
-                "hover:bg-white/10 hover:border-white/20"
+                "bg-white/10 border-2 border-white/20",
+                "shadow-[0px_4px_0px_2px_rgba(255,255,255,0.15)]",
+                "hover:bg-white/15 hover:border-white/30 hover:translate-y-[-2px]"
               )}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}

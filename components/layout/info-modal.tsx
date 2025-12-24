@@ -49,30 +49,38 @@ export function InfoModal({ isOpen, onClose }: InfoModalProps) {
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
             className={cn(
-              "bg-primary text-white",
+              "bg-gradient-to-br from-primary via-primary to-blue-700 text-white",
               "border-2 border-white/20",
-              "shadow-stagger-lg",
-              "max-w-2xl w-full mx-4 max-h-[85vh] overflow-auto"
+              "shadow-stagger-lg-primary",
+              "max-w-2xl w-full mx-4 max-h-[85vh] overflow-auto",
+              "clip-corner-sm"
             )}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
             <div className={cn(
               "sticky top-0 z-10",
-              "bg-primary/95 backdrop-blur-sm",
+              "bg-gradient-to-r from-primary/95 to-blue-700/95 backdrop-blur-sm",
               "border-b border-white/20",
               "px-6 py-4"
             )}>
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-white">
-                  Project Information
-                </h2>
+                <div className="flex items-center gap-3">
+                  <img
+                    src="/images/AI-Hackathon-logo.svg"
+                    alt="AI Hackathon"
+                    className="w-8 h-8 object-contain"
+                  />
+                  <h2 className="text-lg font-semibold text-white">
+                    Project Information
+                  </h2>
+                </div>
                 <button
                   onClick={onClose}
                   className={cn(
-                    "p-2 transition-colors",
+                    "p-2 transition-all duration-200",
                     "border-2 border-white/30",
-                    "hover:bg-white/20 hover:border-white/50",
+                    "hover:bg-white/20 hover:border-white/50 hover:scale-105",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
                   )}
                   aria-label="Close modal"

@@ -195,27 +195,6 @@ export function EmbeddedChat({ onHandlerReady }: EmbeddedChatProps) {
           {!hasMessages && (
             <div className="flex items-center justify-center min-h-full py-8">
               <div className="w-full max-w-2xl px-4">
-                <div className="text-center mb-6">
-                  <div className="flex items-center justify-center mx-auto mb-4">
-                    <img
-                      src="/images/AI-Hackathon-logo.svg"
-                      alt="AI Hackathon Festival 2025"
-                      className="w-24 h-24 object-contain"
-                    />
-                  </div>
-                  <h3 className="text-xl font-bold text-foreground mb-2">
-                    AI Hackathon Festival 2025 Assistant
-                  </h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed mb-4 max-w-lg mx-auto">
-                    I'm here to help you with everything about the AI Hackathon Festival 2025!
-                    Ask me about team formation, judging criteria, event schedule, or anything else you need to know.
-                  </p>
-                  <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground mb-6">
-                    <Sparkles size={12} className="text-primary" />
-                    <span>Powered by Google Gemini Pro</span>
-                  </div>
-                </div>
-
                 <ChatSuggestions onSuggestionClick={handleSuggestionClick} />
               </div>
             </div>
