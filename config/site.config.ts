@@ -87,7 +87,7 @@ export const siteConfig: SiteConfig = {
     website: 'https://aiforum.org.nz/hackathon',
     discord: 'https://discord.gg/hackathon',
     registration: 'https://aiforum.org.nz/hackathon/register',
-    github: 'https://github.com/ChanMeng666/ai-hackathon-assistant-2025',
+    github: 'https://github.com/ChanMeng666/event-qa-ai-template',
   },
 
   // ============================================================================

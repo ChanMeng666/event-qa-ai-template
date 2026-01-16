@@ -8,7 +8,8 @@ Built with Next.js 16, featuring a full-screen chat interface with Google Gemini
 
 **Current Example**: AI Hackathon Festival 2025 (New Zealand)
 
-[![🚀 Visit Live Demo 🚀](https://img.shields.io/badge/%F0%9F%9A%80-Visit%20Live%20Demo-%2300C851?style=for-the-badge&logo=vercel&logoColor=white)](https://github.com/ChanMeng666/ai-hackathon-assistant-2025)
+[![📖 Quick Start Guide](https://img.shields.io/badge/%F0%9F%93%96-Quick%20Start%20Guide-blue?style=for-the-badge)](docs/TEMPLATE-SETUP.md)
+[![🚀 Visit Live Demo 🚀](https://img.shields.io/badge/%F0%9F%9A%80-Visit%20Live%20Demo-%2300C851?style=for-the-badge&logo=vercel&logoColor=white)](https://event-qa-ai-template.vercel.app)
 
 <!-- SHIELD GROUP -->
 
@@ -58,7 +59,17 @@ Built with Next.js 16, featuring a full-screen chat interface with Google Gemini
 </div>
 
 > [!IMPORTANT]
-> **This is a reusable template** - not just a single-purpose application. Clone it, edit a few config files, and deploy your own event Q&A AI in minutes. No code changes required for basic customization. See [Quick Start Guide](docs/TEMPLATE-SETUP.md) for setup instructions.
+> **This is a reusable template** - not just a single-purpose application. Clone it, edit a few config files, and deploy your own event Q&A AI in minutes. No code changes required for basic customization.
+
+<div align="center">
+
+### 🚀 Ready to create your own Event Q&A AI?
+
+**👉 [Read the Quick Start Guide](docs/TEMPLATE-SETUP.md) 👈**
+
+*5 minutes from clone to deployment*
+
+</div>
 
 <details>
 <summary><kbd>📑 Table of Contents</kbd></summary>
@@ -415,8 +426,8 @@ public/images/               # Static assets
 **1. Clone Repository**
 
 ```bash
-git clone https://github.com/ChanMeng666/ai-hackathon-assistant-2025.git
-cd ai-hackathon-assistant-2025
+git clone https://github.com/ChanMeng666/event-qa-ai-template.git
+cd event-qa-ai-template
 ```
 
 **2. Install Dependencies**
@@ -483,7 +494,7 @@ npm run dev
 
 **Deploy to Vercel (Recommended)**
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FChanMeng666%2Fai-hackathon-assistant-2025)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FChanMeng666%2Fevent-qa-ai-template)
 
 ### `B` Manual Deployment
 
@@ -503,7 +514,7 @@ vercel --prod
 
 |           Deploy with Netlify            |                     Deploy with Railway                      |
 | :---------------------------------------: | :-----------------------------------------------------------: |
-| [![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/ChanMeng666/ai-hackathon-assistant-2025) | [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https://github.com/ChanMeng666/ai-hackathon-assistant-2025) |
+| [![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/ChanMeng666/event-qa-ai-template) | [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https://github.com/ChanMeng666/event-qa-ai-template) |
 
 </div>
 
@@ -755,8 +766,8 @@ We welcome contributions! Here's how you can help improve this project:
 
 ```bash
 # Fork the repository on GitHub
-git clone https://github.com/YOUR_USERNAME/ai-hackathon-assistant-2025.git
-cd ai-hackathon-assistant-2025
+git clone https://github.com/YOUR_USERNAME/event-qa-ai-template.git
+cd event-qa-ai-template
 
 # Install dependencies
 pnpm install
@@ -852,8 +863,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Made with ❤️ by Chan Meng**
 
-[![Star on GitHub](https://img.shields.io/github/stars/ChanMeng666/ai-hackathon-assistant-2025?style=social)](https://github.com/ChanMeng666/ai-hackathon-assistant-2025/stargazers)
-[![Fork on GitHub](https://img.shields.io/github/forks/ChanMeng666/ai-hackathon-assistant-2025?style=social)](https://github.com/ChanMeng666/ai-hackathon-assistant-2025/forks)
+[![Star on GitHub](https://img.shields.io/github/stars/ChanMeng666/event-qa-ai-template?style=social)](https://github.com/ChanMeng666/event-qa-ai-template/stargazers)
+[![Fork on GitHub](https://img.shields.io/github/forks/ChanMeng666/event-qa-ai-template?style=social)](https://github.com/ChanMeng666/event-qa-ai-template/forks)
 [![Follow @ChanMeng666](https://img.shields.io/github/followers/ChanMeng666?style=social)](https://github.com/ChanMeng666)
 
 </div>
@@ -865,25 +876,25 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 [back-to-top]: https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square
 
 <!-- GitHub Links -->
-[github-release-link]: https://github.com/ChanMeng666/ai-hackathon-assistant-2025/releases
-[github-stars-link]: https://github.com/ChanMeng666/ai-hackathon-assistant-2025/stargazers
-[github-forks-link]: https://github.com/ChanMeng666/ai-hackathon-assistant-2025/forks
-[github-license-link]: https://github.com/ChanMeng666/ai-hackathon-assistant-2025/blob/main/LICENSE
+[github-release-link]: https://github.com/ChanMeng666/event-qa-ai-template/releases
+[github-stars-link]: https://github.com/ChanMeng666/event-qa-ai-template/stargazers
+[github-forks-link]: https://github.com/ChanMeng666/event-qa-ai-template/forks
+[github-license-link]: https://github.com/ChanMeng666/event-qa-ai-template/blob/main/LICENSE
 
 <!-- Deployment Links -->
-[vercel-link]: https://ai-hackathon-assistant-2025.vercel.app
+[vercel-link]: https://event-qa-ai-template.vercel.app
 
 <!-- Shield Badges -->
-[github-release-shield]: https://img.shields.io/github/v/release/ChanMeng666/ai-hackathon-assistant-2025?color=369eff&labelColor=black&logo=github&style=flat-square
+[github-release-shield]: https://img.shields.io/github/v/release/ChanMeng666/event-qa-ai-template?color=369eff&labelColor=black&logo=github&style=flat-square
 [vercel-shield]: https://img.shields.io/badge/vercel-online-55b467?labelColor=black&logo=vercel&style=flat-square
-[github-stars-shield]: https://img.shields.io/github/stars/ChanMeng666/ai-hackathon-assistant-2025?color=ffcb47&labelColor=black&style=flat-square
-[github-forks-shield]: https://img.shields.io/github/forks/ChanMeng666/ai-hackathon-assistant-2025?color=8ae8ff&labelColor=black&style=flat-square
+[github-stars-shield]: https://img.shields.io/github/stars/ChanMeng666/event-qa-ai-template?color=ffcb47&labelColor=black&style=flat-square
+[github-forks-shield]: https://img.shields.io/github/forks/ChanMeng666/event-qa-ai-template?color=8ae8ff&labelColor=black&style=flat-square
 [github-license-shield]: https://img.shields.io/badge/license-MIT-white?labelColor=black&style=flat-square
 
 <!-- Social Share Links -->
-[share-x-link]: https://x.com/intent/tweet?hashtags=opensource,ai,template&text=Create%20your%20own%20event%20Q%26A%20AI%20in%20minutes%20with%20this%20reusable%20template&url=https%3A%2F%2Fgithub.com%2FChanMeng666%2Fai-hackathon-assistant-2025
-[share-linkedin-link]: https://linkedin.com/sharing/share-offsite/?url=https://github.com/ChanMeng666/ai-hackathon-assistant-2025
-[share-reddit-link]: https://www.reddit.com/submit?title=Event%20Q%26A%20AI%20Template%20-%20Reusable%20AI%20Assistant&url=https%3A%2F%2Fgithub.com%2FChanMeng666%2Fai-hackathon-assistant-2025
+[share-x-link]: https://x.com/intent/tweet?hashtags=opensource,ai,template&text=Create%20your%20own%20event%20Q%26A%20AI%20in%20minutes%20with%20this%20reusable%20template&url=https%3A%2F%2Fgithub.com%2FChanMeng666%2Fevent-qa-ai-template
+[share-linkedin-link]: https://linkedin.com/sharing/share-offsite/?url=https://github.com/ChanMeng666/event-qa-ai-template
+[share-reddit-link]: https://www.reddit.com/submit?title=Event%20Q%26A%20AI%20Template%20-%20Reusable%20AI%20Assistant&url=https%3A%2F%2Fgithub.com%2FChanMeng666%2Fevent-qa-ai-template
 
 [share-x-shield]: https://img.shields.io/badge/-share%20on%20x-black?labelColor=black&logo=x&logoColor=white&style=flat-square
 [share-linkedin-shield]: https://img.shields.io/badge/-share%20on%20linkedin-black?labelColor=black&logo=linkedin&logoColor=white&style=flat-square

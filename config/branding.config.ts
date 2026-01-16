@@ -50,9 +50,9 @@ export const brandingConfig: BrandingConfig = {
 
   project: {
     /** GitHub repository URL */
-    repository: 'https://github.com/ChanMeng666/ai-hackathon-assistant-2025',
+    repository: 'https://github.com/ChanMeng666/event-qa-ai-template',
 
     /** Live deployment URL */
-    deployment: 'https://ai-hackathon-assistant-2025.vercel.app/',
+    deployment: 'https://event-qa-ai-template.vercel.app/',
   },
 };
