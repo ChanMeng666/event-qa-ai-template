@@ -7,6 +7,7 @@ import rehypeHighlight from 'rehype-highlight';
 import { Message } from './types';
 import { User } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { brandingConfig } from '@/config';
 
 interface ChatMessageProps {
   message: Message;
@@ -34,7 +35,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
             <User size={16} className="text-primary-foreground" />
           ) : (
             <img
-              src="/images/AI-Hackathon-logo.svg"
+              src={brandingConfig.logos.main}
               alt="AI Assistant"
               className="w-6 h-6 object-contain"
             />

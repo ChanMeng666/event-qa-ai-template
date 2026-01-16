@@ -1,18 +1,19 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import { siteConfig, brandingConfig } from '@/config'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'AI Hackathon Festival 2025 - AI Assistant',
-  description: 'Get instant answers about the AI Hackathon Festival 2025. Learn about schedules, team formation, judging criteria, and more.',
-  keywords: ['AI Hackathon', 'Festival 2025', 'AUT', 'AI Forum', 'She Sharp', 'Auckland', 'Sustainable Development Goals'],
-  authors: [{ name: 'AI Hackathon Festival 2025 Team' }],
+  title: `${siteConfig.name} - ${siteConfig.tagline}`,
+  description: siteConfig.description,
+  keywords: siteConfig.seo.keywords,
+  authors: siteConfig.seo.authors,
   openGraph: {
-    title: 'AI Hackathon Festival 2025 - AI Assistant',
-    description: 'Get instant answers about the AI Hackathon Festival 2025',
-    type: 'website',
+    title: `${siteConfig.name} - ${siteConfig.tagline}`,
+    description: siteConfig.description,
+    type: siteConfig.seo.ogType as 'website',
   },
 }
 
@@ -24,7 +25,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <head>
-        <link rel="icon" href="/images/AI-Hackathon-logo.svg" type="image/svg+xml" />
+        <link rel="icon" href={brandingConfig.logos.favicon} type="image/svg+xml" />
       </head>
       <body className={`${inter.className} h-full antialiased`}>
         {children}

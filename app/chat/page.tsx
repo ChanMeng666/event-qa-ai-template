@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { brandingConfig, siteConfig } from '@/config';
 
 export default function ChatPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -47,8 +48,8 @@ export default function ChatPage() {
         <div className="text-center">
           <div className="flex items-center justify-center mx-auto mb-4 animate-pulse">
             <img
-              src="/images/AI-Hackathon-logo.svg"
-              alt="AI Hackathon Festival 2025"
+              src={brandingConfig.logos.main}
+              alt={siteConfig.name}
               className="w-16 h-16 object-contain"
             />
           </div>
@@ -73,8 +74,8 @@ export default function ChatPage() {
           {/* Logo and Title */}
           <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <img
-              src="/images/AI-Hackathon-logo.svg"
-              alt="AI Hackathon Festival 2025"
+              src={brandingConfig.logos.main}
+              alt={siteConfig.name}
               className="w-10 h-10 object-contain"
             />
             <div>

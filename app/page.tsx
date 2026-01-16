@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowRight, Calendar, MapPin, ExternalLink, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { siteConfig, brandingConfig } from '@/config';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -29,24 +30,6 @@ const itemVariants = {
 export default function WelcomePage() {
   const [showMapModal, setShowMapModal] = useState(false);
 
-  const organizers = [
-    {
-      name: 'Auckland University of Technology',
-      url: 'https://www.aut.ac.nz/',
-      logo: '/images/Logo_of_Auckland_University_of_Technology.svg'
-    },
-    {
-      name: 'AI Forum NZ',
-      url: 'https://aiforum.org.nz/',
-      logo: '/images/AIFNZ_logo_horiz_gradient_rgb.svg'
-    },
-    {
-      name: 'She Sharp',
-      url: 'https://www.shesharp.org.nz/',
-      logo: '/images/she-sharp-logo-purple-dark-130x130.svg'
-    }
-  ];
-
   return (
     <div className="min-h-screen bg-primary flex flex-col items-center justify-center p-4 sm:p-8">
       <motion.div
@@ -62,8 +45,8 @@ export default function WelcomePage() {
             "shadow-[0px_8px_0px_4px_rgba(255,255,255,0.15)]"
           )}>
             <img
-              src="/images/AI-Hackathon-Master-Branding-06-2048x1003.svg"
-              alt="AI Hackathon Festival 2025"
+              src={brandingConfig.logos.full}
+              alt={siteConfig.name}
               className="max-h-16 sm:max-h-20 w-auto object-contain mx-auto"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
@@ -75,14 +58,14 @@ export default function WelcomePage() {
             <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6 mt-6 text-sm text-white/80">
               <div className="flex items-center justify-center gap-2">
                 <Calendar size={16} />
-                <span>Aug 15-16, 2025</span>
+                <span>{siteConfig.dates.displayFormat}</span>
               </div>
               <button
                 onClick={() => setShowMapModal(true)}
                 className="flex items-center justify-center gap-2 hover:text-white transition-colors cursor-pointer"
               >
                 <MapPin size={16} />
-                <span className="underline underline-offset-2">AUT City Campus</span>
+                <span className="underline underline-offset-2">{siteConfig.venue.name}</span>
               </button>
             </div>
           </div>
@@ -91,7 +74,7 @@ export default function WelcomePage() {
         {/* Organizers */}
         <motion.div variants={itemVariants} className="mb-8">
           <div className="grid grid-cols-3 gap-3">
-            {organizers.map((org, index) => (
+            {siteConfig.organizers.map((org, index) => (
               <motion.a
                 key={org.name}
                 href={org.url}
@@ -109,7 +92,7 @@ export default function WelcomePage() {
               >
                 <div className={cn(
                   "flex items-center justify-center",
-                  org.name === 'AI Forum NZ' ? "w-20 h-14 sm:w-24 sm:h-16" : "w-12 h-12 sm:w-14 sm:h-14"
+                  org.shortName === 'AI Forum NZ' ? "w-20 h-14 sm:w-24 sm:h-16" : "w-12 h-12 sm:w-14 sm:h-14"
                 )}>
                   <img
                     src={org.logo}
@@ -146,23 +129,25 @@ export default function WelcomePage() {
           </Link>
         </motion.div>
 
-        {/* Footer Links */}
-        <motion.div variants={itemVariants} className="flex items-center justify-center text-sm text-white/60">
-          <a
-            href="https://github.com/ChanMeng666"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 hover:text-white transition-colors"
-          >
-            <img
-              src="/images/chan_logo.svg"
-              alt="Chan Meng Logo"
-              className="w-5 h-5 object-contain"
-            />
-            <span>Built by Chan Meng</span>
-            <ExternalLink size={12} />
-          </a>
-        </motion.div>
+        {/* Footer Links - Developer Credit (conditional) */}
+        {brandingConfig.showDeveloper && brandingConfig.developer && (
+          <motion.div variants={itemVariants} className="flex items-center justify-center text-sm text-white/60">
+            <a
+              href={brandingConfig.developer.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 hover:text-white transition-colors"
+            >
+              <img
+                src={brandingConfig.developer.logo}
+                alt={`${brandingConfig.developer.name} Logo`}
+                className="w-5 h-5 object-contain"
+              />
+              <span>Built by {brandingConfig.developer.name}</span>
+              <ExternalLink size={12} />
+            </a>
+          </motion.div>
+        )}
       </motion.div>
 
       {/* Map Modal */}
@@ -195,9 +180,13 @@ export default function WelcomePage() {
                   <X size={20} />
                 </button>
               </div>
+              <div className="mb-3 text-sm text-white/80">
+                <p className="font-medium">{siteConfig.venue.name}, {siteConfig.venue.building}</p>
+                <p className="text-white/60">{siteConfig.venue.address}</p>
+              </div>
               <div className="w-full overflow-hidden rounded-lg">
                 <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2764.369545747652!2d174.7664805!3d-36.8536098!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x6d0d47e463e6c953%3A0xe08f185abdafcdbd!2sAuckland%20University%20of%20Technology!5e1!3m2!1sen!2snz!4v1766547220091!5m2!1sen!2snz"
+                  src={siteConfig.venue.mapEmbed}
                   width="100%"
                   height="350"
                   style={{ border: 0 }}

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { FooterContent } from './footer-content';
 import { cn } from '@/lib/utils';
+import { brandingConfig, siteConfig } from '@/config';
 
 interface InfoModalProps {
   isOpen: boolean;
@@ -67,8 +68,8 @@ export function InfoModal({ isOpen, onClose }: InfoModalProps) {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <img
-                    src="/images/AI-Hackathon-logo.svg"
-                    alt="AI Hackathon"
+                    src={brandingConfig.logos.main}
+                    alt={siteConfig.shortName}
                     className="w-8 h-8 object-contain"
                   />
                   <h2 className="text-lg font-semibold text-white">

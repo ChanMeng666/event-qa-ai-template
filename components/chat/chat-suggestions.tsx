@@ -1,42 +1,63 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { MessageCircle, Users, Calendar, Award, HelpCircle } from 'lucide-react';
+import {
+  MessageCircle,
+  Users,
+  Calendar,
+  Award,
+  HelpCircle,
+  LucideIcon,
+  Lightbulb,
+  MapPin,
+  Clock,
+  Star,
+  Heart,
+  Zap,
+  BookOpen,
+  Target,
+  Trophy,
+  Briefcase,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { contentConfig, siteConfig } from '@/config';
 
 interface ChatSuggestionsProps {
   onSuggestionClick: (suggestion: string) => void;
 }
 
-const suggestions = [
-  {
-    icon: Calendar,
-    text: "What's the schedule for the hackathon?",
-    category: "Schedule"
-  },
-  {
-    icon: Users,
-    text: "How do I form a team?",
-    category: "Teams"
-  },
-  {
-    icon: Award,
-    text: "What are the judging criteria?",
-    category: "Awards"
-  },
-  {
-    icon: HelpCircle,
-    text: "What should I bring to the event?",
-    category: "Logistics"
-  },
-  {
-    icon: MessageCircle,
-    text: "How can I get help from mentors?",
-    category: "Support"
-  }
-];
+/**
+ * Icon mapping from string names to Lucide components.
+ * Add more icons here as needed for your suggestions.
+ */
+const iconMap: Record<string, LucideIcon> = {
+  Calendar,
+  Users,
+  Award,
+  HelpCircle,
+  MessageCircle,
+  Lightbulb,
+  MapPin,
+  Clock,
+  Star,
+  Heart,
+  Zap,
+  BookOpen,
+  Target,
+  Trophy,
+  Briefcase,
+};
+
+/**
+ * Get icon component by name, with fallback to HelpCircle
+ */
+function getIcon(iconName: string): LucideIcon {
+  return iconMap[iconName] || HelpCircle;
+}
 
 export function ChatSuggestions({ onSuggestionClick }: ChatSuggestionsProps) {
+  const suggestions = contentConfig.chatSuggestions;
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="text-center mb-6">
@@ -50,7 +71,7 @@ export function ChatSuggestions({ onSuggestionClick }: ChatSuggestionsProps) {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {suggestions.map((suggestion, index) => {
-          const Icon = suggestion.icon;
+          const Icon = getIcon(suggestion.icon);
           return (
             <motion.div
               key={index}
@@ -106,7 +127,7 @@ export function ChatSuggestions({ onSuggestionClick }: ChatSuggestionsProps) {
 
       <div className="mt-6 text-center">
         <p className="text-xs text-muted-foreground">
-          Or ask anything else about the AI Hackathon Festival 2025
+          Or ask anything else about the {siteConfig.shortName}
         </p>
       </div>
     </div>

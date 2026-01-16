@@ -1,10 +1,12 @@
 <div align="center"><a name="readme-top"></a>
 
-# 🤖 AI Hackathon Festival 2025 Assistant<br/><h3>Interactive AI Assistant with Community-Driven FAQ</h3>
+# 🤖 Event Q&A AI Template<br/><h3>Reusable AI Assistant Template with Community-Driven FAQ</h3>
 
-A modern, full-featured AI assistant website designed to help students and mentors with all aspects of the AI Hackathon Festival 2025.<br/>
-Features a full-screen chat interface with Google Gemini Pro and community-driven FAQ voting system.<br/>
-One-click **FREE** deployment on Vercel.
+A **highly configurable template** for creating AI-powered Q&A assistants for any event.<br/>
+Built with Next.js 16, featuring a full-screen chat interface with Google Gemini and community-driven FAQ voting system.<br/>
+**Customize in minutes** - just edit config files. One-click **FREE** deployment on Vercel.
+
+**Current Example**: AI Hackathon Festival 2025 (New Zealand)
 
 [![🚀 Visit Live Demo 🚀](https://img.shields.io/badge/%F0%9F%9A%80-Visit%20Live%20Demo-%2300C851?style=for-the-badge&logo=vercel&logoColor=white)](https://github.com/ChanMeng666/ai-hackathon-assistant-2025)
 
@@ -16,13 +18,13 @@ One-click **FREE** deployment on Vercel.
 [![][github-forks-shield]][github-forks-link]
 [![][github-license-shield]][github-license-link]
 
-**Share AI Hackathon Assistant**
+**Share Event Q&A AI Template**
 
 [![][share-x-shield]][share-x-link]
 [![][share-linkedin-shield]][share-linkedin-link]
 [![][share-reddit-shield]][share-reddit-link]
 
-<sup>🌟 Pioneering the future of AI-powered event assistance. Built for hackathon participants and mentors.</sup>
+<sup>🌟 Create your own event AI assistant in minutes. Fully configurable template for any event.</sup>
 
 </div>
 
@@ -56,47 +58,24 @@ One-click **FREE** deployment on Vercel.
 </div>
 
 > [!IMPORTANT]
-> This project demonstrates modern full-stack development with Next.js 16, TypeScript, and Google Gemini 2.5 Flash AI. It combines full-screen chat interface with community-driven FAQ voting system backed by Notion database to provide comprehensive hackathon support.
+> **This is a reusable template** - not just a single-purpose application. Clone it, edit a few config files, and deploy your own event Q&A AI in minutes. No code changes required for basic customization. See [Quick Start Guide](docs/TEMPLATE-SETUP.md) for setup instructions.
 
 <details>
 <summary><kbd>📑 Table of Contents</kbd></summary>
 
 #### TOC
 
-- [🤖 AI Hackathon Festival 2025 AssistantInteractive AI Assistant with Community-Driven FAQ](#-ai-hackathon-festival-2025-assistantinteractive-ai-assistant-with-community-driven-faq)
+- [🤖 Event Q&A AI Template](#-event-qa-ai-template)
   - [📸 Project Screenshots](#-project-screenshots)
-      - [TOC](#toc)
-      - [](#)
   - [✨ Key Features](#-key-features)
-    - [`1` Full-Screen AI Chat Experience](#1-full-screen-ai-chat-experience)
-    - [`2` Community-Driven FAQ System](#2-community-driven-faq-system)
-    - [`*` Additional Features](#-additional-features)
+  - [🔧 Template Configuration](#-template-configuration)
   - [🛠️ Tech Stack](#️-tech-stack)
   - [🏗️ Architecture](#️-architecture)
-    - [Component Architecture](#component-architecture)
   - [🚀 Getting Started](#-getting-started)
-    - [Prerequisites](#prerequisites)
-    - [Quick Installation](#quick-installation)
-    - [Environment Setup](#environment-setup)
   - [🛳 Deployment](#-deployment)
-    - [`A` One-Click Deployment](#a-one-click-deployment)
-    - [`B` Manual Deployment](#b-manual-deployment)
-    - [`C` Environment Variables](#c-environment-variables)
   - [📖 Usage Guide](#-usage-guide)
-    - [Main Interface](#main-interface)
-    - [AI Chat Features](#ai-chat-features)
-    - [FAQ Voting System](#faq-voting-system)
-    - [For Students and Mentors](#for-students-and-mentors)
-    - [Interaction Flow](#interaction-flow)
   - [🔌 Customization](#-customization)
-    - [Adding New Preset Questions](#adding-new-preset-questions)
-    - [Modifying AI Behavior](#modifying-ai-behavior)
-    - [Styling and Theming](#styling-and-theming)
-    - [Adding New Categories](#adding-new-categories)
   - [🤝 Contributing](#-contributing)
-    - [Development Process](#development-process)
-    - [Contribution Areas](#contribution-areas)
-    - [Code of Conduct](#code-of-conduct)
   - [📄 License](#-license)
   - [👥 Team](#-team)
 
@@ -156,7 +135,7 @@ Beyond the core functionality, this project includes:
 - [x] ⚡ **Performance Optimized**: 5-min caching, optimistic updates, lazy loading
 - [x] 🛡️ **Graceful Fallback**: Works without Notion (static questions)
 
-> ✨ Built specifically for the AI Hackathon Festival 2025 with hackathon-specific Q&A database.
+> ✨ Built as a reusable template - currently showcasing AI Hackathon Festival 2025 as an example configuration.
 
 <div align="right">
 
@@ -225,10 +204,102 @@ Beyond the core functionality, this project includes:
 > [!TIP]
 > Each technology was carefully selected for developer experience, performance, and production readiness.
 
+## 🔧 Template Configuration
+
+> [!NOTE]
+> **Zero Code Changes Required** - Customize everything through configuration files in the `config/` directory.
+
+This template uses a centralized configuration system. All event-specific content is separated from code:
+
+### Configuration Files
+
+| File | Purpose | What to Configure |
+|------|---------|-------------------|
+| `config/site.config.ts` | Event information | Name, dates, venue, organizers, links |
+| `config/ai.config.ts` | AI assistant | System prompt, model settings, knowledge base |
+| `config/content.config.ts` | Static content | FAQ questions, testimonials, chat suggestions |
+| `config/branding.config.ts` | Visual assets | Logos, developer credits, project links |
+
+### Quick Configuration Example
+
+**1. Event Information** (`config/site.config.ts`):
+```typescript
+export const siteConfig: SiteConfig = {
+  name: 'Your Event Name 2025',
+  shortName: 'Event 2025',
+  tagline: 'Interactive Assistant',
+  dates: {
+    start: '2025-08-15',
+    end: '2025-08-16',
+    displayFormat: 'Aug 15-16, 2025',
+  },
+  venue: {
+    name: 'Convention Center',
+    address: '123 Main Street',
+    city: 'Your City',
+  },
+  organizers: [
+    { name: 'Your Organization', logo: '/images/organizers/org.svg' },
+  ],
+};
+```
+
+**2. AI Knowledge** (`config/ai.config.ts`):
+```typescript
+// Add event-specific knowledge for the AI
+const additionalContext = `
+## Event Rules
+- Teams: 2-5 members
+- Duration: 24 hours
+
+## Prize Categories
+- Grand Prize: $5,000
+- Best Innovation: $2,000
+`;
+```
+
+**3. Branding** (`config/branding.config.ts`):
+```typescript
+export const brandingConfig: BrandingConfig = {
+  logos: {
+    main: '/images/event/logo.svg',
+    full: '/images/event/logo-full.svg',
+  },
+  showDeveloper: false,  // Hide developer credits if desired
+};
+```
+
+### Image Directory Structure
+
+```
+public/images/
+├── event/              # Your event logos
+│   ├── logo.svg        # Header/icon logo
+│   └── logo-full.svg   # Landing page logo
+├── organizers/         # Organizer/sponsor logos
+│   ├── org1.svg
+│   └── org2.svg
+└── developer/          # Optional developer branding
+    └── logo.svg
+```
+
+> [!TIP]
+> For detailed configuration instructions, see **[docs/TEMPLATE-SETUP.md](docs/TEMPLATE-SETUP.md)**
+
+[![][back-to-top]](#readme-top)
+
 ## 🏗️ Architecture
 
 ```mermaid
 graph TB
+    subgraph "Configuration Layer"
+        CFG[config/]
+        CFG --> CFG1[site.config.ts]
+        CFG --> CFG2[ai.config.ts]
+        CFG --> CFG3[content.config.ts]
+        CFG --> CFG4[branding.config.ts]
+    end
+
     subgraph "Frontend Layer"
         A[Next.js App Router] --> B[React Components]
         B --> C[Tailwind Styling]
@@ -266,6 +337,10 @@ graph TB
         M[Edge Functions]
     end
 
+    CFG1 --> A
+    CFG2 --> R1
+    CFG3 --> B
+    CFG4 --> B
     A --> E
     B --> H
     B --> R1
@@ -283,6 +358,13 @@ graph TB
 ### Component Architecture
 
 ```
+config/                        # 🔧 CONFIGURATION (edit these!)
+├── index.ts                  # Unified exports
+├── types.ts                  # TypeScript interfaces
+├── site.config.ts            # Event name, dates, venue
+├── ai.config.ts              # AI system prompt & settings
+├── content.config.ts         # FAQ, testimonials, suggestions
+└── branding.config.ts        # Logos, developer credits
 app/                           # Next.js App Router
 ├── api/
 │   ├── chat/                 # AI streaming endpoint (Gemini)
@@ -292,9 +374,9 @@ app/                           # Next.js App Router
 │       └── view/             # POST - Track views
 ├── chat/                     # Chat page (70/30 layout)
 ├── testimonials/             # Testimonials page
-├── globals.css               # Global styles
-├── layout.tsx                # Root layout
-└── page.tsx                  # Home/landing page
+├── globals.css               # Global styles + color theme
+├── layout.tsx                # Root layout (reads config)
+└── page.tsx                  # Home/landing page (reads config)
 components/                   # React components
 ├── chat/                    # EmbeddedChat, ChatSuggestions
 ├── faq/                     # FAQList, FAQCard (voting UI)
@@ -305,12 +387,16 @@ hooks/                       # Custom React hooks
 └── use-scroll-direction.ts # Header visibility
 lib/                         # Utilities
 ├── notion-faq.ts           # Notion client & operations
-├── testimonials-data.ts    # Static testimonials
+├── testimonials-data.ts    # Wrapper → contentConfig
 └── utils.ts                # Helper functions (cn)
 docs/                        # Documentation
+├── TEMPLATE-SETUP.md       # Quick start guide
 ├── UI-DESIGN-SYSTEM.md     # Visual design guide
 └── NOTION-INTEGRATION.md   # Notion backend docs
-public/                      # Static assets
+public/images/               # Static assets
+├── event/                  # Event logos
+├── organizers/             # Organizer logos
+└── developer/              # Developer branding (optional)
 ```
 
 ## 🚀 Getting Started
@@ -550,63 +636,114 @@ flowchart TD
 
 ## 🔌 Customization
 
-### Adding New Preset Questions
+> [!NOTE]
+> All customization is done through configuration files - no need to modify component code!
 
-Extend the FAQ database by editing `components/chatbot/preset-questions.ts`:
+### Event Information
 
-```typescript
-{
-  id: 'unique-id',
-  category: 'event-info', // Available: event-info, teams, technical, schedule, mentors, awards, logistics
-  question: 'Your question here?',
-  answer: 'The detailed answer with helpful information...'
-}
-```
-
-### Modifying AI Behavior
-
-Customize the AI assistant's personality and knowledge by updating the system prompt in `app/api/chat/route.ts`:
+Edit `config/site.config.ts` to set your event's basic information:
 
 ```typescript
-const systemPrompt = `You are an AI assistant for the AI Hackathon Festival 2025...
-- Add specific instructions
-- Include domain knowledge
-- Set response tone and style
-`;
-```
-
-### Styling and Theming
-
-**Global Styles:**
-```css
-/* app/globals.css */
-:root {
-  --primary-color: #4F46E5;
-  --secondary-color: #059669;
-  /* Add custom CSS variables */
-}
-```
-
-**Component Styling:**
-- Individual components use Tailwind CSS classes
-- Theme colors defined in `tailwind.config.js`
-- Animations powered by Framer Motion
-
-### Adding New Categories
-
-1. **Update Types** (`components/chatbot/types.ts`):
-```typescript
-export type QuestionCategory = 'event-info' | 'teams' | 'your-new-category';
-```
-
-2. **Add Display Name** (`components/chatbot/preset-questions.ts`):
-```typescript
-const categoryNames = {
-  'your-new-category': 'Your Category Name'
+export const siteConfig: SiteConfig = {
+  name: 'Your Event Name',
+  shortName: 'Event',
+  tagline: 'Your Tagline',
+  description: 'Event description for SEO',
+  dates: { start: '2025-08-15', end: '2025-08-16', displayFormat: 'Aug 15-16, 2025' },
+  venue: { name: 'Venue Name', address: '123 Main St', city: 'City' },
+  organizers: [{ name: 'Organization', shortName: 'Org', logo: '/images/organizers/org.svg' }],
 };
 ```
 
-3. **Create Questions** with the new category value.
+### FAQ Questions & Testimonials
+
+Edit `config/content.config.ts` to add or modify content:
+
+```typescript
+const presetQuestions: PresetQuestion[] = [
+  {
+    id: 'unique-id',
+    category: 'event-info',
+    question: 'When is the event?',
+    answer: 'The event takes place on...',
+  },
+];
+
+const testimonials: Testimonial[] = [
+  {
+    id: '1',
+    quote: 'Amazing experience!',
+    author: 'John Doe',
+    role: 'participant',
+    organization: 'Company X',
+  },
+];
+```
+
+### AI Assistant Behavior
+
+Edit `config/ai.config.ts` to customize the AI's knowledge and personality:
+
+```typescript
+// Add event-specific knowledge
+const additionalContext = `
+## Event Rules
+- Team size: 2-5 members
+- Duration: 24 hours
+
+## Prizes
+- Grand Prize: $5,000
+- Best Innovation: $2,000
+`;
+
+// Or override the entire system prompt
+export const aiConfig: AIConfig = {
+  // ...
+  customSystemPrompt: 'Your completely custom system prompt here...',
+};
+```
+
+### Color Theme
+
+Edit `app/globals.css` to change the color scheme:
+
+```css
+:root {
+  --primary: 221.2 83.2% 53.3%;       /* Main brand color */
+  --primary-foreground: 210 40% 98%; /* Text on primary */
+  /* Modify other colors as needed */
+}
+```
+
+### Branding & Logos
+
+Edit `config/branding.config.ts` to set your visual identity:
+
+```typescript
+export const brandingConfig: BrandingConfig = {
+  logos: {
+    main: '/images/event/logo.svg',      // Header icon
+    full: '/images/event/logo-full.svg', // Landing page
+    favicon: '/images/event/logo.svg',
+  },
+  showDeveloper: false,  // Hide developer credits
+};
+```
+
+### Adding New Categories
+
+Edit `config/content.config.ts`:
+
+```typescript
+const categories: Record<string, string> = {
+  'event-info': 'Event Info',
+  'teams': 'Teams',
+  'your-new-category': 'Your Category Name',  // Add new category
+};
+```
+
+> [!TIP]
+> For complete configuration reference, see **[docs/TEMPLATE-SETUP.md](docs/TEMPLATE-SETUP.md)**
 
 ## 🤝 Contributing
 
@@ -704,16 +841,16 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 <div align="center">
-<strong>🚀 Building the Future of AI-Powered Event Assistance 🌟</strong>
+<strong>🚀 Create Your Own Event Q&A AI in Minutes 🌟</strong>
 <br/>
-<em>Empowering hackathon participants and mentors worldwide</em>
+<em>A reusable template for AI-powered event assistance</em>
 <br/><br/>
 
-⭐ **Star us on GitHub** • 📖 **Read the Documentation** • 🐛 **Report Issues** • 💡 **Request Features** • 🤝 **Contribute**
+⭐ **Star us on GitHub** • 📖 **Read the [Setup Guide](docs/TEMPLATE-SETUP.md)** • 🐛 **Report Issues** • 💡 **Request Features** • 🤝 **Contribute**
 
 <br/><br/>
 
-**Made with ❤️ by the AI Hackathon Assistant team**
+**Made with ❤️ by Chan Meng**
 
 [![Star on GitHub](https://img.shields.io/github/stars/ChanMeng666/ai-hackathon-assistant-2025?style=social)](https://github.com/ChanMeng666/ai-hackathon-assistant-2025/stargazers)
 [![Fork on GitHub](https://img.shields.io/github/forks/ChanMeng666/ai-hackathon-assistant-2025?style=social)](https://github.com/ChanMeng666/ai-hackathon-assistant-2025/forks)
@@ -744,9 +881,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 [github-license-shield]: https://img.shields.io/badge/license-MIT-white?labelColor=black&style=flat-square
 
 <!-- Social Share Links -->
-[share-x-link]: https://x.com/intent/tweet?hashtags=opensource,ai,hackathon&text=Check%20out%20this%20amazing%20AI%20hackathon%20assistant&url=https%3A%2F%2Fgithub.com%2FChanMeng666%2Fai-hackathon-assistant-2025
+[share-x-link]: https://x.com/intent/tweet?hashtags=opensource,ai,template&text=Create%20your%20own%20event%20Q%26A%20AI%20in%20minutes%20with%20this%20reusable%20template&url=https%3A%2F%2Fgithub.com%2FChanMeng666%2Fai-hackathon-assistant-2025
 [share-linkedin-link]: https://linkedin.com/sharing/share-offsite/?url=https://github.com/ChanMeng666/ai-hackathon-assistant-2025
-[share-reddit-link]: https://www.reddit.com/submit?title=AI%20Hackathon%20Assistant%202025&url=https%3A%2F%2Fgithub.com%2FChanMeng666%2Fai-hackathon-assistant-2025
+[share-reddit-link]: https://www.reddit.com/submit?title=Event%20Q%26A%20AI%20Template%20-%20Reusable%20AI%20Assistant&url=https%3A%2F%2Fgithub.com%2FChanMeng666%2Fai-hackathon-assistant-2025
 
 [share-x-shield]: https://img.shields.io/badge/-share%20on%20x-black?labelColor=black&logo=x&logoColor=white&style=flat-square
 [share-linkedin-shield]: https://img.shields.io/badge/-share%20on%20linkedin-black?labelColor=black&logo=linkedin&logoColor=white&style=flat-square

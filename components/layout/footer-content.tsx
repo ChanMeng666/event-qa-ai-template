@@ -8,39 +8,10 @@ import {
   Heart
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { siteConfig, brandingConfig } from '@/config';
 
 export function FooterContent() {
   const currentYear = new Date().getFullYear();
-
-  const links = {
-    developer: {
-      name: 'Chan Meng',
-      github: 'https://github.com/ChanMeng666',
-      description: 'AI Agent & Full-Stack Developer | Agentic Systems & LLM Integration Expert',
-      logo: '/images/chan_logo.svg'
-    },
-    project: {
-      repository: 'https://github.com/ChanMeng666/ai-hackathon-assistant-2025',
-      deployment: 'https://ai-hackathon-assistant-2025.vercel.app/'
-    },
-    organizers: [
-      {
-        name: 'Auckland University of Technology',
-        url: 'https://www.aut.ac.nz/',
-        logo: '/images/Logo_of_Auckland_University_of_Technology.svg'
-      },
-      {
-        name: 'AI Forum New Zealand',
-        url: 'https://aiforum.org.nz/',
-        logo: '/images/AIFNZ_logo_horiz_gradient_rgb.svg'
-      },
-      {
-        name: 'She Sharp',
-        url: 'https://www.shesharp.org.nz/',
-        logo: '/images/she-sharp-logo-purple-dark-130x130.svg'
-      }
-    ]
-  };
 
   return (
     <div className="p-6 space-y-5">
@@ -52,48 +23,50 @@ export function FooterContent() {
         className="text-center py-3 px-4 bg-white/10 border-2 border-white/20 shadow-[0px_4px_0px_2px_rgba(255,255,255,0.15)]"
       >
         <p className="text-sm text-white/90 font-medium">
-          AI Hackathon Festival 2025 - Interactive Assistant
+          {siteConfig.name} - {siteConfig.tagline}
         </p>
       </motion.div>
 
-      {/* Developer Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="space-y-3"
-      >
-        <div className="flex items-center space-x-2">
-          <Code2 className="w-5 h-5 text-cyan-300" />
-          <h3 className="text-base font-semibold text-white">Developer</h3>
-        </div>
+      {/* Developer Section (conditional) */}
+      {brandingConfig.showDeveloper && brandingConfig.developer && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="space-y-3"
+        >
+          <div className="flex items-center space-x-2">
+            <Code2 className="w-5 h-5 text-cyan-300" />
+            <h3 className="text-base font-semibold text-white">Developer</h3>
+          </div>
 
-        <div className={cn(
-          "flex items-center space-x-4 p-3",
-          "bg-white/10 border-2 border-white/20",
-          "shadow-[0px_4px_0px_2px_rgba(255,255,255,0.15)]"
-        )}>
-          <div className="flex-shrink-0">
-            <img
-              src={links.developer.logo}
-              alt="Chan Meng Logo"
-              className="w-16 h-16 object-contain"
-            />
+          <div className={cn(
+            "flex items-center space-x-4 p-3",
+            "bg-white/10 border-2 border-white/20",
+            "shadow-[0px_4px_0px_2px_rgba(255,255,255,0.15)]"
+          )}>
+            <div className="flex-shrink-0">
+              <img
+                src={brandingConfig.developer.logo}
+                alt={`${brandingConfig.developer.name} Logo`}
+                className="w-16 h-16 object-contain"
+              />
+            </div>
+            <div className="flex-grow">
+              <a
+                href={brandingConfig.developer.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-cyan-300 hover:text-cyan-200 font-medium flex items-center space-x-1 transition-colors"
+              >
+                <span>{brandingConfig.developer.name}</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+              <p className="text-sm text-white/60 mt-1">{brandingConfig.developer.description}</p>
+            </div>
           </div>
-          <div className="flex-grow">
-            <a
-              href={links.developer.github}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-cyan-300 hover:text-cyan-200 font-medium flex items-center space-x-1 transition-colors"
-            >
-              <span>{links.developer.name}</span>
-              <ExternalLink className="w-3 h-3" />
-            </a>
-            <p className="text-sm text-white/60 mt-1">{links.developer.description}</p>
-          </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      )}
 
       {/* Project Links Section */}
       <motion.div
@@ -108,7 +81,7 @@ export function FooterContent() {
         </div>
 
         <a
-          href={links.project.deployment}
+          href={brandingConfig.project.deployment}
           target="_blank"
           rel="noopener noreferrer"
           className={cn(
@@ -137,7 +110,7 @@ export function FooterContent() {
         </div>
 
         <div className="space-y-2">
-          {links.organizers.map((organizer, index) => (
+          {siteConfig.organizers.map((organizer, index) => (
             <motion.a
               key={organizer.name}
               href={organizer.url}
@@ -180,8 +153,14 @@ export function FooterContent() {
       >
         <div className="text-center">
           <div className="text-sm text-white/50 flex items-center justify-center space-x-2">
-            <span>© {currentYear} Chan Meng</span>
-            <span>•</span>
+            {brandingConfig.showDeveloper && brandingConfig.developer ? (
+              <>
+                <span>&copy; {currentYear} {brandingConfig.developer.name}</span>
+                <span>&bull;</span>
+              </>
+            ) : (
+              <span>&copy; {currentYear}</span>
+            )}
             <span className="flex items-center space-x-1">
               <span>Built with</span>
               <Heart className="w-3 h-3 text-pink-400 fill-current" />

@@ -24,7 +24,11 @@
       "Bash(cat:*)",
       "Bash(python:*)",
       "Bash(node:*)",
-      "Bash(npm info:*)"
+      "Bash(npm info:*)",
+      "Bash(npm update:*)",
+      "Bash(npm ls:*)",
+      "Bash(npm run lint)",
+      "Bash(npx next lint)"
     ]
   }
 }
