@@ -1,4 +1,4 @@
-import { google } from '@ai-sdk/google';
+import { openai } from '@ai-sdk/openai';
 import { convertToCoreMessages, streamText } from 'ai';
 import { getSystemPrompt, aiConfig } from '@/config';
 
@@ -15,7 +15,7 @@ export async function POST(req: Request) {
       }));
 
     // Use model from configuration
-    const model = google(aiConfig.model.name);
+    const model = openai(aiConfig.model.name);
 
     const result = await streamText({
       model,

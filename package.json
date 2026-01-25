@@ -9,8 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@ai-sdk/google": "^1.2.22",
-    "@google/generative-ai": "^0.24.1",
+    "@ai-sdk/openai": "^1.0.0",
     "@notionhq/client": "^2.3.0",
     "@radix-ui/react-dialog": "^1.0.5",
     "@radix-ui/react-scroll-area": "^1.0.5",

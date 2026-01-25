@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This is a **reusable template** for creating AI-powered Q&A assistants for events. Built with Next.js 16, React, and TypeScript, featuring a full-screen chat interface powered by Google Gemini 2.5 Flash and a community-driven FAQ voting system backed by Notion database.
+This is a **reusable template** for creating AI-powered Q&A assistants for events. Built with Next.js 16, React, and TypeScript, featuring a full-screen chat interface powered by OpenAI GPT-4o-mini and a community-driven FAQ voting system backed by Notion database.
 
 **Template Documentation**: See **[docs/TEMPLATE-SETUP.md](docs/TEMPLATE-SETUP.md)** for quick start guide.
 
@@ -15,7 +15,7 @@ This is a **reusable template** for creating AI-powered Q&A assistants for event
 - **Styling**: Tailwind CSS v3
 - **UI Components**: shadcn/ui (customized) + Radix UI primitives
 - **Animation**: Framer Motion v12
-- **AI**: Google Gemini 2.5 Flash via Vercel AI SDK v4.3
+- **AI**: OpenAI GPT-4o-mini via Vercel AI SDK v4.3
 - **Backend**: Notion API (@notionhq/client ^2.3.0) for FAQ voting & statistics
 
 ## Configuration System
@@ -108,7 +108,7 @@ className="border-white/30 text-white/80 bg-transparent hover:bg-white/20"
 ```
 ├── app/                      # Next.js App Router
 │   ├── api/
-│   │   ├── chat/            # AI chat streaming endpoint (Gemini)
+│   │   ├── chat/            # AI chat streaming endpoint (OpenAI)
 │   │   └── faq/             # FAQ endpoints
 │   │       ├── questions/   # GET - Fetch FAQ with stats
 │   │       ├── vote/        # POST - Record up/down votes
@@ -160,7 +160,7 @@ className="border-white/30 text-white/80 bg-transparent hover:bg-white/20"
 - `components/ui/button.tsx` - Button variants including stagger styles
 
 ### AI Chat
-- `app/api/chat/route.ts` - Gemini streaming endpoint (uses `aiConfig`)
+- `app/api/chat/route.ts` - OpenAI streaming endpoint (uses `aiConfig`)
 - `components/chat/embedded-chat.tsx` - Full-screen chat interface
 - `components/chatbot/chat-message.tsx` - Markdown message renderer
 
@@ -183,7 +183,7 @@ Required in `.env.local`:
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `GOOGLE_GENERATIVE_AI_API_KEY` | Google Gemini API key | Yes |
+| `OPENAI_API_KEY` | OpenAI API key | Yes |
 | `NOTION_TOKEN` | Notion Integration token | Yes (for FAQ) |
 | `NOTION_FAQ_DATABASE_ID` | Notion FAQ database ID | Yes (for FAQ) |
 
@@ -195,7 +195,7 @@ Required in `.env.local`:
 
 ```
 Chat Flow:
-User Input → EmbeddedChat → /api/chat → Gemini 2.5 Flash → Streaming Response
+User Input → EmbeddedChat → /api/chat → OpenAI GPT-4o-mini → Streaming Response
                                 ↓
                          config/ai.config.ts (system prompt)
 

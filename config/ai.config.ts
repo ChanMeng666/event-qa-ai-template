@@ -95,9 +95,9 @@ const additionalContext = `
 // ============================================================================
 
 export const aiConfig: AIConfig = {
-  // Model settings (Google Gemini)
+  // Model settings (OpenAI)
   model: {
-    name: 'gemini-2.5-flash',
+    name: 'gpt-4o-mini-2024-07-18',
     temperature: 0.7,
     maxTokens: 800,
   },
