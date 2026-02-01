@@ -1,28 +1,35 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
-import { EmbeddedChat } from '@/components/chat/embedded-chat';
-import { FAQList } from '@/components/faq/faq-list';
-import { FloatingInfoButton } from '@/components/layout/floating-info-button';
-import { useFAQVoting } from '@/hooks/use-faq-voting';
-import { useScrollDirection } from '@/hooks/use-scroll-direction';
-import { EnhancedPresetQuestion } from '@/components/chatbot/types';
-import {
-  MessageCircle,
-  HelpCircle,
-  Menu,
-  X,
-  Quote
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { ArrowLeft, Quote } from 'lucide-react';
+import { useFAQVoting } from '@/hooks/use-faq-voting';
+import { FAQGrid } from '@/components/faq/faq-grid';
+import { ProjectInfoSection } from '@/components/layout/project-info-section';
+import { ChatDialog } from '@/components/chat/chat-dialog';
+import { cn } from '@/lib/utils';
 import { brandingConfig, siteConfig } from '@/config';
 
+// Dynamic imports for Three.js components (client-side only)
+const CosmicBackground = dynamic(
+  () => import('@/components/three/cosmic-background').then(mod => mod.CosmicBackground),
+  { ssr: false }
+);
+
+const SpriteChat = dynamic(
+  () => import('@/components/chat/sprite-chat').then(mod => mod.SpriteChat),
+  { ssr: false }
+);
+
+const MouseTrail = dynamic(
+  () => import('@/components/effects/mouse-trail').then(mod => mod.MouseTrail),
+  { ssr: false }
+);
+
 export default function ChatPage() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState<'chat' | 'faq'>('chat');
-  const [chatHandler, setChatHandler] = useState<((q: EnhancedPresetQuestion) => void) | null>(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   const {
     isLoading,
@@ -31,20 +38,13 @@ export default function ChatPage() {
     incrementViews
   } = useFAQVoting();
 
-  // 智能导航栏控制
-  const { isHeaderVisible, isAtTop } = useScrollDirection({
-    threshold: 80,
-    debounceMs: 10
-  });
-
-  // Register chat handler when chat component is ready
-  const handleChatHandlerReady = useCallback((handler: (q: EnhancedPresetQuestion) => void) => {
-    setChatHandler(() => handler);
+  const handleSpriteClick = useCallback(() => {
+    setIsChatOpen(true);
   }, []);
 
   if (isLoading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-purple-500/5">
+      <div className="min-h-screen flex items-center justify-center bg-[#050505]">
         <div className="text-center">
           <div className="flex items-center justify-center mx-auto mb-4 animate-pulse">
             <img
@@ -53,157 +53,106 @@ export default function ChatPage() {
               className="w-16 h-16 object-contain"
             />
           </div>
-          <p className="text-muted-foreground">Loading AI Assistant...</p>
+          <p className="text-white/60">Loading AI Assistant...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen bg-background">
-      {/* Smart Navigation Header */}
-      <header className={`
-        fixed top-0 left-0 right-0 z-50
-        bg-card/95 backdrop-blur-sm border-b border-border
-        transition-transform duration-300 ease-in-out
-        ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'}
-        ${isAtTop ? 'shadow-sm' : 'shadow-stagger'}
-      `}>
-        <div className="px-4 py-3">
-          <div className="flex items-center justify-between">
-          {/* Logo and Title */}
-          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+    <div className="min-h-screen bg-[#050505] relative overflow-x-hidden">
+      {/* Dynamic Cosmic Background */}
+      <CosmicBackground className="fixed inset-0 z-0" />
+      
+      {/* Mouse Trail Effect */}
+      <MouseTrail />
+      
+      {/* Noise Overlay */}
+      <div className="fixed inset-0 z-[1] pointer-events-none opacity-[0.03]"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+        }}
+      />
+      
+      {/* Back Button - Glass Panel Style */}
+      <Link
+        href="/"
+        className={cn(
+          "fixed top-6 left-6 z-50",
+          "px-5 py-2.5 rounded-full",
+          "bg-black/30 backdrop-blur-[20px]",
+          "border border-white/10",
+          "text-white text-xs font-light tracking-wider uppercase",
+          "hover:bg-white/10 hover:border-white hover:shadow-[0_0_20px_rgba(255,255,255,0.2)]",
+          "transition-all duration-300",
+          "flex items-center gap-2"
+        )}
+      >
+        <ArrowLeft size={14} />
+        Back to Home
+      </Link>
+      
+      {/* Testimonials Link */}
+      <Link
+        href="/testimonials"
+        className={cn(
+          "fixed top-6 left-44 z-50",
+          "px-5 py-2.5 rounded-full",
+          "bg-black/30 backdrop-blur-[20px]",
+          "border border-white/10",
+          "text-white text-xs font-light tracking-wider uppercase",
+          "hover:bg-white/10 hover:border-white hover:shadow-[0_0_20px_rgba(255,255,255,0.2)]",
+          "transition-all duration-300",
+          "flex items-center gap-2"
+        )}
+      >
+        <Quote size={14} />
+        Testimonials
+      </Link>
+      
+      {/* Interactive Sprite - rendered via Portal to body for proper fixed positioning */}
+      <SpriteChat onSpriteClick={handleSpriteClick} />
+      
+      {/* Chat Dialog - z-index 10001 to be above sprite */}
+      <ChatDialog 
+        isOpen={isChatOpen} 
+        onClose={() => setIsChatOpen(false)} 
+      />
+      
+      {/* Main Content */}
+      <main className="relative z-10 pt-24">
+        {/* Page Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-center py-12"
+        >
+          <div className="flex items-center justify-center gap-4 mb-6">
             <img
               src={brandingConfig.logos.main}
               alt={siteConfig.name}
-              className="w-10 h-10 object-contain"
+              className="w-16 h-16 object-contain"
             />
-            <div>
-              <h1 className="text-lg font-semibold text-foreground">
-                AI Assistant
-              </h1>
-              <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground">
-                <span>Powered by Gemini</span>
-              </div>
-            </div>
-          </Link>
-
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-2">
-            <Link href="/testimonials">
-              <Button variant="stagger" size="sm" className="gap-2">
-                <Quote size={16} />
-                Testimonials
-              </Button>
-            </Link>
           </div>
-
-          {/* Mobile Menu Button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="lg:hidden"
-          >
-            {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-          </Button>
-        </div>
-
-        {/* Mobile Navigation */}
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden mt-3 pt-3 border-t border-border"
-          >
-            <div className="flex flex-col gap-2">
-              <div className="flex gap-2">
-                <Button
-                  variant={activeTab === 'chat' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => {
-                    setActiveTab('chat');
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="flex-1 text-sm"
-                >
-                  <MessageCircle size={16} className="mr-2" />
-                  AI Chat
-                </Button>
-                <Button
-                  variant={activeTab === 'faq' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => {
-                    setActiveTab('faq');
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="flex-1 text-sm"
-                >
-                  <HelpCircle size={16} className="mr-2" />
-                  FAQ ({enhancedQuestions.length})
-                </Button>
-              </div>
-              <Link href="/testimonials" className="w-full">
-                <Button variant="stagger" size="sm" className="w-full gap-2">
-                  <Quote size={16} />
-                  Testimonials
-                </Button>
-              </Link>
-            </div>
-          </motion.div>
-        )}
-        </div>
-      </header>
-
-      {/* Main Content - Full height layout without margins */}
-      <main className="h-full pt-16">
-        <div className="h-full">
-          {/* Desktop Layout - No gaps, tight to edges */}
-          <div className="hidden lg:flex h-full">
-            {/* Chat Area - 70% with Full Height */}
-            <div className="flex-1 lg:w-[70%]">
-              <div className="h-full bg-card border-r border-border">
-                <EmbeddedChat onHandlerReady={handleChatHandlerReady} />
-              </div>
-            </div>
-
-            {/* FAQ Sidebar - 30% with Full Height */}
-            <div className="lg:w-[30%]">
-              <div className="h-full bg-card">
-                <FAQList
-                  questions={enhancedQuestions}
-                  onVote={voteOnQuestion}
-                  onView={incrementViews}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile Layout - Full screen */}
-          <div className="lg:hidden h-full">
-            <div className="h-full bg-card relative">
-              {activeTab === 'chat' && (
-                <div className="h-full">
-                  <EmbeddedChat onHandlerReady={handleChatHandlerReady} />
-                </div>
-              )}
-              {activeTab === 'faq' && (
-                <div className="h-full">
-                  <FAQList
-                    questions={enhancedQuestions}
-                    onVote={voteOnQuestion}
-                    onView={incrementViews}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+          <h1 className="text-5xl font-bold text-white mb-4 tracking-tight">
+            AI Hackathon Assistant
+          </h1>
+          <p className="text-white/60 text-lg max-w-2xl mx-auto">
+            Your AI-powered guide to {siteConfig.name}. Click the sprite in the top-right corner to chat with me!
+          </p>
+        </motion.div>
+        
+        {/* FAQ Section */}
+        <FAQGrid
+          questions={enhancedQuestions}
+          onVote={voteOnQuestion}
+          onView={incrementViews}
+        />
+        
+        {/* Project Information Section */}
+        <ProjectInfoSection />
       </main>
-
-      {/* Floating Info Button */}
-      <FloatingInfoButton />
     </div>
   );
 }

@@ -1,11 +1,23 @@
 'use client';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowRight, Calendar, MapPin, ExternalLink, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { siteConfig, brandingConfig } from '@/config';
+
+// Dynamic imports for Three.js components (client-side only)
+const CosmicBackground = dynamic(
+  () => import('@/components/three/cosmic-background').then(mod => mod.CosmicBackground),
+  { ssr: false }
+);
+
+const ParticleSphere = dynamic(
+  () => import('@/components/three/particle-sphere').then(mod => mod.ParticleSphere),
+  { ssr: false }
+);
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -31,42 +43,58 @@ export default function WelcomePage() {
   const [showMapModal, setShowMapModal] = useState(false);
 
   return (
-    <div className="min-h-screen bg-primary flex flex-col items-center justify-center p-4 sm:p-8">
+    <div className="min-h-screen bg-primary relative overflow-hidden">
+      {/* Dynamic Cosmic Background */}
+      <CosmicBackground className="fixed inset-0 z-0" />
+      
+      {/* Main Content */}
+      <div className="relative z-10 min-h-screen flex flex-col items-center justify-center p-4 sm:p-8">
       <motion.div
-        className="w-full max-w-2xl"
+        className="w-full max-w-2xl lg:max-w-4xl"
         initial="hidden"
         animate="visible"
         variants={containerVariants}
       >
-        {/* Logo Card */}
+        {/* Hero Section with Logo and Particle Sphere */}
         <motion.div variants={itemVariants} className="mb-8">
-          <div className={cn(
-            "border-2 border-white/20 bg-white/10 backdrop-blur-sm p-8",
-            "shadow-[0px_8px_0px_4px_rgba(255,255,255,0.15)]"
-          )}>
-            <img
-              src={brandingConfig.logos.full}
-              alt={siteConfig.name}
-              className="max-h-16 sm:max-h-20 w-auto object-contain mx-auto"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.style.display = 'none';
-              }}
-            />
+          <div className="flex flex-col lg:flex-row items-center gap-6">
+            {/* Logo Card */}
+            <div className={cn(
+              "flex-1 w-full border-2 border-white/20 bg-white/10 backdrop-blur-sm p-8",
+              "shadow-[0px_8px_0px_4px_rgba(255,255,255,0.15)]"
+            )}>
+              <img
+                src={brandingConfig.logos.full}
+                alt={siteConfig.name}
+                className="max-h-16 sm:max-h-20 w-auto object-contain mx-auto"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                }}
+              />
 
-            {/* Event Info */}
-            <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6 mt-6 text-sm text-white/80">
-              <div className="flex items-center justify-center gap-2">
-                <Calendar size={16} />
-                <span>{siteConfig.dates.displayFormat}</span>
+              {/* Event Info */}
+              <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6 mt-6 text-sm text-white/80">
+                <div className="flex items-center justify-center gap-2">
+                  <Calendar size={16} />
+                  <span>{siteConfig.dates.displayFormat}</span>
+                </div>
+                <button
+                  onClick={() => setShowMapModal(true)}
+                  className="flex items-center justify-center gap-2 hover:text-white transition-colors cursor-pointer"
+                >
+                  <MapPin size={16} />
+                  <span className="underline underline-offset-2">{siteConfig.venue.name}</span>
+                </button>
               </div>
-              <button
-                onClick={() => setShowMapModal(true)}
-                className="flex items-center justify-center gap-2 hover:text-white transition-colors cursor-pointer"
-              >
-                <MapPin size={16} />
-                <span className="underline underline-offset-2">{siteConfig.venue.name}</span>
-              </button>
+            </div>
+
+            {/* Interactive Particle Sphere - Hidden on mobile */}
+            <div className="hidden lg:block w-[280px] h-[280px] flex-shrink-0">
+              <ParticleSphere 
+                className="w-full h-full cursor-pointer"
+                greeting="WELCOME TO AI HACKATHON!"
+              />
             </div>
           </div>
         </motion.div>
@@ -149,6 +177,7 @@ export default function WelcomePage() {
           </motion.div>
         )}
       </motion.div>
+      </div>
 
       {/* Map Modal */}
       <AnimatePresence>

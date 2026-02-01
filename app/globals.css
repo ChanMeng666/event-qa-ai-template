@@ -5,11 +5,15 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Performance optimizations */
-* {
+/* Performance optimizations - exclude html/body to preserve fixed positioning */
+*:not(html):not(body) {
   /* Hardware acceleration for smooth animations */
   backface-visibility: hidden;
-  transform: translateZ(0);
+}
+
+/* Ensure html and body don't have transforms that break fixed positioning */
+html, body {
+  transform: none !important;
 }
 
 /* Smooth scrolling */
