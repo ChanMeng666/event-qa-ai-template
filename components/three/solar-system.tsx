@@ -2,6 +2,10 @@
 
 import React, { useEffect, useRef } from 'react'
 import * as THREE from 'three'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
 import { cn } from '@/lib/utils'
 
 interface SolarSystemProps {
@@ -9,14 +13,74 @@ interface SolarSystemProps {
   size?: number
 }
 
+// Configuration - matching space.html exactly
+const CONFIG = {
+  bloomStrength: 1.8,
+  bloomRadius: 0.5,
+  bloomThreshold: 0.2,
+  ambientLight: 0.05,
+  starCount: 6000,
+  autoRotateSpeed: 0.3
+}
+
+// Planet Data - matching space.html exactly
+const planetData = [
+  {
+    name: 'MUSE AURORA',
+    cnName: '缪斯极光',
+    color: 0x4169E1,
+    atmosphereColor: 0x00ffff,
+    type: 'Terrestrial',
+    orbitRadius: 55,
+    size: 4.5,
+    speed: 0.003,
+    description: '汇聚宇宙间的灵感碎片，这里是艺术家与梦想家的终极归宿。'
+  },
+  {
+    name: 'LUMINARIA',
+    cnName: '流光书海',
+    color: 0xD3D3D3,
+    atmosphereColor: 0xffffff,
+    type: 'Satellite',
+    orbitRadius: 75,
+    size: 2.2,
+    speed: 0.005,
+    description: '漂浮在静谧虚空中的智慧结晶，表面刻满了宇宙真理的符文。'
+  },
+  {
+    name: 'NEON FORGE',
+    cnName: '霓虹锻界',
+    color: 0xFF4500,
+    atmosphereColor: 0xff3300,
+    type: 'Industrial',
+    orbitRadius: 100,
+    size: 4,
+    speed: 0.002,
+    description: '闪耀着赛博朋克光芒的未来世界。'
+  },
+  {
+    name: 'WHISPER RING',
+    cnName: '风语环廊',
+    color: 0xDAA520,
+    atmosphereColor: 0xffcc00,
+    type: 'Gas Giant',
+    orbitRadius: 140,
+    size: 9,
+    speed: 0.001,
+    description: '巨大的气态行星，表面风暴涌动着全宇宙的信息流。'
+  }
+]
+
 /**
  * Solar System Component
- * A Three.js based solar system visualization with orbiting planets,
- * sun with shader animation, and bloom effects
+ * Exact replication of space.html Three.js solar system
+ * with bloom post-processing, OrbitControls, and interactive planets
  */
 export function SolarSystem({ className = '', size = 400 }: SolarSystemProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null)
+  const composerRef = useRef<EffectComposer | null>(null)
+  const controlsRef = useRef<OrbitControls | null>(null)
   
   useEffect(() => {
     if (!containerRef.current) return
@@ -25,23 +89,15 @@ export function SolarSystem({ className = '', size = 400 }: SolarSystemProps) {
     const width = size
     const height = size
     
-    // Configuration
-    const CONFIG = {
-      ambientLight: 0.05,
-      starCount: 2000,
-      autoRotateSpeed: 0.3
-    }
-    
-    // Scene Setup
+    // ========== Scene Setup ==========
     const scene = new THREE.Scene()
-    scene.fog = new THREE.FogExp2(0x000000, 0.003)
+    scene.fog = new THREE.FogExp2(0x000000, 0.0015)
     
-    // Camera Setup
+    // ========== Camera Setup ==========
     const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 2000)
-    camera.position.set(0, 60, 180)
-    camera.lookAt(0, 0, 0)
+    camera.position.set(0, 40, 180)
     
-    // Renderer Setup
+    // ========== Renderer Setup ==========
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
     renderer.setSize(width, height)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
@@ -49,63 +105,48 @@ export function SolarSystem({ className = '', size = 400 }: SolarSystemProps) {
     container.appendChild(renderer.domElement)
     rendererRef.current = renderer
     
-    // Lighting
+    // ========== Post-Processing (Bloom Effect) ==========
+    const renderScene = new RenderPass(scene, camera)
+    const bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(width, height),
+      1.5, 0.4, 0.85
+    )
+    bloomPass.threshold = CONFIG.bloomThreshold
+    bloomPass.strength = CONFIG.bloomStrength
+    bloomPass.radius = CONFIG.bloomRadius
+    
+    const composer = new EffectComposer(renderer)
+    composer.addPass(renderScene)
+    composer.addPass(bloomPass)
+    composerRef.current = composer
+    
+    // ========== OrbitControls ==========
+    const controls = new OrbitControls(camera, renderer.domElement)
+    controls.enableDamping = true
+    controls.dampingFactor = 0.05
+    controls.minDistance = 50
+    controls.maxDistance = 400
+    controls.autoRotate = true
+    controls.autoRotateSpeed = CONFIG.autoRotateSpeed
+    controlsRef.current = controls
+    
+    // ========== Lighting ==========
     const ambientLight = new THREE.AmbientLight(0x404040, CONFIG.ambientLight)
     scene.add(ambientLight)
     
     const sunLight = new THREE.PointLight(0xffffff, 1.5, 400)
     scene.add(sunLight)
     
-    // Planet Data
-    const planetData = [
-      {
-        name: 'Planet 1',
-        color: 0x4169E1,
-        atmosphereColor: 0x00ffff,
-        orbitRadius: 45,
-        size: 4,
-        speed: 0.004,
-        angle: Math.random() * Math.PI * 2
-      },
-      {
-        name: 'Planet 2',
-        color: 0xD3D3D3,
-        atmosphereColor: 0xffffff,
-        orbitRadius: 65,
-        size: 2.5,
-        speed: 0.006,
-        angle: Math.random() * Math.PI * 2
-      },
-      {
-        name: 'Planet 3',
-        color: 0xFF4500,
-        atmosphereColor: 0xff3300,
-        orbitRadius: 85,
-        size: 3.5,
-        speed: 0.003,
-        angle: Math.random() * Math.PI * 2
-      },
-      {
-        name: 'Planet 4',
-        color: 0xDAA520,
-        atmosphereColor: 0xffcc00,
-        orbitRadius: 115,
-        size: 7,
-        speed: 0.0015,
-        angle: Math.random() * Math.PI * 2
-      }
-    ]
-    
-    // Create Starfield
+    // ========== Create Starfield ==========
     const createStarfield = () => {
       const geometry = new THREE.BufferGeometry()
       const positions: number[] = []
       const colors: number[] = []
       
       for (let i = 0; i < CONFIG.starCount; i++) {
-        const x = (Math.random() - 0.5) * 1500
-        const y = (Math.random() - 0.5) * 1500
-        const z = (Math.random() - 0.5) * 1500
+        const x = (Math.random() - 0.5) * 2000
+        const y = (Math.random() - 0.5) * 2000
+        const z = (Math.random() - 0.5) * 2000
         positions.push(x, y, z)
         
         const colorType = Math.random()
@@ -121,7 +162,7 @@ export function SolarSystem({ className = '', size = 400 }: SolarSystemProps) {
       geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
       
       const material = new THREE.PointsMaterial({
-        size: 1.2,
+        size: 1.5,
         vertexColors: true,
         transparent: true,
         opacity: 0.8,
@@ -132,11 +173,13 @@ export function SolarSystem({ className = '', size = 400 }: SolarSystemProps) {
       scene.add(starField)
     }
     
-    // Create Sun with Shader
+    // ========== Create Sun with Shader ==========
     let sunMesh: THREE.Mesh
+    
     const createSun = () => {
-      const geometry = new THREE.SphereGeometry(10, 64, 64)
+      const geometry = new THREE.SphereGeometry(12, 64, 64)
       
+      // Custom shader for sun surface turbulence
       const material = new THREE.ShaderMaterial({
         uniforms: {
           time: { value: 0 },
@@ -174,8 +217,8 @@ export function SolarSystem({ className = '', size = 400 }: SolarSystemProps) {
       
       sunMesh = new THREE.Mesh(geometry, material)
       
-      // Sun glow
-      const glowGeo = new THREE.SphereGeometry(12, 32, 32)
+      // Sun outer glow (Bloom will amplify this)
+      const glowGeo = new THREE.SphereGeometry(13.5, 32, 32)
       const glowMat = new THREE.MeshBasicMaterial({
         color: 0xff4500,
         transparent: true,
@@ -184,20 +227,10 @@ export function SolarSystem({ className = '', size = 400 }: SolarSystemProps) {
       const sunGlow = new THREE.Mesh(glowGeo, glowMat)
       sunMesh.add(sunGlow)
       
-      // Outer glow
-      const outerGlowGeo = new THREE.SphereGeometry(14, 32, 32)
-      const outerGlowMat = new THREE.MeshBasicMaterial({
-        color: 0xffaa00,
-        transparent: true,
-        opacity: 0.08
-      })
-      const outerGlow = new THREE.Mesh(outerGlowGeo, outerGlowMat)
-      sunMesh.add(outerGlow)
-      
       scene.add(sunMesh)
     }
     
-    // Create Atmosphere Material (Fresnel shader)
+    // ========== Fresnel Atmosphere Shader ==========
     const getAtmosphereMaterial = (color: number) => {
       return new THREE.ShaderMaterial({
         uniforms: {
@@ -232,10 +265,23 @@ export function SolarSystem({ className = '', size = 400 }: SolarSystemProps) {
       })
     }
     
-    // Create Planets
+    // ========== Create Planets ==========
+    interface PlanetUserData {
+      name: string
+      cnName: string
+      color: number
+      atmosphereColor: number
+      type: string
+      orbitRadius: number
+      size: number
+      speed: number
+      description: string
+      angle: number
+    }
+    
     interface PlanetGroup extends THREE.Group {
       atmosphere?: THREE.Mesh
-      userData: typeof planetData[0]
+      userData: PlanetUserData
     }
     
     const planets: PlanetGroup[] = []
@@ -243,6 +289,7 @@ export function SolarSystem({ className = '', size = 400 }: SolarSystemProps) {
     const createPlanets = () => {
       planetData.forEach(data => {
         const planetGroup = new THREE.Group() as PlanetGroup
+        const angle = Math.random() * Math.PI * 2
         
         // Planet body
         const geometry = new THREE.SphereGeometry(data.size, 64, 64)
@@ -250,13 +297,14 @@ export function SolarSystem({ className = '', size = 400 }: SolarSystemProps) {
           color: data.color,
           roughness: 0.6,
           metalness: 0.1,
-          reflectivity: 0.2
+          reflectivity: 0.2,
+          flatShading: false
         })
         
         const planet = new THREE.Mesh(geometry, material)
         planetGroup.add(planet)
         
-        // Atmosphere glow
+        // Atmosphere glow (Fresnel)
         const atmoGeo = new THREE.SphereGeometry(data.size * 1.2, 64, 64)
         const atmoMat = getAtmosphereMaterial(data.atmosphereColor)
         const atmosphere = new THREE.Mesh(atmoGeo, atmoMat)
@@ -282,32 +330,27 @@ export function SolarSystem({ className = '', size = 400 }: SolarSystemProps) {
         const orbit = new THREE.Line(orbitGeo, orbitMat)
         scene.add(orbit)
         
-        planetGroup.userData = data
+        // Store data
+        planetGroup.userData = { ...data, angle }
+        
         scene.add(planetGroup)
         planets.push(planetGroup)
       })
     }
     
-    // Initialize scene objects
+    // ========== Initialize Scene Objects ==========
     createStarfield()
     createSun()
     createPlanets()
     
-    // Animation
+    // ========== Animation Loop ==========
     let time = 0
-    let rotationY = 0
     let animationId: number
     
     const animate = () => {
       animationId = requestAnimationFrame(animate)
       
       time += 0.005
-      rotationY += 0.001
-      
-      // Rotate camera around scene
-      camera.position.x = Math.sin(rotationY) * 180
-      camera.position.z = Math.cos(rotationY) * 180
-      camera.lookAt(0, 0, 0)
       
       // Sun animation
       if (sunMesh && sunMesh.material instanceof THREE.ShaderMaterial) {
@@ -336,14 +379,29 @@ export function SolarSystem({ className = '', size = 400 }: SolarSystemProps) {
         }
       })
       
-      renderer.render(scene, camera)
+      // Update controls
+      controls.update()
+      
+      // Render with post-processing (using composer instead of renderer)
+      composer.render()
     }
     
     animate()
     
-    // Cleanup
+    // ========== Handle Resize ==========
+    const handleResize = () => {
+      camera.aspect = width / height
+      camera.updateProjectionMatrix()
+      renderer.setSize(width, height)
+      composer.setSize(width, height)
+    }
+    
+    // ========== Cleanup ==========
     return () => {
       cancelAnimationFrame(animationId)
+      
+      // Dispose controls
+      controls.dispose()
       
       // Dispose of all geometries and materials
       scene.traverse((object) => {
@@ -355,8 +413,24 @@ export function SolarSystem({ className = '', size = 400 }: SolarSystemProps) {
             object.material.forEach(m => m.dispose())
           }
         }
+        if (object instanceof THREE.Line) {
+          object.geometry.dispose()
+          if (object.material instanceof THREE.Material) {
+            object.material.dispose()
+          }
+        }
+        if (object instanceof THREE.Points) {
+          object.geometry.dispose()
+          if (object.material instanceof THREE.Material) {
+            object.material.dispose()
+          }
+        }
       })
       
+      // Dispose composer
+      composer.dispose()
+      
+      // Dispose renderer
       renderer.dispose()
       
       if (container.contains(renderer.domElement)) {
@@ -368,11 +442,10 @@ export function SolarSystem({ className = '', size = 400 }: SolarSystemProps) {
   return (
     <div 
       ref={containerRef}
-      className={cn("relative", className)}
+      className={cn("relative cursor-grab active:cursor-grabbing", className)}
       style={{ 
         width: size, 
-        height: size,
-        filter: 'drop-shadow(0 0 30px rgba(255, 150, 50, 0.2))'
+        height: size
       }}
     />
   )
