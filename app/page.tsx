@@ -16,8 +16,8 @@ const CosmicBackground = dynamic(
   { ssr: false }
 );
 
-const SolarSystem = dynamic(
-  () => import('@/components/three/solar-system').then(mod => mod.SolarSystem),
+const ParticleSphere = dynamic(
+  () => import('@/components/three/particle-sphere').then(mod => mod.ParticleSphere),
   { ssr: false }
 );
 
@@ -172,19 +172,25 @@ export default function WelcomePage() {
             </motion.div>
           </motion.div>
           
-          {/* Right Column - Solar System Visual */}
+          {/* Right Column - Particle Sphere Visual */}
           <motion.div 
             className="order-1 lg:order-2 flex items-center justify-center"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.3, ease: [0.23, 1, 0.32, 1] }}
           >
-            <div className="hidden lg:block">
-              <SolarSystem size={450} />
+            <div className="hidden lg:block w-[450px] h-[450px]">
+              <ParticleSphere 
+                className="w-full h-full" 
+                greeting="WELCOME TO AI HACKATHON!"
+              />
             </div>
             {/* Mobile: Show smaller version */}
-            <div className="lg:hidden">
-              <SolarSystem size={320} />
+            <div className="lg:hidden w-[320px] h-[320px]">
+              <ParticleSphere 
+                className="w-full h-full" 
+                greeting="WELCOME!"
+              />
             </div>
           </motion.div>
         </div>
