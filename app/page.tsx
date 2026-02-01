@@ -8,12 +8,16 @@ import { ArrowRight, Calendar, MapPin, ExternalLink, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { siteConfig, brandingConfig } from '@/config';
 import { NoiseOverlay } from '@/components/effects/noise-overlay';
-import { QuantumOrb } from '@/components/three/quantum-orb';
 import { Button } from '@/components/ui/button';
 
 // Dynamic imports for Three.js components (client-side only)
 const CosmicBackground = dynamic(
   () => import('@/components/three/cosmic-background').then(mod => mod.CosmicBackground),
+  { ssr: false }
+);
+
+const SolarSystem = dynamic(
+  () => import('@/components/three/solar-system').then(mod => mod.SolarSystem),
   { ssr: false }
 );
 
@@ -168,7 +172,7 @@ export default function WelcomePage() {
             </motion.div>
           </motion.div>
           
-          {/* Right Column - Quantum Orb Visual */}
+          {/* Right Column - Solar System Visual */}
           <motion.div 
             className="order-1 lg:order-2 flex items-center justify-center"
             initial={{ opacity: 0, scale: 0.8 }}
@@ -176,11 +180,11 @@ export default function WelcomePage() {
             transition={{ duration: 0.8, delay: 0.3, ease: [0.23, 1, 0.32, 1] }}
           >
             <div className="hidden lg:block">
-              <QuantumOrb size={380} />
+              <SolarSystem size={450} />
             </div>
             {/* Mobile: Show smaller version */}
             <div className="lg:hidden">
-              <QuantumOrb size={280} />
+              <SolarSystem size={320} />
             </div>
           </motion.div>
         </div>
