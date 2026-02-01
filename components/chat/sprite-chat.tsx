@@ -423,7 +423,7 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
     <div 
       ref={containerRef}
       id="sprite-container"
-      className={cn("cursor-pointer", className)}
+      className={cn("cursor-pointer group", className)}
       style={{
         position: 'fixed',
         top: '20px',
@@ -432,15 +432,23 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
         height: 180,
         zIndex: 10000,
         pointerEvents: 'auto',
-        filter: 'drop-shadow(0 0 20px rgba(255, 255, 255, 0.2))',
+        filter: 'drop-shadow(0 0 30px rgba(255, 255, 255, 0.15))',
       }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onClick={handleClick}
     >
-      {/* Greeting bubble */}
+      {/* Ambient glow ring */}
+      <div 
+        className="absolute inset-0 rounded-full opacity-30 group-hover:opacity-60 transition-opacity duration-500"
+        style={{
+          background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)',
+        }}
+      />
+      
+      {/* Greeting bubble - Sci-Fi style */}
       <div
-        className="sprite-greeting"
+        className="sprite-greeting font-display"
         style={{
           position: 'absolute',
           top: '50%',
@@ -448,25 +456,33 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
           transform: showGreeting 
             ? 'translateY(-50%) scale(1) translateX(0)' 
             : 'translateY(-50%) scale(0.8) translateX(20px)',
-          background: 'rgba(255, 255, 255, 0.05)',
-          backdropFilter: 'blur(15px)',
-          WebkitBackdropFilter: 'blur(15px)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          padding: '10px 20px',
+          background: 'rgba(10, 10, 10, 0.8)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
+          padding: '12px 24px',
           borderRadius: '40px',
           color: '#ffffff',
-          fontSize: '0.875rem',
-          fontWeight: 600,
-          letterSpacing: '1px',
+          fontSize: '0.9rem',
+          fontWeight: 400,
+          letterSpacing: '2px',
+          textTransform: 'uppercase',
           pointerEvents: 'none',
           opacity: showGreeting ? 1 : 0,
           transition: 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
           zIndex: 10001,
           whiteSpace: 'nowrap',
-          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)',
+          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 255, 255, 0.1)',
         }}
       >
         {greetingText}
+      </div>
+      
+      {/* Click hint on hover */}
+      <div 
+        className="absolute -bottom-2 left-1/2 -translate-x-1/2 font-display text-[0.6rem] tracking-[3px] uppercase text-white/0 group-hover:text-white/40 transition-all duration-300 whitespace-nowrap"
+      >
+        CLICK TO CHAT
       </div>
       
       {/* Three.js canvas container */}

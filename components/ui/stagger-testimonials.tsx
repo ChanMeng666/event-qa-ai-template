@@ -31,65 +31,54 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
     <div
       onClick={() => handleMove(position)}
       className={cn(
-        "absolute left-1/2 top-1/2 cursor-pointer border-2 p-8 transition-all duration-500 ease-in-out",
+        "absolute left-1/2 top-1/2 cursor-pointer border p-8 transition-all duration-500 ease-scifi-smooth backdrop-blur-[20px]",
         isCenter
-          ? "z-10 bg-primary text-primary-foreground border-primary"
-          : "z-0 bg-card text-card-foreground border-border hover:border-primary/50"
+          ? "z-10 bg-white/10 text-white border-white/30"
+          : "z-0 bg-white/5 text-white/80 border-white/10 hover:border-white/20"
       )}
       style={{
         width: cardSize,
         height: cardSize,
-        clipPath: `polygon(50px 0%, calc(100% - 50px) 0%, 100% 50px, 100% 100%, calc(100% - 50px) 100%, 50px 100%, 0 100%, 0 0)`,
         transform: `
           translate(-50%, -50%)
           translateX(${(cardSize / 1.5) * position}px)
           translateY(${isCenter ? -65 : position % 2 ? 15 : -15}px)
           rotate(${isCenter ? 0 : position % 2 ? 2.5 : -2.5}deg)
         `,
-        boxShadow: isCenter ? "0px 8px 0px 4px hsl(var(--border))" : "0px 0px 0px 0px transparent"
+        boxShadow: isCenter ? "0 0 30px rgba(255, 255, 255, 0.1)" : "0px 0px 0px 0px transparent"
       }}
     >
-      <span
-        className="absolute block origin-top-right rotate-45 bg-border"
-        style={{
-          right: -2,
-          top: 48,
-          width: SQRT_5000,
-          height: 2
-        }}
-      />
       <div className="flex items-start gap-4 mb-4">
         <img
           src={testimonial.avatarUrl}
           alt={testimonial.author}
-          className="h-14 w-12 bg-muted object-cover object-top"
-          style={{
-            boxShadow: "3px 3px 0px hsl(var(--background))"
-          }}
+          className="h-14 w-12 object-cover object-top border border-white/20"
         />
         <div>
           <span className={cn(
-            "inline-block px-2 py-0.5 text-xs font-medium rounded-full mb-1",
-            isCenter ? "bg-primary-foreground/20 text-primary-foreground" : getRoleBadgeColor(testimonial.role)
+            "inline-block px-3 py-1 text-[0.6rem] font-display font-medium tracking-[2px] uppercase mb-1",
+            isCenter 
+              ? "bg-white/20 text-white border border-white/30" 
+              : "bg-white/10 text-white/60 border border-white/10"
           )}>
             {getRoleDisplayName(testimonial.role)}
           </span>
         </div>
       </div>
       <h3 className={cn(
-        "text-base sm:text-lg font-medium leading-relaxed",
-        isCenter ? "text-primary-foreground" : "text-foreground"
+        "text-base sm:text-lg font-primary leading-relaxed",
+        isCenter ? "text-white" : "text-white/70"
       )}>
         "{testimonial.quote}"
       </h3>
       <div className={cn(
         "absolute bottom-8 left-8 right-8 mt-2",
-        isCenter ? "text-primary-foreground/80" : "text-muted-foreground"
+        isCenter ? "text-white/80" : "text-white/40"
       )}>
-        <p className="text-sm font-medium">
+        <p className="text-sm font-medium font-display tracking-wider">
           {testimonial.author}
         </p>
-        <p className="text-xs italic">
+        <p className="text-xs font-primary opacity-70">
           {testimonial.organization}
         </p>
       </div>
@@ -142,7 +131,7 @@ export const StaggerTestimonials: React.FC<StaggerTestimonialsProps> = ({
 
   return (
     <div
-      className={cn("relative w-full overflow-hidden bg-muted/30", className)}
+      className={cn("relative w-full overflow-hidden", className)}
       style={{ height: 600 }}
     >
       {testimonialsList.map((testimonial, index) => {
@@ -159,13 +148,14 @@ export const StaggerTestimonials: React.FC<StaggerTestimonialsProps> = ({
           />
         );
       })}
-      <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2">
+      <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-3">
         <button
           onClick={() => handleMove(-1)}
           className={cn(
-            "flex h-14 w-14 items-center justify-center text-2xl transition-colors",
-            "bg-background border-2 border-border shadow-stagger-sm hover:bg-primary hover:text-primary-foreground hover:border-primary",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            "flex h-12 w-12 items-center justify-center text-xl transition-all duration-300",
+            "bg-white/5 backdrop-blur-[20px] border border-white/20 text-white/60",
+            "hover:bg-white/15 hover:border-white/40 hover:text-white hover:shadow-glow-sm",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
           )}
           aria-label="Previous testimonial"
         >
@@ -174,9 +164,10 @@ export const StaggerTestimonials: React.FC<StaggerTestimonialsProps> = ({
         <button
           onClick={() => handleMove(1)}
           className={cn(
-            "flex h-14 w-14 items-center justify-center text-2xl transition-colors",
-            "bg-background border-2 border-border shadow-stagger-sm hover:bg-primary hover:text-primary-foreground hover:border-primary",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            "flex h-12 w-12 items-center justify-center text-xl transition-all duration-300",
+            "bg-white/5 backdrop-blur-[20px] border border-white/20 text-white/60",
+            "hover:bg-white/15 hover:border-white/40 hover:text-white hover:shadow-glow-sm",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
           )}
           aria-label="Next testimonial"
         >

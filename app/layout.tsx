@@ -1,9 +1,21 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter, Orbitron, Space_Grotesk } from 'next/font/google'
 import './globals.css'
 import { siteConfig, brandingConfig } from '@/config'
 
 const inter = Inter({ subsets: ['latin'] })
+
+const orbitron = Orbitron({ 
+  subsets: ['latin'],
+  variable: '--font-display',
+  weight: ['400', '700', '900']
+})
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  variable: '--font-primary',
+  weight: ['300', '500']
+})
 
 export const metadata: Metadata = {
   title: `${siteConfig.name} - ${siteConfig.tagline}`,
@@ -27,7 +39,7 @@ export default function RootLayout({
       <head>
         <link rel="icon" href={brandingConfig.logos.favicon} type="image/svg+xml" />
       </head>
-      <body className={`${inter.className} h-full antialiased`}>
+      <body className={`${inter.className} ${orbitron.variable} ${spaceGrotesk.variable} h-full antialiased`}>
         {children}
       </body>
     </html>

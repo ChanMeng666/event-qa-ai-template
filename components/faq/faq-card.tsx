@@ -46,37 +46,37 @@ export function FAQCard({ question, onVote, onView }: FAQCardProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      whileHover={{ y: -4 }}
+      whileHover={{ y: -5 }}
       className={cn(
-        "bg-white/95 text-gray-800 border-2 border-white/50",
-        "shadow-[0px_6px_0px_3px_rgba(255,255,255,0.3)]",
-        "hover:bg-white hover:border-white hover:shadow-[0px_8px_0px_4px_rgba(255,255,255,0.4)] transition-all duration-200 overflow-hidden group"
+        "bg-white/5 backdrop-blur-[20px] text-white border border-white/10",
+        "hover:bg-white/10 hover:border-white/30 hover:shadow-glow",
+        "transition-all duration-300 ease-scifi-smooth overflow-hidden group"
       )}
     >
       {/* Category Badge */}
       <div className="px-4 pt-4 pb-1">
-        <span className="inline-block px-2 py-1 bg-primary text-white text-xs font-medium rounded">
+        <span className="inline-block px-3 py-1 bg-white/10 border border-white/20 text-white/80 text-[0.65rem] font-display font-medium tracking-[2px] uppercase">
           {getCategoryDisplayName(question.category)}
         </span>
       </div>
 
       {/* Question Title */}
       <div className="px-4 pb-2">
-        <h3 className="font-semibold text-gray-900 text-sm leading-tight">
+        <h3 className="font-semibold text-white text-sm leading-tight group-hover:text-glow-sm transition-all">
           {question.question}
         </h3>
       </div>
 
       {/* Answer Preview */}
       <div className="px-4 pb-3">
-        <p className="text-gray-600 text-sm leading-relaxed">
+        <p className="text-white/60 text-sm leading-relaxed font-primary">
           {isExpanded ? question.answer : truncatedAnswer}
         </p>
 
         {question.answer.length > 120 && (
           <button
             onClick={handleExpand}
-            className="mt-2 text-primary text-xs font-medium hover:text-primary/80 transition-colors flex items-center gap-1"
+            className="mt-2 text-white/50 text-xs font-display tracking-[1px] uppercase hover:text-white transition-colors flex items-center gap-1"
           >
             {isExpanded ? 'Show less' : 'Read more'}
             {isExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
@@ -85,21 +85,21 @@ export function FAQCard({ question, onVote, onView }: FAQCardProps) {
       </div>
 
       {/* Stats and Actions */}
-      <div className="border-t border-gray-200 px-4 py-3 bg-gray-50/80">
+      <div className="border-t border-white/10 px-4 py-3 bg-white/[0.02]">
         {/* Stats Row */}
         <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3 text-xs text-gray-500">
+          <div className="flex items-center gap-3 text-xs text-white/40">
             <div className="flex items-center gap-1">
               <Eye size={12} />
               <span>{question.stats.totalViews}</span>
             </div>
-            <div className="text-gray-300">•</div>
-            <div>
+            <div className="text-white/20">|</div>
+            <div className="font-display tracking-wider uppercase text-[0.6rem]">
               Score: <span className={cn(
                 "font-medium",
-                question.stats.score > 0 && "text-green-600",
-                question.stats.score < 0 && "text-red-500",
-                question.stats.score === 0 && "text-gray-500"
+                question.stats.score > 0 && "text-green-400",
+                question.stats.score < 0 && "text-red-400",
+                question.stats.score === 0 && "text-white/50"
               )}>
                 {question.stats.score > 0 ? '+' : ''}{question.stats.score}
               </span>
@@ -116,10 +116,10 @@ export function FAQCard({ question, onVote, onView }: FAQCardProps) {
               size="sm"
               onClick={() => handleVote('up')}
               className={cn(
-                "h-8 px-2 text-xs",
+                "h-8 px-3 text-xs border border-transparent",
                 question.userVote === 'up'
-                  ? "text-green-600 bg-green-100 hover:bg-green-200"
-                  : "text-gray-500 hover:text-green-600 hover:bg-green-50"
+                  ? "text-green-400 bg-green-400/20 border-green-400/30"
+                  : "text-white/40 hover:text-green-400 hover:bg-green-400/10 hover:border-green-400/20"
               )}
             >
               <ThumbsUp size={12} className="mr-1" />
@@ -131,10 +131,10 @@ export function FAQCard({ question, onVote, onView }: FAQCardProps) {
               size="sm"
               onClick={() => handleVote('down')}
               className={cn(
-                "h-8 px-2 text-xs",
+                "h-8 px-3 text-xs border border-transparent",
                 question.userVote === 'down'
-                  ? "text-red-500 bg-red-100 hover:bg-red-200"
-                  : "text-gray-500 hover:text-red-500 hover:bg-red-50"
+                  ? "text-red-400 bg-red-400/20 border-red-400/30"
+                  : "text-white/40 hover:text-red-400 hover:bg-red-400/10 hover:border-red-400/20"
               )}
             >
               <ThumbsDown size={12} className="mr-1" />

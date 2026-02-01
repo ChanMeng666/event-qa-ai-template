@@ -124,26 +124,34 @@ export function ChatDialog({ isOpen, onClose }: ChatDialogProps) {
             {/* Gradient border effect */}
             <div className="absolute -inset-[2px] bg-gradient-to-br from-white/10 via-white/5 to-white/10 rounded-[32px_20px_32px_28px] -z-10 opacity-50" />
             
-            {/* Header */}
+            {/* Header - Sci-Fi Style */}
             <div className={cn(
               "flex-shrink-0 px-6 py-4",
               "border-b border-white/10",
-              "bg-transparent backdrop-blur-[20px]",
+              "bg-black/20 backdrop-blur-[20px]",
               "rounded-t-[32px_20px_0_0]"
             )}>
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-white font-semibold">
-                  <span>✨</span>
-                  <span>AI Assistant</span>
+                <div className="flex items-center gap-3">
+                  {/* Pulsing indicator */}
+                  <div className="relative">
+                    <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                    <div className="absolute inset-0 w-2 h-2 bg-white rounded-full animate-ping opacity-50" />
+                  </div>
+                  <span className="font-display text-xs font-bold tracking-[4px] uppercase text-white/80">
+                    AI ASSISTANT
+                  </span>
                 </div>
                 <button
                   onClick={onClose}
                   className={cn(
-                    "p-1.5 rounded transition-all",
-                    "text-white/60 hover:text-white hover:bg-white/15"
+                    "p-2 transition-all duration-300",
+                    "text-white/40 hover:text-white",
+                    "hover:bg-white/10 rounded-full",
+                    "border border-transparent hover:border-white/20"
                   )}
                 >
-                  <X size={18} />
+                  <X size={16} />
                 </button>
               </div>
             </div>
@@ -228,12 +236,12 @@ export function ChatDialog({ isOpen, onClose }: ChatDialogProps) {
                   value={input}
                   onChange={handleInputChange}
                   onKeyDown={handleKeyDown}
-                  placeholder="Ask a question..."
+                  placeholder="Ask me anything..."
                   rows={1}
                   className={cn(
                     "flex-1 bg-transparent border-none resize-none",
-                    "px-3 py-2 text-sm text-white placeholder:text-white/50",
-                    "focus:outline-none",
+                    "px-3 py-2 text-sm text-white placeholder:text-white/40 placeholder:font-display placeholder:tracking-wider placeholder:uppercase placeholder:text-xs",
+                    "focus:outline-none font-primary",
                     "min-h-[40px] max-h-[100px]"
                   )}
                   style={{ height: 'auto' }}
