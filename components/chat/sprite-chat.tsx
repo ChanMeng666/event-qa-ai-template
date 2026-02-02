@@ -1042,19 +1042,25 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
     // Apply penalties
     updateMood(config.moodPenalty, true);
     
-    // Apply affection penalty and show feedback
+    // Apply affection penalty and show combined feedback
+    const hasPenalty = config.affectionPenalty < 0 || config.moodPenalty < 0;
+    
     if (config.affectionPenalty < 0) {
       setAffection(prev => {
         const level = getAffectionLevel(prev.points);
         const newPoints = Math.max(level.minPoints, prev.points + config.affectionPenalty);
         return { ...prev, points: newPoints };
       });
-      
+    }
+    
+    if (hasPenalty) {
       // Show progress bar to display the change
       setShowProgressBar(true);
       
-      // Show floating text with negative points
-      setFloatingText(`${config.affectionPenalty}`);
+      // Show combined floating text: affection + mood penalties
+      const affectionText = config.affectionPenalty < 0 ? `${config.affectionPenalty}` : '';
+      const moodText = config.moodPenalty < 0 ? ` 😢${config.moodPenalty}` : '';
+      setFloatingText(`${affectionText}${moodText}`);
       setFloatingTextType('points');
       setShowFloatingText(true);
       setTimeout(() => setShowFloatingText(false), 1500);
@@ -1092,6 +1098,9 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
   const addAffection = useCallback((points: number, gestureType: GestureType) => {
     const config = gestureConfigs[gestureType];
     const randomPhrase = config.phrases[Math.floor(Math.random() * config.phrases.length)];
+    
+    // Show progress bar when gaining affection
+    setShowProgressBar(true);
     
     setAffection(prev => {
       const level = getAffectionLevel(prev.points);
@@ -1132,7 +1141,8 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
       }
       
       const newPoints = prev.points + adjustedPoints;
-      const newMood = Math.min(100, prev.mood + config.moodReward);
+      const moodGain = config.moodReward;
+      const newMood = Math.min(100, prev.mood + moodGain);
       const newLevel = getAffectionLevel(newPoints);
       const oldLevel = getAffectionLevel(prev.points);
       
@@ -1161,12 +1171,14 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
         
         setTimeout(() => setShowFloatingText(false), 2000);
       } else {
-        // Normal points gain - use weighted emotion selection
+        // Normal points gain - show both affection and mood increase
         const availableEmotions = level.unlockedEmotions.filter(e => !emotionConfigs[e].isNegative);
         const selectedEmotion = selectWeightedEmotion(availableEmotions, newMood, 'positive');
         const selectedConfig = emotionConfigs[selectedEmotion];
         
-        setFloatingText(`+${adjustedPoints}`);
+        // Show combined feedback: affection + mood
+        const moodText = moodGain > 0 ? ` 😊+${moodGain}` : '';
+        setFloatingText(`+${adjustedPoints}${moodText}`);
         setFloatingTextType('points');
         setShowFloatingText(true);
         
@@ -1627,86 +1639,146 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
         <span
           className="font-display font-bold"
           style={{
-            fontSize: floatingTextType === 'levelup' ? '1rem' : '1.2rem',
+            fontSize: floatingTextType === 'levelup' ? '1rem' : '0.9rem',
             color: floatingTextType === 'levelup' 
               ? '#FFD700' 
-              : floatingText.startsWith('-') 
+              : floatingText.startsWith('-') || floatingText.includes('😢')
                 ? '#F87171' // Red for negative
                 : '#4ADE80', // Green for positive
             textShadow: floatingTextType === 'levelup' 
               ? '0 0 20px rgba(255, 215, 0, 0.8), 0 0 40px rgba(255, 215, 0, 0.4)'
-              : floatingText.startsWith('-')
+              : floatingText.startsWith('-') || floatingText.includes('😢')
                 ? '0 0 10px rgba(248, 113, 113, 0.8)' // Red glow for negative
                 : '0 0 10px rgba(74, 222, 128, 0.8)',
-            letterSpacing: '2px',
+            letterSpacing: '1px',
           }}
         >
           {floatingText}
         </span>
       </div>
       
-      {/* Progress bar */}
+      {/* Stats container (on hover) */}
       <div
         className="pointer-events-none"
         style={{
           position: 'absolute',
-          bottom: '-12px',
+          bottom: '-36px',
           left: '50%',
           transform: 'translateX(-50%)',
-          width: '100px',
-          height: '4px',
-          background: 'rgba(10, 10, 10, 0.6)',
-          borderRadius: '2px',
-          overflow: 'hidden',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
           opacity: showProgressBar ? 1 : 0,
           transition: 'opacity 0.3s ease-out',
           zIndex: 10002,
-        }}
-      >
-        <div
-          style={{
-            width: `${progressPercent}%`,
-            height: '100%',
-            background: `linear-gradient(90deg, ${levelGlowColor}, ${levelGlowColor.replace('0.', '0.8')})`,
-            borderRadius: '2px',
-            transition: 'width 0.3s ease-out',
-            boxShadow: `0 0 6px ${levelGlowColor}`,
-          }}
-        />
-      </div>
-      
-      {/* Level and points display (on hover) - simple text below progress bar */}
-      <div
-        className="pointer-events-none font-display text-[0.45rem] tracking-[1px]"
-        style={{
-          position: 'absolute',
-          bottom: '-24px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          color: 'rgba(255, 255, 255, 0.4)',
-          opacity: showProgressBar ? 1 : 0,
-          transition: 'opacity 0.3s ease-out',
-          zIndex: 10002,
-          whiteSpace: 'nowrap',
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
-          gap: '6px',
+          gap: '4px',
         }}
       >
-        <span style={{ color: 'rgba(255, 255, 255, 0.35)' }}>
-          Lv.{affection.tier}
-        </span>
-        <span style={{ color: 'rgba(255, 255, 255, 0.25)' }}>·</span>
-        <span>{affection.points}pts</span>
-        <span style={{ color: getMoodColor(affection.mood), fontSize: '0.5rem' }}>
-          {getMoodEmoji(moodState)}
-        </span>
-        {affection.streakDays > 1 && (
-          <span style={{ color: 'rgba(255, 200, 100, 0.6)', marginLeft: '2px' }}>
-            🔥{affection.streakDays}
+        {/* Affection bar with label */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span className="font-display text-[0.4rem]" style={{ color: 'rgba(255, 255, 255, 0.4)', width: '14px' }}>❤️</span>
+          <div
+            style={{
+              width: '70px',
+              height: '4px',
+              background: 'rgba(10, 10, 10, 0.6)',
+              borderRadius: '2px',
+              overflow: 'hidden',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+            }}
+          >
+            <div
+              style={{
+                width: `${progressPercent}%`,
+                height: '100%',
+                background: `linear-gradient(90deg, ${levelGlowColor}, ${levelGlowColor.replace('0.', '0.8')})`,
+                borderRadius: '2px',
+                transition: 'width 0.3s ease-out',
+                boxShadow: `0 0 4px ${levelGlowColor}`,
+              }}
+            />
+          </div>
+          <span className="font-display text-[0.35rem]" style={{ color: 'rgba(255, 255, 255, 0.35)', width: '28px' }}>
+            {affection.points}
           </span>
-        )}
+        </div>
+        
+        {/* Mood bar with label */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span className="font-display text-[0.4rem]" style={{ color: getMoodColor(affection.mood), width: '14px' }}>
+            {getMoodEmoji(moodState)}
+          </span>
+          <div
+            style={{
+              width: '70px',
+              height: '4px',
+              background: 'rgba(10, 10, 10, 0.6)',
+              borderRadius: '2px',
+              overflow: 'hidden',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+            }}
+          >
+            {/* Mood bar - centered at 50%, extends left for negative, right for positive */}
+            <div
+              style={{
+                position: 'relative',
+                width: '100%',
+                height: '100%',
+              }}
+            >
+              {/* Center line indicator */}
+              <div style={{
+                position: 'absolute',
+                left: '50%',
+                top: 0,
+                width: '1px',
+                height: '100%',
+                background: 'rgba(255, 255, 255, 0.2)',
+              }} />
+              {/* Mood fill */}
+              <div
+                style={{
+                  position: 'absolute',
+                  left: affection.mood >= 0 ? '50%' : `${50 + (affection.mood / 2)}%`,
+                  width: `${Math.abs(affection.mood) / 2}%`,
+                  height: '100%',
+                  background: affection.mood >= 0 
+                    ? 'linear-gradient(90deg, rgba(74, 222, 128, 0.8), rgba(74, 222, 128, 1))'
+                    : 'linear-gradient(90deg, rgba(248, 113, 113, 1), rgba(248, 113, 113, 0.8))',
+                  borderRadius: '2px',
+                  transition: 'all 0.3s ease-out',
+                  boxShadow: affection.mood >= 0 
+                    ? '0 0 4px rgba(74, 222, 128, 0.6)'
+                    : '0 0 4px rgba(248, 113, 113, 0.6)',
+                }}
+              />
+            </div>
+          </div>
+          <span className="font-display text-[0.35rem]" style={{ 
+            color: affection.mood >= 0 ? 'rgba(74, 222, 128, 0.7)' : 'rgba(248, 113, 113, 0.7)', 
+            width: '28px' 
+          }}>
+            {affection.mood >= 0 ? `+${affection.mood}` : affection.mood}
+          </span>
+        </div>
+        
+        {/* Level and streak info */}
+        <div 
+          className="font-display text-[0.35rem]"
+          style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '4px',
+            color: 'rgba(255, 255, 255, 0.35)',
+          }}
+        >
+          <span>Lv.{affection.tier}</span>
+          {affection.streakDays > 1 && (
+            <span style={{ color: 'rgba(255, 200, 100, 0.6)' }}>
+              🔥{affection.streakDays}
+            </span>
+          )}
+        </div>
       </div>
       
       {/* Greeting bubble - Sci-Fi style */}
