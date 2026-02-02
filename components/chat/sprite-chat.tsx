@@ -5,11 +5,97 @@ import { createPortal } from 'react-dom';
 import * as THREE from 'three';
 import { cn } from '@/lib/utils';
 
+// Emotion Category System
+type EmotionCategory = 
+  | 'happy'      // Yellow/Gold glow
+  | 'excited'    // Orange/Bright glow
+  | 'shy'        // Pink/Red blush
+  | 'love'       // Deep pink/Heart shapes
+  | 'surprised'  // White flash
+  | 'curious'    // Cyan/Blue glow
+  | 'playful'    // Rainbow/Multi-color
+  | 'sleepy'     // Dim blue/Slow pulse
+  | 'cool'       // Light blue/Ice
+  | 'confused';  // Purple wobble
+
+type AnimationType = 'bounce' | 'shake' | 'pulse' | 'spin' | 'wobble';
+
+interface EmotionConfig {
+  earColor: { r: number; g: number; b: number };
+  glowColor: string;
+  particleColor: { r: number; g: number; b: number };
+  animationType: AnimationType;
+}
+
+// Emotion-to-Color Mapping
+const emotionConfigs: Record<EmotionCategory, EmotionConfig> = {
+  happy: {
+    earColor: { r: 1, g: 0.86, b: 0.4 },
+    glowColor: 'rgba(255, 220, 100, 0.4)',
+    particleColor: { r: 1, g: 0.9, b: 0.6 },
+    animationType: 'bounce',
+  },
+  excited: {
+    earColor: { r: 1, g: 0.6, b: 0.2 },
+    glowColor: 'rgba(255, 150, 50, 0.5)',
+    particleColor: { r: 1, g: 0.7, b: 0.3 },
+    animationType: 'spin',
+  },
+  shy: {
+    earColor: { r: 1, g: 0.5, b: 0.63 },
+    glowColor: 'rgba(255, 130, 160, 0.4)',
+    particleColor: { r: 1, g: 0.8, b: 0.85 },
+    animationType: 'pulse',
+  },
+  love: {
+    earColor: { r: 1, g: 0.4, b: 0.6 },
+    glowColor: 'rgba(255, 100, 150, 0.5)',
+    particleColor: { r: 1, g: 0.6, b: 0.75 },
+    animationType: 'pulse',
+  },
+  surprised: {
+    earColor: { r: 1, g: 1, b: 1 },
+    glowColor: 'rgba(255, 255, 255, 0.6)',
+    particleColor: { r: 1, g: 1, b: 1 },
+    animationType: 'shake',
+  },
+  curious: {
+    earColor: { r: 0.4, g: 0.78, b: 1 },
+    glowColor: 'rgba(100, 200, 255, 0.4)',
+    particleColor: { r: 0.7, g: 0.9, b: 1 },
+    animationType: 'wobble',
+  },
+  playful: {
+    earColor: { r: 0.9, g: 0.5, b: 1 },
+    glowColor: 'rgba(230, 130, 255, 0.5)',
+    particleColor: { r: 0.85, g: 0.7, b: 1 },
+    animationType: 'spin',
+  },
+  sleepy: {
+    earColor: { r: 0.6, g: 0.7, b: 0.86 },
+    glowColor: 'rgba(150, 180, 220, 0.3)',
+    particleColor: { r: 0.75, g: 0.8, b: 0.9 },
+    animationType: 'wobble',
+  },
+  cool: {
+    earColor: { r: 0.78, g: 0.9, b: 1 },
+    glowColor: 'rgba(200, 230, 255, 0.4)',
+    particleColor: { r: 0.85, g: 0.95, b: 1 },
+    animationType: 'bounce',
+  },
+  confused: {
+    earColor: { r: 0.7, g: 0.5, b: 0.86 },
+    glowColor: 'rgba(180, 130, 220, 0.4)',
+    particleColor: { r: 0.8, g: 0.7, b: 0.9 },
+    animationType: 'shake',
+  },
+};
+
 interface Reaction {
   msg: string;
+  emotion: EmotionCategory;
   eyeScale: { x: number; y: number };
-  color: { r: number; g: number; b: number };
-  shape: 'sphere' | 'arc';
+  shape: 'sphere' | 'arc' | 'star' | 'heart' | 'crescent';
   rotation?: number;
 }
 
@@ -24,7 +110,13 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
   const [mounted, setMounted] = useState(false);
   const [showGreeting, setShowGreeting] = useState(false);
   const [greetingText, setGreetingText] = useState('');
+  const [glowColor, setGlowColor] = useState('rgba(255, 255, 255, 0.15)');
+  const [currentEmotion, setCurrentEmotion] = useState<EmotionCategory | null>(null);
   const greetingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hoverStartTimeRef = useRef<number | null>(null);
+  const longHoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastMouseMoveRef = useRef<number>(Date.now());
   
   // Three.js refs for animation control
   const sceneRef = useRef<{
@@ -33,8 +125,12 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
     leftEar: THREE.Mesh;
     rightEar: THREE.Mesh;
     particleSphere: THREE.Points;
+    sphereGeometry: THREE.SphereGeometry;
     eyeGeo: THREE.SphereGeometry;
     archedEyeGeo: THREE.TorusGeometry;
+    starEyeGeo: THREE.BufferGeometry;
+    heartEyeGeo: THREE.BufferGeometry;
+    crescentEyeGeo: THREE.TorusGeometry;
   } | null>(null);
   
   useEffect(() => {
@@ -42,6 +138,12 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
     return () => {
       if (greetingTimeoutRef.current) {
         clearTimeout(greetingTimeoutRef.current);
+      }
+      if (longHoverTimeoutRef.current) {
+        clearTimeout(longHoverTimeoutRef.current);
+      }
+      if (idleTimeoutRef.current) {
+        clearTimeout(idleTimeoutRef.current);
       }
     };
   }, []);
@@ -95,6 +197,39 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
     
     const eyeGeo = new THREE.SphereGeometry(0.5, 32, 32);
     const archedEyeGeo = new THREE.TorusGeometry(0.6, 0.15, 16, 32, Math.PI);
+    
+    // Star eye geometry - 5 pointed star
+    const starShape = new THREE.Shape();
+    const outerRadius = 0.5;
+    const innerRadius = 0.2;
+    const spikes = 5;
+    for (let i = 0; i < spikes * 2; i++) {
+      const radius = i % 2 === 0 ? outerRadius : innerRadius;
+      const angle = (i * Math.PI) / spikes - Math.PI / 2;
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+      if (i === 0) starShape.moveTo(x, y);
+      else starShape.lineTo(x, y);
+    }
+    starShape.closePath();
+    const starEyeGeo = new THREE.ExtrudeGeometry(starShape, { depth: 0.15, bevelEnabled: false });
+    starEyeGeo.center();
+    
+    // Heart eye geometry
+    const heartShape = new THREE.Shape();
+    const hx = 0, hy = 0, hs = 0.35;
+    heartShape.moveTo(hx, hy + hs * 0.5);
+    heartShape.bezierCurveTo(hx, hy + hs, hx - hs, hy + hs, hx - hs, hy + hs * 0.5);
+    heartShape.bezierCurveTo(hx - hs, hy, hx, hy - hs * 0.5, hx, hy - hs);
+    heartShape.bezierCurveTo(hx, hy - hs * 0.5, hx + hs, hy, hx + hs, hy + hs * 0.5);
+    heartShape.bezierCurveTo(hx + hs, hy + hs, hx, hy + hs, hx, hy + hs * 0.5);
+    const heartEyeGeo = new THREE.ExtrudeGeometry(heartShape, { depth: 0.15, bevelEnabled: false });
+    heartEyeGeo.center();
+    heartEyeGeo.rotateZ(Math.PI); // Flip so heart points down correctly
+    
+    // Crescent eye geometry (for sleepy)
+    const crescentEyeGeo = new THREE.TorusGeometry(0.4, 0.12, 16, 32, Math.PI * 0.6);
+    
     const eyeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
     
     const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
@@ -137,8 +272,12 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
       leftEar,
       rightEar,
       particleSphere,
+      sphereGeometry,
       eyeGeo,
       archedEyeGeo,
+      starEyeGeo,
+      heartEyeGeo,
+      crescentEyeGeo,
     };
     
     // Store original positions for wave animation
@@ -223,6 +362,9 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
       sphereMaterial.dispose();
       eyeGeo.dispose();
       archedEyeGeo.dispose();
+      starEyeGeo.dispose();
+      heartEyeGeo.dispose();
+      crescentEyeGeo.dispose();
       eyeMat.dispose();
       earGeo.dispose();
       leftEarMat.dispose();
@@ -234,49 +376,136 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
     };
   }, [mounted]);
   
-  // Enhanced reactions with eye shape changes and color variations
+  // Enhanced reactions with emotion categories - 35+ expressions
   const reactions: Reaction[] = [
-    { msg: '(>////<)', eyeScale: { x: 1, y: 0.15 }, color: { r: 1, g: 0.5, b: 0.6 }, shape: 'sphere' },
-    { msg: '😳', eyeScale: { x: 1.8, y: 1.8 }, color: { r: 1, g: 0.4, b: 0.4 }, shape: 'sphere' },
-    { msg: '(〃∀〃)', eyeScale: { x: 1.2, y: 1.2 }, color: { r: 1, g: 0.6, b: 0.8 }, shape: 'arc', rotation: Math.PI },
-    { msg: '✨', eyeScale: { x: 1.5, y: 1.5 }, color: { r: 1, g: 1, b: 0.4 }, shape: 'sphere' },
-    { msg: '(/▽＼)', eyeScale: { x: 1, y: 0.1 }, color: { r: 1, g: 0.5, b: 0.7 }, shape: 'arc', rotation: 0 },
-    { msg: '(◕‿◕)', eyeScale: { x: 1.3, y: 1.3 }, color: { r: 0.6, g: 1, b: 0.8 }, shape: 'sphere' },
-    { msg: '(ﾉ´ヮ`)ﾉ', eyeScale: { x: 0.8, y: 1.4 }, color: { r: 1, g: 0.8, b: 0.4 }, shape: 'arc', rotation: Math.PI },
-    { msg: '(｡♥‿♥｡)', eyeScale: { x: 1.6, y: 1.6 }, color: { r: 1, g: 0.4, b: 0.6 }, shape: 'sphere' },
-    { msg: '(◠‿◠)', eyeScale: { x: 1.1, y: 0.6 }, color: { r: 0.8, g: 0.9, b: 1 }, shape: 'arc', rotation: Math.PI },
-    { msg: '👀', eyeScale: { x: 2, y: 2 }, color: { r: 1, g: 1, b: 1 }, shape: 'sphere' },
+    // Happy expressions (5)
+    { msg: '(◕‿◕)', emotion: 'happy', eyeScale: { x: 1.3, y: 1.3 }, shape: 'sphere' },
+    { msg: 'Yay~!', emotion: 'happy', eyeScale: { x: 1.5, y: 1.2 }, shape: 'arc', rotation: Math.PI },
+    { msg: '(｡◕‿◕｡)', emotion: 'happy', eyeScale: { x: 1.4, y: 1.4 }, shape: 'sphere' },
+    { msg: '(◠‿◠)', emotion: 'happy', eyeScale: { x: 1.1, y: 0.6 }, shape: 'arc', rotation: Math.PI },
+    { msg: 'Nice!', emotion: 'happy', eyeScale: { x: 1.3, y: 1.1 }, shape: 'sphere' },
+    
+    // Excited expressions (5)
+    { msg: '✨ WOW! ✨', emotion: 'excited', eyeScale: { x: 2, y: 2 }, shape: 'star' },
+    { msg: '(ﾉ´ヮ`)ﾉ*:・゚✧', emotion: 'excited', eyeScale: { x: 1.8, y: 1.8 }, shape: 'star' },
+    { msg: 'AMAZING!', emotion: 'excited', eyeScale: { x: 1.9, y: 1.9 }, shape: 'star' },
+    { msg: '(☆▽☆)', emotion: 'excited', eyeScale: { x: 1.7, y: 1.7 }, shape: 'star' },
+    { msg: 'Let\'s GO!', emotion: 'excited', eyeScale: { x: 1.6, y: 1.8 }, shape: 'sphere' },
+    
+    // Shy expressions (4)
+    { msg: '(>////<)', emotion: 'shy', eyeScale: { x: 1, y: 0.15 }, shape: 'sphere' },
+    { msg: 'H-hi...', emotion: 'shy', eyeScale: { x: 0.8, y: 0.3 }, shape: 'arc', rotation: 0 },
+    { msg: '(/▽＼)', emotion: 'shy', eyeScale: { x: 1, y: 0.1 }, shape: 'arc', rotation: 0 },
+    { msg: '(〃▽〃)', emotion: 'shy', eyeScale: { x: 0.9, y: 0.2 }, shape: 'sphere' },
+    
+    // Love expressions (4)
+    { msg: '(♥‿♥)', emotion: 'love', eyeScale: { x: 1.6, y: 1.6 }, shape: 'heart' },
+    { msg: '(｡♥‿♥｡)', emotion: 'love', eyeScale: { x: 1.5, y: 1.5 }, shape: 'heart' },
+    { msg: 'So cute~', emotion: 'love', eyeScale: { x: 1.4, y: 1.4 }, shape: 'heart' },
+    { msg: '♡(◡‿◡)', emotion: 'love', eyeScale: { x: 1.3, y: 1.2 }, shape: 'arc', rotation: Math.PI },
+    
+    // Surprised expressions (4)
+    { msg: '😳', emotion: 'surprised', eyeScale: { x: 1.8, y: 1.8 }, shape: 'sphere' },
+    { msg: 'Whoa!', emotion: 'surprised', eyeScale: { x: 2, y: 2 }, shape: 'sphere' },
+    { msg: '(°o°)', emotion: 'surprised', eyeScale: { x: 1.9, y: 1.9 }, shape: 'sphere' },
+    { msg: 'EH?!', emotion: 'surprised', eyeScale: { x: 2.1, y: 2.1 }, shape: 'sphere' },
+    
+    // Curious expressions (4)
+    { msg: 'Hmm...?', emotion: 'curious', eyeScale: { x: 1.4, y: 1.2 }, shape: 'sphere' },
+    { msg: '(・・?)', emotion: 'curious', eyeScale: { x: 1.3, y: 1.5 }, shape: 'sphere' },
+    { msg: 'Tell me more', emotion: 'curious', eyeScale: { x: 1.2, y: 1.3 }, shape: 'sphere' },
+    { msg: '👀', emotion: 'curious', eyeScale: { x: 1.6, y: 1.6 }, shape: 'sphere' },
+    
+    // Playful expressions (4)
+    { msg: '(〃∀〃)', emotion: 'playful', eyeScale: { x: 1.2, y: 1.2 }, shape: 'arc', rotation: Math.PI },
+    { msg: 'Hehe~', emotion: 'playful', eyeScale: { x: 1.1, y: 0.8 }, shape: 'arc', rotation: Math.PI },
+    { msg: '( ͡° ͜ʖ ͡°)', emotion: 'playful', eyeScale: { x: 1.0, y: 0.6 }, shape: 'sphere' },
+    { msg: 'Gotcha!', emotion: 'playful', eyeScale: { x: 1.3, y: 1.0 }, shape: 'arc', rotation: Math.PI },
+    
+    // Sleepy expressions (3)
+    { msg: 'zzZ...', emotion: 'sleepy', eyeScale: { x: 1.2, y: 0.2 }, shape: 'crescent' },
+    { msg: '(－ω－)', emotion: 'sleepy', eyeScale: { x: 1.0, y: 0.15 }, shape: 'crescent' },
+    { msg: '*yawn*', emotion: 'sleepy', eyeScale: { x: 0.9, y: 0.1 }, shape: 'arc', rotation: 0 },
+    
+    // Cool expressions (3)
+    { msg: '( •̀ᴗ•́ )و', emotion: 'cool', eyeScale: { x: 1.1, y: 1.1 }, shape: 'sphere' },
+    { msg: 'Nice one', emotion: 'cool', eyeScale: { x: 1.0, y: 0.9 }, shape: 'sphere' },
+    { msg: '(‾◡◝)', emotion: 'cool', eyeScale: { x: 1.2, y: 0.8 }, shape: 'arc', rotation: Math.PI },
+    
+    // Confused expressions (3)
+    { msg: '(・・?)', emotion: 'confused', eyeScale: { x: 1.5, y: 1.2 }, shape: 'sphere' },
+    { msg: 'Huh...?', emotion: 'confused', eyeScale: { x: 1.4, y: 1.6 }, shape: 'sphere' },
+    { msg: '(?_?)', emotion: 'confused', eyeScale: { x: 1.3, y: 1.4 }, shape: 'sphere' },
   ];
   
-  // Apply reaction animation
+  // Special click reactions
+  const clickReactions: Reaction[] = [
+    { msg: 'Ask me anything!', emotion: 'excited', eyeScale: { x: 1.8, y: 1.8 }, shape: 'star' },
+    { msg: 'Let\'s chat!', emotion: 'happy', eyeScale: { x: 1.5, y: 1.5 }, shape: 'sphere' },
+    { msg: 'I\'m here to help!', emotion: 'happy', eyeScale: { x: 1.4, y: 1.4 }, shape: 'arc', rotation: Math.PI },
+  ];
+  
+  // Idle/long hover reactions
+  const sleepyReactions: Reaction[] = [
+    { msg: 'zzZ...', emotion: 'sleepy', eyeScale: { x: 1.2, y: 0.2 }, shape: 'crescent' },
+    { msg: 'Still here...', emotion: 'sleepy', eyeScale: { x: 1.0, y: 0.15 }, shape: 'crescent' },
+    { msg: '*yawn*', emotion: 'sleepy', eyeScale: { x: 0.9, y: 0.1 }, shape: 'arc', rotation: 0 },
+  ];
+  
+  // Apply reaction animation with emotion-based colors
   const applyReaction = useCallback((reaction: Reaction) => {
     if (!sceneRef.current) return;
     
-    const { leftEye, rightEye, leftEar, rightEar, particleSphere, eyeGeo, archedEyeGeo } = sceneRef.current;
+    const { 
+      leftEye, rightEye, leftEar, rightEar, particleSphere, sphereGeometry,
+      eyeGeo, archedEyeGeo, starEyeGeo, heartEyeGeo, crescentEyeGeo 
+    } = sceneRef.current;
     
-    // Change eye shape
-    if (reaction.shape === 'arc') {
-      leftEye.geometry = archedEyeGeo;
-      rightEye.geometry = archedEyeGeo;
+    // Get emotion config
+    const emotionConfig = emotionConfigs[reaction.emotion];
+    setCurrentEmotion(reaction.emotion);
+    setGlowColor(emotionConfig.glowColor);
+    
+    // Change eye shape based on reaction
+    const getEyeGeometry = () => {
+      switch (reaction.shape) {
+        case 'arc': return archedEyeGeo;
+        case 'star': return starEyeGeo;
+        case 'heart': return heartEyeGeo;
+        case 'crescent': return crescentEyeGeo;
+        default: return eyeGeo;
+      }
+    };
+    
+    const targetGeo = getEyeGeometry();
+    leftEye.geometry = targetGeo;
+    rightEye.geometry = targetGeo;
+    
+    // Set rotation for arc and crescent
+    if (reaction.shape === 'arc' || reaction.shape === 'crescent') {
       leftEye.rotation.x = reaction.rotation || 0;
       rightEye.rotation.x = reaction.rotation || 0;
+      leftEye.rotation.y = 0;
+      rightEye.rotation.y = 0;
+    } else if (reaction.shape === 'star' || reaction.shape === 'heart') {
+      leftEye.rotation.x = 0;
+      rightEye.rotation.x = 0;
+      leftEye.rotation.y = 0;
+      rightEye.rotation.y = 0;
     } else {
-      leftEye.geometry = eyeGeo;
-      rightEye.geometry = eyeGeo;
       leftEye.rotation.x = 0;
       rightEye.rotation.x = 0;
     }
     
     // Animate eye scale
     const animateScale = (target: { x: number; y: number }) => {
-      let progress = 0;
       const duration = 300;
       const startScale = { x: leftEye.scale.x, y: leftEye.scale.y };
       const startTime = performance.now();
       
       const animate = () => {
         const elapsed = performance.now() - startTime;
-        progress = Math.min(elapsed / duration, 1);
+        const progress = Math.min(elapsed / duration, 1);
         const eased = 1 - Math.pow(1 - progress, 3);
         
         leftEye.scale.x = startScale.x + (target.x - startScale.x) * eased;
@@ -293,9 +522,8 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
     
     animateScale(reaction.eyeScale);
     
-    // Animate ear color
-    const animateColor = (target: { r: number; g: number; b: number }) => {
-      let progress = 0;
+    // Animate ear color based on emotion
+    const animateEarColor = (target: { r: number; g: number; b: number }) => {
       const duration = 300;
       const leftMat = leftEar.material as THREE.MeshBasicMaterial;
       const rightMat = rightEar.material as THREE.MeshBasicMaterial;
@@ -304,7 +532,7 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
       
       const animate = () => {
         const elapsed = performance.now() - startTime;
-        progress = Math.min(elapsed / duration, 1);
+        const progress = Math.min(elapsed / duration, 1);
         const eased = 1 - Math.pow(1 - progress, 3);
         
         leftMat.color.r = startColor.r + (target.r - startColor.r) * eased;
@@ -321,18 +549,75 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
       animate();
     };
     
-    animateColor(reaction.color);
+    animateEarColor(emotionConfig.earColor);
     
-    // Bounce animation on the sphere
+    // Animate particle colors based on emotion
+    const animateParticleColor = (target: { r: number; g: number; b: number }) => {
+      const duration = 400;
+      const colors = sphereGeometry.attributes.color;
+      const startColors: number[] = [];
+      for (let i = 0; i < colors.count; i++) {
+        startColors.push(colors.getX(i), colors.getY(i), colors.getZ(i));
+      }
+      const startTime = performance.now();
+      
+      const animate = () => {
+        const elapsed = performance.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        
+        for (let i = 0; i < colors.count; i++) {
+          const sr = startColors[i * 3];
+          const sg = startColors[i * 3 + 1];
+          const sb = startColors[i * 3 + 2];
+          colors.setXYZ(
+            i,
+            sr + (target.r - sr) * eased,
+            sg + (target.g - sg) * eased,
+            sb + (target.b - sb) * eased
+          );
+        }
+        colors.needsUpdate = true;
+        
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        }
+      };
+      animate();
+    };
+    
+    animateParticleColor(emotionConfig.particleColor);
+    
+    // Apply animation based on emotion type
+    const playAnimation = (type: AnimationType) => {
+      switch (type) {
+        case 'bounce':
+          animateBounce();
+          break;
+        case 'shake':
+          animateShake();
+          break;
+        case 'pulse':
+          animatePulse();
+          break;
+        case 'spin':
+          animateSpin();
+          break;
+        case 'wobble':
+          animateWobble();
+          break;
+      }
+    };
+    
+    // Bounce animation
     const animateBounce = () => {
-      let bounceProgress = 0;
       const bounceDuration = 200;
       const startTime = performance.now();
       const startY = particleSphere.position.y;
       
       const animate = () => {
         const elapsed = performance.now() - startTime;
-        bounceProgress = Math.min(elapsed / bounceDuration, 1);
+        const bounceProgress = Math.min(elapsed / bounceDuration, 1);
         const bounceHeight = 2;
         const bounce = Math.sin(bounceProgress * Math.PI) * bounceHeight;
         particleSphere.position.y = startY + bounce;
@@ -344,22 +629,110 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
       animate();
     };
     
-    animateBounce();
+    // Shake animation (for surprised/confused)
+    const animateShake = () => {
+      const shakeDuration = 300;
+      const startTime = performance.now();
+      const startX = particleSphere.position.x;
+      
+      const animate = () => {
+        const elapsed = performance.now() - startTime;
+        const progress = Math.min(elapsed / shakeDuration, 1);
+        const shakeIntensity = 1.5 * (1 - progress);
+        const shake = Math.sin(progress * Math.PI * 8) * shakeIntensity;
+        particleSphere.position.x = startX + shake;
+        
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          particleSphere.position.x = startX;
+        }
+      };
+      animate();
+    };
+    
+    // Pulse animation (for shy/love)
+    const animatePulse = () => {
+      const pulseDuration = 400;
+      const startTime = performance.now();
+      const startScale = particleSphere.scale.x;
+      
+      const animate = () => {
+        const elapsed = performance.now() - startTime;
+        const progress = Math.min(elapsed / pulseDuration, 1);
+        const pulseScale = 1 + Math.sin(progress * Math.PI * 2) * 0.1;
+        particleSphere.scale.setScalar(startScale * pulseScale);
+        
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          particleSphere.scale.setScalar(startScale);
+        }
+      };
+      animate();
+    };
+    
+    // Spin animation (for excited/playful)
+    const animateSpin = () => {
+      const spinDuration = 400;
+      const startTime = performance.now();
+      const startRotY = particleSphere.rotation.y;
+      
+      const animate = () => {
+        const elapsed = performance.now() - startTime;
+        const progress = Math.min(elapsed / spinDuration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        particleSphere.rotation.y = startRotY + eased * Math.PI * 2;
+        
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        }
+      };
+      animate();
+    };
+    
+    // Wobble animation (for sleepy/curious)
+    const animateWobble = () => {
+      const wobbleDuration = 600;
+      const startTime = performance.now();
+      const startRotZ = particleSphere.rotation.z;
+      
+      const animate = () => {
+        const elapsed = performance.now() - startTime;
+        const progress = Math.min(elapsed / wobbleDuration, 1);
+        const wobbleAngle = Math.sin(progress * Math.PI * 3) * 0.15 * (1 - progress);
+        particleSphere.rotation.z = startRotZ + wobbleAngle;
+        
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          particleSphere.rotation.z = startRotZ;
+        }
+      };
+      animate();
+    };
+    
+    playAnimation(emotionConfig.animationType);
   }, []);
   
   // Reset to default state
   const resetState = useCallback(() => {
     if (!sceneRef.current) return;
     
-    const { leftEye, rightEye, leftEar, rightEar, eyeGeo } = sceneRef.current;
+    const { leftEye, rightEye, leftEar, rightEar, eyeGeo, sphereGeometry } = sceneRef.current;
     
     leftEye.geometry = eyeGeo;
     rightEye.geometry = eyeGeo;
     leftEye.rotation.x = 0;
     rightEye.rotation.x = 0;
+    leftEye.rotation.y = 0;
+    rightEye.rotation.y = 0;
+    
+    // Reset emotion state
+    setCurrentEmotion(null);
+    setGlowColor('rgba(255, 255, 255, 0.15)');
     
     const animateReset = () => {
-      let progress = 0;
       const duration = 500;
       const startTime = performance.now();
       const startScale = { x: leftEye.scale.x, y: leftEye.scale.y };
@@ -367,22 +740,45 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
       const rightMat = rightEar.material as THREE.MeshBasicMaterial;
       const startColor = { r: leftMat.color.r, g: leftMat.color.g, b: leftMat.color.b };
       
+      // Store particle start colors
+      const colors = sphereGeometry.attributes.color;
+      const startParticleColors: number[] = [];
+      for (let i = 0; i < colors.count; i++) {
+        startParticleColors.push(colors.getX(i), colors.getY(i), colors.getZ(i));
+      }
+      
       const animate = () => {
         const elapsed = performance.now() - startTime;
-        progress = Math.min(elapsed / duration, 1);
+        const progress = Math.min(elapsed / duration, 1);
         const eased = 1 - Math.pow(1 - progress, 3);
         
+        // Reset eye scale
         leftEye.scale.x = startScale.x + (1 - startScale.x) * eased;
         leftEye.scale.y = startScale.y + (1 - startScale.y) * eased;
         rightEye.scale.x = startScale.x + (1 - startScale.x) * eased;
         rightEye.scale.y = startScale.y + (1 - startScale.y) * eased;
         
+        // Reset ear color to white
         leftMat.color.r = startColor.r + (1 - startColor.r) * eased;
         leftMat.color.g = startColor.g + (1 - startColor.g) * eased;
         leftMat.color.b = startColor.b + (1 - startColor.b) * eased;
         rightMat.color.r = startColor.r + (1 - startColor.r) * eased;
         rightMat.color.g = startColor.g + (1 - startColor.g) * eased;
         rightMat.color.b = startColor.b + (1 - startColor.b) * eased;
+        
+        // Reset particle colors to white
+        for (let i = 0; i < colors.count; i++) {
+          const sr = startParticleColors[i * 3];
+          const sg = startParticleColors[i * 3 + 1];
+          const sb = startParticleColors[i * 3 + 2];
+          colors.setXYZ(
+            i,
+            sr + (1 - sr) * eased,
+            sg + (1 - sg) * eased,
+            sb + (1 - sb) * eased
+          );
+        }
+        colors.needsUpdate = true;
         
         if (progress < 1) {
           requestAnimationFrame(animate);
@@ -394,9 +790,22 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
     animateReset();
   }, []);
   
+  // Handle mouse enter - show random reaction
   const handleMouseEnter = useCallback(() => {
     if (showGreeting) return;
     
+    // Clear any existing timeouts
+    if (longHoverTimeoutRef.current) {
+      clearTimeout(longHoverTimeoutRef.current);
+    }
+    if (idleTimeoutRef.current) {
+      clearTimeout(idleTimeoutRef.current);
+    }
+    
+    // Track hover start time
+    hoverStartTimeRef.current = Date.now();
+    
+    // Show random reaction
     const reaction = reactions[Math.floor(Math.random() * reactions.length)];
     setGreetingText(reaction.msg);
     setShowGreeting(true);
@@ -405,18 +814,65 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
     if (greetingTimeoutRef.current) {
       clearTimeout(greetingTimeoutRef.current);
     }
-  }, [showGreeting, applyReaction]);
+    
+    // Set up long hover detection (3 seconds)
+    longHoverTimeoutRef.current = setTimeout(() => {
+      // After 3 seconds of hovering, show sleepy reaction
+      const sleepyReaction = sleepyReactions[Math.floor(Math.random() * sleepyReactions.length)];
+      setGreetingText(sleepyReaction.msg);
+      applyReaction(sleepyReaction);
+    }, 3000);
+  }, [showGreeting, applyReaction, reactions, sleepyReactions]);
   
+  // Handle mouse leave - reset after delay
   const handleMouseLeave = useCallback(() => {
+    // Clear long hover timeout
+    if (longHoverTimeoutRef.current) {
+      clearTimeout(longHoverTimeoutRef.current);
+    }
+    
+    hoverStartTimeRef.current = null;
+    
     greetingTimeoutRef.current = setTimeout(() => {
       setShowGreeting(false);
       resetState();
+      
+      // Set up idle timeout (30 seconds without interaction)
+      idleTimeoutRef.current = setTimeout(() => {
+        // Show idle animation
+        const idleReaction = reactions[Math.floor(Math.random() * reactions.length)];
+        setGreetingText(idleReaction.msg);
+        setShowGreeting(true);
+        applyReaction(idleReaction);
+        
+        // Auto-hide after 2 seconds
+        greetingTimeoutRef.current = setTimeout(() => {
+          setShowGreeting(false);
+          resetState();
+        }, 2000);
+      }, 30000);
     }, 500);
-  }, [resetState]);
+  }, [resetState, applyReaction, reactions]);
   
+  // Handle click - show special click reaction and open dialog
   const handleClick = useCallback(() => {
+    // Clear timeouts
+    if (greetingTimeoutRef.current) {
+      clearTimeout(greetingTimeoutRef.current);
+    }
+    if (longHoverTimeoutRef.current) {
+      clearTimeout(longHoverTimeoutRef.current);
+    }
+    
+    // Show click-specific reaction
+    const clickReaction = clickReactions[Math.floor(Math.random() * clickReactions.length)];
+    setGreetingText(clickReaction.msg);
+    setShowGreeting(true);
+    applyReaction(clickReaction);
+    
+    // Trigger the click callback
     onSpriteClick?.();
-  }, [onSpriteClick]);
+  }, [onSpriteClick, applyReaction, clickReactions]);
   
   // Sprite content
   const spriteContent = (
@@ -432,17 +888,20 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
         height: 180,
         zIndex: 10000,
         pointerEvents: 'auto',
-        filter: 'drop-shadow(0 0 30px rgba(255, 255, 255, 0.15))',
+        filter: `drop-shadow(0 0 30px ${glowColor})`,
+        transition: 'filter 0.3s ease-out',
       }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onClick={handleClick}
     >
-      {/* Ambient glow ring */}
+      {/* Ambient glow ring - color changes with emotion */}
       <div 
-        className="absolute inset-0 rounded-full opacity-30 group-hover:opacity-60 transition-opacity duration-500"
+        className="absolute inset-0 rounded-full opacity-30 group-hover:opacity-60 transition-all duration-500"
         style={{
-          background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)',
+          background: currentEmotion 
+            ? `radial-gradient(circle, ${glowColor} 0%, transparent 70%)`
+            : 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)',
         }}
       />
       
