@@ -20,7 +20,7 @@ export function QuantumOrb({ className = '', size = 380 }: QuantumOrbProps) {
       style={{
         width: size,
         height: size,
-        transformStyle: 'preserve3d',
+        transformStyle: 'preserve-3d',
         perspective: '1000px',
         transform: 'rotateX(60deg) rotateZ(-20deg)',
         background: 'radial-gradient(circle at center, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 50%, transparent 70%)',
@@ -30,7 +30,7 @@ export function QuantumOrb({ className = '', size = 380 }: QuantumOrbProps) {
       {/* Accretion Disk */}
       <div 
         className="absolute w-full h-full animate-disk-spin"
-        style={{ transformStyle: 'preserve3d' }}
+        style={{ transformStyle: 'preserve-3d' }}
       >
         {/* Ring 1 - Outer */}
         <div 
@@ -79,7 +79,7 @@ export function QuantumOrb({ className = '', size = 380 }: QuantumOrbProps) {
         style={{
           width: size * 0.21,
           height: size * 0.21,
-          transformStyle: 'preserve3d',
+          transformStyle: 'preserve-3d',
           transform: 'rotateX(-60deg)',
         }}
       >
@@ -109,7 +109,7 @@ export function QuantumOrb({ className = '', size = 380 }: QuantumOrbProps) {
       {/* Energy Jets */}
       <div 
         className="absolute w-full h-full pointer-events-none"
-        style={{ transformStyle: 'preserve3d' }}
+        style={{ transformStyle: 'preserve-3d' }}
       >
         {/* Top Jet */}
         <div 
@@ -146,7 +146,7 @@ export function QuantumOrb({ className = '', size = 380 }: QuantumOrbProps) {
       <div 
         className="absolute w-full h-full"
         style={{
-          transformStyle: 'preserve3d',
+          transformStyle: 'preserve-3d',
           animation: 'particleCloudSpin 30s linear infinite',
         }}
       >

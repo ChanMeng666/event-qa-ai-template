@@ -127,7 +127,7 @@ function FAQGridCard({
             )}
           >
             <ThumbsUp size={12} />
-            <span>{question.stats.upvotes}</span>
+            <span>{question.stats.upVotes}</span>
           </button>
           <button
             onClick={() => onVote(question.id, 'down')}
@@ -137,7 +137,7 @@ function FAQGridCard({
             )}
           >
             <ThumbsDown size={12} />
-            <span>{question.stats.downvotes}</span>
+            <span>{question.stats.downVotes}</span>
           </button>
         </div>
       </div>
