@@ -59,7 +59,7 @@ export const siteConfig: SiteConfig = {
       name: 'AI Forum New Zealand',
       shortName: 'AI Forum NZ',
       url: 'https://aiforum.org.nz/',
-      logo: '/images/organizers/aiforum.svg',
+      logo: '/images/organizers/aiforum_white.svg',
     },
     {
       name: 'She Sharp',
