@@ -72,12 +72,12 @@ export function ChatMessage({ message }: ChatMessageProps) {
                     li: ({ children }) => <li className="text-sm">{children}</li>,
                     code: ({ children, ...props }) => (
                       'inline' in props && props.inline ? (
-                        <code className="bg-muted-foreground/20 text-foreground px-1 py-0.5 rounded text-xs">{children}</code>
+                        <code className="bg-muted-foreground/20 text-foreground px-1 py-0.5 text-xs">{children}</code>
                       ) : (
-                        <code className="block bg-foreground text-background p-2 rounded text-xs overflow-x-auto">{children}</code>
+                        <code className="block bg-foreground text-background p-2 text-xs overflow-x-auto">{children}</code>
                       )
                     ),
-                    pre: ({ children }) => <pre className="bg-foreground text-background p-2 rounded text-xs overflow-x-auto mb-2">{children}</pre>,
+                    pre: ({ children }) => <pre className="bg-foreground text-background p-2 text-xs overflow-x-auto mb-2">{children}</pre>,
                     a: ({ href, children }) => (
                       <a
                         href={href}

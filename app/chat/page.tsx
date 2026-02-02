@@ -50,8 +50,8 @@ export default function ChatPage() {
         <div className="text-center">
           {/* Digital Pulse Loader */}
           <div className="relative w-12 h-12 mx-auto mb-6">
-            <div className="absolute inset-0 border-2 border-white rounded-full animate-ping opacity-50" />
-            <div className="absolute inset-2 border-2 border-white rounded-full animate-ping opacity-30" style={{ animationDelay: '0.7s' }} />
+            <div className="absolute inset-0 border-2 border-white animate-ping opacity-50" />
+            <div className="absolute inset-2 border-2 border-white animate-ping opacity-30" style={{ animationDelay: '0.7s' }} />
           </div>
           <p className="font-display text-xs tracking-[4px] uppercase text-white/40">
             Loading AI Assistant...
@@ -135,7 +135,7 @@ export default function ChatPage() {
                 className="w-16 h-16 object-contain"
               />
               {/* Glow effect */}
-              <div className="absolute inset-0 bg-white/20 blur-xl rounded-full" />
+              <div className="absolute inset-0 bg-white/20 blur-xl" />
             </div>
           </motion.div>
           

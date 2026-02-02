@@ -3,10 +3,10 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, Loader2 } from 'lucide-react';
+import { X, Send, Loader2, User, Bot } from 'lucide-react';
 import { useChat } from 'ai/react';
 import { cn } from '@/lib/utils';
-import { siteConfig, aiConfig } from '@/config';
+import { siteConfig } from '@/config';
 import ReactMarkdown from 'react-markdown';
 
 interface ChatDialogProps {
@@ -105,38 +105,36 @@ export function ChatDialog({ isOpen, onClose }: ChatDialogProps) {
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             style={{
               position: 'fixed',
-              top: '50%',
+              top: '80px',
               right: '30px',
-              transform: 'translateY(-50%)',
+              bottom: '30px',
               zIndex: 10002,
               width: '420px',
-              maxHeight: '75vh',
+              maxHeight: 'calc(100vh - 110px)',
             }}
             className={cn(
-              "bg-white/[0.03] backdrop-blur-[60px] saturate-200",
+              "bg-black/80 backdrop-blur-[40px]",
               "border border-white/10",
-              "rounded-[32px_20px_32px_28px]",
-              "shadow-[0_12px_40px_rgba(0,0,0,0.25),0_4px_12px_rgba(0,0,0,0.15),inset_0_1px_0_rgba(255,255,255,0.1)]",
+              "shadow-[0_20px_60px_rgba(0,0,0,0.5),0_0_40px_rgba(255,255,255,0.03)]",
               "flex flex-col overflow-hidden"
             )}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Gradient border effect */}
-            <div className="absolute -inset-[2px] bg-gradient-to-br from-white/10 via-white/5 to-white/10 rounded-[32px_20px_32px_28px] -z-10 opacity-50" />
+            {/* Subtle inner glow */}
+            <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none" />
             
-            {/* Header - Sci-Fi Style */}
+            {/* Header - Sci-Fi Glass Style */}
             <div className={cn(
               "flex-shrink-0 px-6 py-4",
               "border-b border-white/10",
-              "bg-black/20 backdrop-blur-[20px]",
-              "rounded-t-[32px_20px_0_0]"
+              "bg-white/[0.03] backdrop-blur-sm"
             )}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   {/* Pulsing indicator */}
                   <div className="relative">
-                    <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                    <div className="absolute inset-0 w-2 h-2 bg-white rounded-full animate-ping opacity-50" />
+                    <div className="w-2 h-2 bg-white/80 animate-pulse" />
+                    <div className="absolute inset-0 w-2 h-2 bg-white animate-ping opacity-30" />
                   </div>
                   <span className="font-display text-xs font-bold tracking-[4px] uppercase text-white/80">
                     AI ASSISTANT
@@ -147,8 +145,8 @@ export function ChatDialog({ isOpen, onClose }: ChatDialogProps) {
                   className={cn(
                     "p-2 transition-all duration-300",
                     "text-white/40 hover:text-white",
-                    "hover:bg-white/10 rounded-full",
-                    "border border-transparent hover:border-white/20"
+                    "hover:bg-white/10",
+                    "border border-white/10 hover:border-white/30"
                   )}
                 >
                   <X size={16} />
@@ -157,7 +155,7 @@ export function ChatDialog({ isOpen, onClose }: ChatDialogProps) {
             </div>
             
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-5 space-y-4 min-h-[220px] max-h-[calc(70vh-180px)] custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-5 space-y-4 min-h-[220px] custom-scrollbar">
               {messages.map((message) => (
                 <motion.div
                   key={message.id}
@@ -170,22 +168,29 @@ export function ChatDialog({ isOpen, onClose }: ChatDialogProps) {
                 >
                   {/* Avatar */}
                   <div className={cn(
-                    "w-7 h-7 rounded-full flex-shrink-0",
-                    "flex items-center justify-center text-sm",
-                    "bg-white text-black"
+                    "w-7 h-7 flex-shrink-0",
+                    "flex items-center justify-center",
+                    "border",
+                    message.role === 'user'
+                      ? "bg-white/90 text-black border-white/50"
+                      : "bg-white/10 text-white border-white/20"
                   )}>
-                    {message.role === 'user' ? '👤' : '✨'}
+                    {message.role === 'user' ? (
+                      <User size={14} strokeWidth={2} />
+                    ) : (
+                      <Bot size={14} strokeWidth={2} />
+                    )}
                   </div>
                   
                   {/* Content */}
                   <div className={cn(
                     "max-w-[75%] px-4 py-3 text-sm leading-relaxed",
                     message.role === 'user' 
-                      ? "bg-white/25 text-white rounded-[20px_16px_4px_16px] border border-white/20 backdrop-blur-[20px]"
-                      : "bg-white/10 text-white/90 rounded-[16px_20px_16px_4px] border border-white/10 backdrop-blur-[20px]"
+                      ? "bg-white/90 text-black border border-white/50 shadow-[0_4px_12px_rgba(255,255,255,0.1)]"
+                      : "bg-white/[0.08] text-white/90 border border-white/10 backdrop-blur-sm"
                   )}>
                     {message.role === 'assistant' ? (
-                      <div className="prose prose-sm prose-invert max-w-none">
+                      <div className="prose prose-sm prose-invert max-w-none prose-headings:text-white prose-p:text-white/80 prose-a:text-white/90 prose-a:underline prose-strong:text-white">
                         <ReactMarkdown>{message.content}</ReactMarkdown>
                       </div>
                     ) : (
@@ -202,16 +207,16 @@ export function ChatDialog({ isOpen, onClose }: ChatDialogProps) {
                   animate={{ opacity: 1 }}
                   className="flex gap-2"
                 >
-                  <div className="w-7 h-7 rounded-full bg-white text-black flex items-center justify-center text-sm">
-                    ✨
+                  <div className="w-7 h-7 bg-white/10 text-white border border-white/20 flex items-center justify-center">
+                    <Bot size={14} strokeWidth={2} />
                   </div>
-                  <div className="bg-white/10 border border-white/10 rounded-[16px_20px_16px_4px] px-4 py-3">
+                  <div className="bg-white/[0.08] border border-white/10 px-4 py-3 backdrop-blur-sm">
                     <div className="flex items-center gap-2 text-white/60 text-sm">
                       <span>Thinking</span>
                       <div className="flex gap-1">
-                        <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                        <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                        <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                        <span className="w-1.5 h-1.5 bg-white/80 animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <span className="w-1.5 h-1.5 bg-white/80 animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <span className="w-1.5 h-1.5 bg-white/80 animate-bounce" style={{ animationDelay: '300ms' }} />
                       </div>
                     </div>
                   </div>
@@ -222,14 +227,12 @@ export function ChatDialog({ isOpen, onClose }: ChatDialogProps) {
             </div>
             
             {/* Input */}
-            <form onSubmit={onSubmit} className="flex-shrink-0 p-5 pt-0">
+            <form onSubmit={onSubmit} className="flex-shrink-0 p-4 border-t border-white/10 bg-white/[0.02]">
               <div className={cn(
                 "flex gap-3 items-end p-2",
-                "bg-white/10 border border-white/15",
-                "rounded-[24px_18px_24px_20px]",
-                "backdrop-blur-[30px] saturate-150",
-                "shadow-[0_4px_16px_rgba(0,0,0,0.15),inset_0_1px_4px_rgba(255,255,255,0.1)]",
-                "transition-all focus-within:bg-white/15 focus-within:border-white/25"
+                "bg-white/[0.05] border border-white/10",
+                "backdrop-blur-sm",
+                "transition-all focus-within:border-white/30 focus-within:bg-white/[0.08]"
               )}>
                 <textarea
                   ref={inputRef}
@@ -251,13 +254,11 @@ export function ChatDialog({ isOpen, onClose }: ChatDialogProps) {
                   disabled={!input.trim() || isLoading}
                   className={cn(
                     "flex-shrink-0 px-4 py-2",
-                    "bg-white/25 border border-white/30",
-                    "rounded-[16px_12px_16px_14px]",
-                    "text-white text-sm font-semibold",
-                    "backdrop-blur-[20px]",
+                    "bg-white/90 border border-white/50",
+                    "text-black text-sm font-semibold",
                     "transition-all",
-                    "hover:bg-white/35 hover:border-white/45 hover:-translate-y-0.5",
-                    "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                    "hover:bg-white hover:-translate-y-0.5",
+                    "disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0"
                   )}
                 >
                   {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
