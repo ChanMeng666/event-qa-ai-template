@@ -4,6 +4,51 @@ import { useRef, useEffect, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import * as THREE from 'three';
 import { cn } from '@/lib/utils';
+import {
+  gestureConfigs,
+  affectionLevels,
+  levelUpPhrases,
+  getAffectionLevel,
+  getLevelProgress,
+  AFFECTION_STORAGE_KEY,
+  type AffectionState,
+  type AffectionTier,
+  type GestureType,
+} from '@/config/sprite-affection.config';
+
+// Gesture detection state
+interface GestureState {
+  // Circle detection
+  circleAngleAccumulator: number;
+  lastAngle: number | null;
+  circleDirection: 'cw' | 'ccw' | null;
+  
+  // Vertical swipe detection
+  verticalCrossCount: number;
+  lastVerticalSide: 'top' | 'bottom' | null;
+  
+  // Horizontal swipe detection
+  horizontalCrossCount: number;
+  lastHorizontalSide: 'left' | 'right' | null;
+  
+  // Pat detection (slow movement on top area)
+  patCount: number;
+  lastPatTime: number;
+  isInPatZone: boolean;
+}
+
+const initialGestureState: GestureState = {
+  circleAngleAccumulator: 0,
+  lastAngle: null,
+  circleDirection: null,
+  verticalCrossCount: 0,
+  lastVerticalSide: null,
+  horizontalCrossCount: 0,
+  lastHorizontalSide: null,
+  patCount: 0,
+  lastPatTime: 0,
+  isInPatZone: false,
+};
 
 // Emotion Category System
 type EmotionCategory = 
@@ -117,6 +162,44 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
   const longHoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastMouseMoveRef = useRef<number>(Date.now());
+  
+  // Affection system state
+  const [affection, setAffection] = useState<AffectionState>({ points: 0, tier: 0 as AffectionTier, lastInteraction: Date.now() });
+  const [showFloatingText, setShowFloatingText] = useState(false);
+  const [floatingText, setFloatingText] = useState('');
+  const [floatingTextType, setFloatingTextType] = useState<'points' | 'levelup'>('points');
+  const [showProgressBar, setShowProgressBar] = useState(false);
+  const gestureStateRef = useRef<GestureState>({ ...initialGestureState });
+  const lastMousePosRef = useRef<{ x: number; y: number } | null>(null);
+  
+  // Load affection from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(AFFECTION_STORAGE_KEY);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          const level = getAffectionLevel(parsed.points || 0);
+          setAffection({
+            points: parsed.points || 0,
+            tier: level.tier,
+            lastInteraction: parsed.lastInteraction || Date.now(),
+          });
+          // Apply level-specific glow color
+          setGlowColor(level.glowColor);
+        } catch {
+          // Invalid data, use default
+        }
+      }
+    }
+  }, []);
+  
+  // Save affection to localStorage when it changes
+  useEffect(() => {
+    if (mounted && typeof window !== 'undefined') {
+      localStorage.setItem(AFFECTION_STORAGE_KEY, JSON.stringify(affection));
+    }
+  }, [affection, mounted]);
   
   // Three.js refs for animation control
   const sceneRef = useRef<{
@@ -790,7 +873,180 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
     animateReset();
   }, []);
   
-  // Handle mouse enter - show random reaction
+  // Add affection points and check for level up
+  const addAffection = useCallback((points: number, gestureType: GestureType) => {
+    const config = gestureConfigs[gestureType];
+    const randomPhrase = config.phrases[Math.floor(Math.random() * config.phrases.length)];
+    
+    setAffection(prev => {
+      const newPoints = prev.points + points;
+      const newLevel = getAffectionLevel(newPoints);
+      const oldLevel = getAffectionLevel(prev.points);
+      
+      // Check for level up
+      if (newLevel.tier > oldLevel.tier) {
+        // Level up celebration
+        const celebrationPhrase = levelUpPhrases[newLevel.tier as AffectionTier][
+          Math.floor(Math.random() * levelUpPhrases[newLevel.tier as AffectionTier].length)
+        ];
+        setFloatingText(`Level Up! ${newLevel.nameEn}`);
+        setFloatingTextType('levelup');
+        setShowFloatingText(true);
+        
+        // Show celebration reaction
+        const celebrationReaction: Reaction = {
+          msg: celebrationPhrase || randomPhrase,
+          emotion: newLevel.defaultEmotion,
+          eyeScale: { x: 2, y: 2 },
+          shape: 'star',
+        };
+        setGreetingText(celebrationReaction.msg);
+        setShowGreeting(true);
+        applyReaction(celebrationReaction);
+        
+        // Update glow color to new level
+        setGlowColor(newLevel.glowColor);
+        
+        setTimeout(() => setShowFloatingText(false), 2000);
+      } else {
+        // Normal points gain
+        setFloatingText(`+${points}`);
+        setFloatingTextType('points');
+        setShowFloatingText(true);
+        
+        // Show gesture reaction
+        const gestureReaction: Reaction = {
+          msg: randomPhrase,
+          emotion: config.emotion,
+          eyeScale: { x: 1.5, y: 1.5 },
+          shape: 'sphere',
+        };
+        setGreetingText(gestureReaction.msg);
+        setShowGreeting(true);
+        applyReaction(gestureReaction);
+        
+        setTimeout(() => setShowFloatingText(false), 1000);
+      }
+      
+      return {
+        points: newPoints,
+        tier: newLevel.tier,
+        lastInteraction: Date.now(),
+      };
+    });
+  }, [applyReaction]);
+  
+  // Gesture detection handler
+  const detectGestures = useCallback((clientX: number, clientY: number) => {
+    if (!containerRef.current) return;
+    
+    const rect = containerRef.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const relX = clientX - centerX;
+    const relY = clientY - centerY;
+    
+    const gs = gestureStateRef.current;
+    const now = Date.now();
+    
+    // 1. Circle detection - track angle changes
+    const currentAngle = Math.atan2(relY, relX);
+    if (gs.lastAngle !== null) {
+      let angleDiff = currentAngle - gs.lastAngle;
+      
+      // Normalize angle difference to handle wrap-around
+      if (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+      if (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+      
+      // Determine direction
+      if (Math.abs(angleDiff) > 0.01) {
+        const newDirection = angleDiff > 0 ? 'cw' : 'ccw';
+        
+        // Reset if direction changes
+        if (gs.circleDirection && gs.circleDirection !== newDirection) {
+          gs.circleAngleAccumulator = 0;
+        }
+        gs.circleDirection = newDirection;
+        gs.circleAngleAccumulator += Math.abs(angleDiff);
+        
+        // Check for 5 complete circles (5 * 2π)
+        const circleConfig = gestureConfigs.circle;
+        if (gs.circleAngleAccumulator >= circleConfig.requiredCount * 2 * Math.PI) {
+          addAffection(circleConfig.affectionReward, 'circle');
+          gs.circleAngleAccumulator = 0;
+          gs.circleDirection = null;
+        }
+      }
+    }
+    gs.lastAngle = currentAngle;
+    
+    // 2. Vertical swipe detection (within sprite bounds)
+    if (Math.abs(relX) < rect.width / 2 && Math.abs(relY) < rect.height / 2) {
+      const currentVerticalSide = relY < 0 ? 'top' : 'bottom';
+      if (gs.lastVerticalSide && gs.lastVerticalSide !== currentVerticalSide) {
+        gs.verticalCrossCount++;
+        
+        const vConfig = gestureConfigs.verticalSwipe;
+        if (gs.verticalCrossCount >= vConfig.requiredCount * 2) { // * 2 because crossing counts both ways
+          addAffection(vConfig.affectionReward, 'verticalSwipe');
+          gs.verticalCrossCount = 0;
+        }
+      }
+      gs.lastVerticalSide = currentVerticalSide;
+      
+      // 3. Horizontal swipe detection
+      const currentHorizontalSide = relX < 0 ? 'left' : 'right';
+      if (gs.lastHorizontalSide && gs.lastHorizontalSide !== currentHorizontalSide) {
+        gs.horizontalCrossCount++;
+        
+        const hConfig = gestureConfigs.horizontalSwipe;
+        if (gs.horizontalCrossCount >= hConfig.requiredCount * 2) {
+          addAffection(hConfig.affectionReward, 'horizontalSwipe');
+          gs.horizontalCrossCount = 0;
+        }
+      }
+      gs.lastHorizontalSide = currentHorizontalSide;
+      
+      // 4. Pat detection (slow movement in top area)
+      const isInTopArea = relY < -rect.height / 4;
+      if (isInTopArea) {
+        if (!gs.isInPatZone) {
+          gs.isInPatZone = true;
+        }
+        // Check for slow movement (pat)
+        if (lastMousePosRef.current) {
+          const dx = clientX - lastMousePosRef.current.x;
+          const dy = clientY - lastMousePosRef.current.y;
+          const speed = Math.sqrt(dx * dx + dy * dy);
+          
+          // Slow movement in pat zone
+          if (speed < 5 && now - gs.lastPatTime > 300) {
+            gs.patCount++;
+            gs.lastPatTime = now;
+            
+            const patConfig = gestureConfigs.pat;
+            if (gs.patCount >= patConfig.requiredCount) {
+              addAffection(patConfig.affectionReward, 'pat');
+              gs.patCount = 0;
+            }
+          }
+        }
+      } else {
+        gs.isInPatZone = false;
+        gs.patCount = 0;
+      }
+    }
+    
+    lastMousePosRef.current = { x: clientX, y: clientY };
+  }, [addAffection]);
+  
+  // Reset gesture state when mouse leaves
+  const resetGestureState = useCallback(() => {
+    gestureStateRef.current = { ...initialGestureState };
+    lastMousePosRef.current = null;
+  }, []);
+  
+  // Handle mouse enter - show level-based reaction
   const handleMouseEnter = useCallback(() => {
     if (showGreeting) return;
     
@@ -805,11 +1061,29 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
     // Track hover start time
     hoverStartTimeRef.current = Date.now();
     
-    // Show random reaction
-    const reaction = reactions[Math.floor(Math.random() * reactions.length)];
-    setGreetingText(reaction.msg);
+    // Show progress bar on hover
+    setShowProgressBar(true);
+    
+    // Get level-appropriate greeting
+    const currentLevel = affectionLevels[affection.tier];
+    const greetingPhrase = currentLevel.greetingPhrases[
+      Math.floor(Math.random() * currentLevel.greetingPhrases.length)
+    ];
+    
+    // Create level-based reaction
+    const levelReaction: Reaction = {
+      msg: greetingPhrase,
+      emotion: currentLevel.defaultEmotion,
+      eyeScale: { x: 1.3 + affection.tier * 0.1, y: 1.3 + affection.tier * 0.1 },
+      shape: affection.tier >= 4 ? 'heart' : affection.tier >= 3 ? 'star' : 'sphere',
+    };
+    
+    setGreetingText(levelReaction.msg);
     setShowGreeting(true);
-    applyReaction(reaction);
+    applyReaction(levelReaction);
+    
+    // Apply level-specific glow
+    setGlowColor(currentLevel.glowColor);
     
     if (greetingTimeoutRef.current) {
       clearTimeout(greetingTimeoutRef.current);
@@ -822,7 +1096,7 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
       setGreetingText(sleepyReaction.msg);
       applyReaction(sleepyReaction);
     }, 3000);
-  }, [showGreeting, applyReaction, reactions, sleepyReactions]);
+  }, [showGreeting, applyReaction, sleepyReactions, affection.tier]);
   
   // Handle mouse leave - reset after delay
   const handleMouseLeave = useCallback(() => {
@@ -833,14 +1107,31 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
     
     hoverStartTimeRef.current = null;
     
+    // Reset gesture tracking
+    resetGestureState();
+    
+    // Hide progress bar
+    setShowProgressBar(false);
+    
     greetingTimeoutRef.current = setTimeout(() => {
       setShowGreeting(false);
       resetState();
       
       // Set up idle timeout (30 seconds without interaction)
       idleTimeoutRef.current = setTimeout(() => {
-        // Show idle animation
-        const idleReaction = reactions[Math.floor(Math.random() * reactions.length)];
+        // Show level-appropriate idle reaction
+        const currentLevel = affectionLevels[affection.tier];
+        const idlePhrase = currentLevel.idlePhrases[
+          Math.floor(Math.random() * currentLevel.idlePhrases.length)
+        ];
+        
+        const idleReaction: Reaction = {
+          msg: idlePhrase,
+          emotion: currentLevel.defaultEmotion,
+          eyeScale: { x: 1.2, y: 1.2 },
+          shape: 'sphere',
+        };
+        
         setGreetingText(idleReaction.msg);
         setShowGreeting(true);
         applyReaction(idleReaction);
@@ -852,7 +1143,7 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
         }, 2000);
       }, 30000);
     }, 500);
-  }, [resetState, applyReaction, reactions]);
+  }, [resetState, applyReaction, resetGestureState, affection.tier]);
   
   // Handle click - show special click reaction and open dialog
   const handleClick = useCallback(() => {
@@ -864,6 +1155,9 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
       clearTimeout(longHoverTimeoutRef.current);
     }
     
+    // Add click affection
+    addAffection(gestureConfigs.click.affectionReward, 'click');
+    
     // Show click-specific reaction
     const clickReaction = clickReactions[Math.floor(Math.random() * clickReactions.length)];
     setGreetingText(clickReaction.msg);
@@ -872,7 +1166,16 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
     
     // Trigger the click callback
     onSpriteClick?.();
-  }, [onSpriteClick, applyReaction, clickReactions]);
+  }, [onSpriteClick, applyReaction, clickReactions, addAffection]);
+  
+  // Handle mouse move for gesture detection
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    detectGestures(e.clientX, e.clientY);
+  }, [detectGestures]);
+  
+  // Get current level info for display
+  const currentLevelInfo = affectionLevels[affection.tier];
+  const progressPercent = getLevelProgress(affection.points);
   
   // Sprite content
   const spriteContent = (
@@ -893,6 +1196,7 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
       }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onMouseMove={handleMouseMove}
       onClick={handleClick}
     >
       {/* Ambient glow ring - color changes with emotion */}
@@ -904,6 +1208,111 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
             : 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)',
         }}
       />
+      
+      {/* Floating text for affection gain */}
+      <div
+        className="pointer-events-none"
+        style={{
+          position: 'absolute',
+          top: '20%',
+          left: '50%',
+          transform: showFloatingText 
+            ? 'translate(-50%, -20px) scale(1)' 
+            : 'translate(-50%, 0) scale(0.5)',
+          opacity: showFloatingText ? 1 : 0,
+          transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+          zIndex: 10003,
+        }}
+      >
+        <span
+          className="font-display font-bold"
+          style={{
+            fontSize: floatingTextType === 'levelup' ? '1rem' : '1.2rem',
+            color: floatingTextType === 'levelup' ? '#FFD700' : '#4ADE80',
+            textShadow: floatingTextType === 'levelup' 
+              ? '0 0 20px rgba(255, 215, 0, 0.8), 0 0 40px rgba(255, 215, 0, 0.4)'
+              : '0 0 10px rgba(74, 222, 128, 0.8)',
+            letterSpacing: '2px',
+          }}
+        >
+          {floatingText}
+        </span>
+      </div>
+      
+      {/* Level badge */}
+      <div
+        className="pointer-events-none"
+        style={{
+          position: 'absolute',
+          top: '-8px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'rgba(10, 10, 10, 0.9)',
+          backdropFilter: 'blur(10px)',
+          border: `2px solid ${currentLevelInfo.glowColor.replace('0.', '0.6').replace(')', ')')}`,
+          padding: '4px 12px',
+          borderRadius: '20px',
+          zIndex: 10002,
+          opacity: showProgressBar ? 1 : 0,
+          transition: 'opacity 0.3s ease-out',
+        }}
+      >
+        <span
+          className="font-display text-[0.6rem] tracking-[2px] uppercase"
+          style={{ color: currentLevelInfo.glowColor.replace('0.', '1').replace(')', ')') }}
+        >
+          Lv.{affection.tier} {currentLevelInfo.nameEn}
+        </span>
+      </div>
+      
+      {/* Progress bar */}
+      <div
+        className="pointer-events-none"
+        style={{
+          position: 'absolute',
+          bottom: '-16px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '120px',
+          height: '6px',
+          background: 'rgba(10, 10, 10, 0.8)',
+          borderRadius: '3px',
+          overflow: 'hidden',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          opacity: showProgressBar ? 1 : 0,
+          transition: 'opacity 0.3s ease-out',
+          zIndex: 10002,
+        }}
+      >
+        <div
+          style={{
+            width: `${progressPercent}%`,
+            height: '100%',
+            background: `linear-gradient(90deg, ${currentLevelInfo.glowColor}, ${currentLevelInfo.glowColor.replace('0.', '0.8')})`,
+            borderRadius: '3px',
+            transition: 'width 0.3s ease-out',
+            boxShadow: `0 0 10px ${currentLevelInfo.glowColor}`,
+          }}
+        />
+      </div>
+      
+      {/* Affection points display (on hover) */}
+      <div
+        className="pointer-events-none font-display text-[0.5rem] tracking-[1px]"
+        style={{
+          position: 'absolute',
+          bottom: '-28px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          color: 'rgba(255, 255, 255, 0.5)',
+          opacity: showProgressBar ? 1 : 0,
+          transition: 'opacity 0.3s ease-out',
+          zIndex: 10002,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {affection.points} pts
+      </div>
       
       {/* Greeting bubble - Sci-Fi style */}
       <div
@@ -939,7 +1348,7 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
       
       {/* Click hint on hover */}
       <div 
-        className="absolute -bottom-2 left-1/2 -translate-x-1/2 font-display text-[0.6rem] tracking-[3px] uppercase text-white/0 group-hover:text-white/40 transition-all duration-300 whitespace-nowrap"
+        className="absolute -bottom-38 left-1/2 -translate-x-1/2 font-display text-[0.6rem] tracking-[3px] uppercase text-white/0 group-hover:text-white/40 transition-all duration-300 whitespace-nowrap"
       >
         CLICK TO CHAT
       </div>
