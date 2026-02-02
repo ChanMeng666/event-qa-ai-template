@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { ArrowLeft, Quote } from 'lucide-react';
 import { useFAQVoting } from '@/hooks/use-faq-voting';
 import { FAQGrid } from '@/components/faq/faq-grid';
-import { ProjectInfoSection } from '@/components/layout/project-info-section';
+import { Heart } from 'lucide-react';
 import { ChatDialog } from '@/components/chat/chat-dialog';
 import { HUDHeader } from '@/components/ui/hud-header';
 import { NoiseOverlay } from '@/components/effects/noise-overlay';
@@ -165,8 +165,29 @@ export default function ChatPage() {
           onView={incrementViews}
         />
         
-        {/* Project Information Section */}
-        <ProjectInfoSection />
+        {/* Simple Footer */}
+        <footer className="py-8 mt-8 border-t border-white/10">
+          <div className="text-center">
+            <div className="text-sm text-white/40 flex items-center justify-center gap-2">
+              <span>&copy; {new Date().getFullYear()}{' '}
+                <a
+                  href="https://github.com/ChanMeng666"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white/60 hover:text-white transition-colors"
+                >
+                  {brandingConfig.developer?.name || 'Chan Meng'}
+                </a>
+              </span>
+              <span>&bull;</span>
+              <span className="flex items-center gap-1">
+                Built with
+                <Heart size={12} className="text-pink-400 fill-current" />
+                for the AI community
+              </span>
+            </div>
+          </div>
+        </footer>
       </main>
     </div>
   );

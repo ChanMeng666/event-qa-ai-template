@@ -201,7 +201,16 @@ export function ProjectInfoSection() {
           <div className="text-sm text-white/40 flex items-center justify-center gap-2">
             {brandingConfig.showDeveloper && brandingConfig.developer ? (
               <>
-                <span>&copy; {currentYear} {brandingConfig.developer.name}</span>
+                <span>&copy; {currentYear}{' '}
+                  <a
+                    href="https://github.com/ChanMeng666"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white/60 hover:text-white transition-colors"
+                  >
+                    {brandingConfig.developer.name}
+                  </a>
+                </span>
                 <span>&bull;</span>
               </>
             ) : (

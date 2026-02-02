@@ -114,7 +114,7 @@ export default function WelcomePage() {
               </button>
             </motion.div>
             
-            {/* CTA Buttons */}
+            {/* CTA Button */}
             <motion.div variants={itemVariants} className="flex flex-wrap gap-4 mb-12">
               <Link href="/chat">
                 <Button variant="scifiPrimary" size="scifiLg">
@@ -122,13 +122,6 @@ export default function WelcomePage() {
                   <ArrowRight className="ml-2" size={16} />
                 </Button>
               </Link>
-              <Button 
-                variant="scifiOutline" 
-                size="scifiLg"
-                onClick={() => setShowMapModal(true)}
-              >
-                <span>Learn More</span>
-              </Button>
             </motion.div>
             
             {/* Organizers */}
