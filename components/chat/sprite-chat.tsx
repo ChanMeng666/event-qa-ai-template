@@ -1622,46 +1622,20 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
         </span>
       </div>
       
-      {/* Level badge */}
-      <div
-        className="pointer-events-none"
-        style={{
-          position: 'absolute',
-          top: '-8px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          background: 'rgba(10, 10, 10, 0.9)',
-          backdropFilter: 'blur(10px)',
-          border: `2px solid ${levelGlowColor.replace('0.', '0.6').replace(')', ')')}`,
-          padding: '4px 12px',
-          borderRadius: '20px',
-          zIndex: 10002,
-          opacity: showProgressBar ? 1 : 0,
-          transition: 'opacity 0.3s ease-out',
-        }}
-      >
-        <span
-          className="font-display text-[0.6rem] tracking-[2px] uppercase"
-          style={{ color: levelGlowColor.replace('0.', '1').replace(')', ')') }}
-        >
-          Lv.{affection.tier} {currentLevelInfo.nameEn}
-        </span>
-      </div>
-      
       {/* Progress bar */}
       <div
         className="pointer-events-none"
         style={{
           position: 'absolute',
-          bottom: '-16px',
+          bottom: '-12px',
           left: '50%',
           transform: 'translateX(-50%)',
-          width: '120px',
-          height: '6px',
-          background: 'rgba(10, 10, 10, 0.8)',
-          borderRadius: '3px',
+          width: '100px',
+          height: '4px',
+          background: 'rgba(10, 10, 10, 0.6)',
+          borderRadius: '2px',
           overflow: 'hidden',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
           opacity: showProgressBar ? 1 : 0,
           transition: 'opacity 0.3s ease-out',
           zIndex: 10002,
@@ -1672,54 +1646,45 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
             width: `${progressPercent}%`,
             height: '100%',
             background: `linear-gradient(90deg, ${levelGlowColor}, ${levelGlowColor.replace('0.', '0.8')})`,
-            borderRadius: '3px',
+            borderRadius: '2px',
             transition: 'width 0.3s ease-out',
-            boxShadow: `0 0 10px ${levelGlowColor}`,
+            boxShadow: `0 0 6px ${levelGlowColor}`,
           }}
         />
       </div>
       
-      {/* Affection points and mood display (on hover) */}
+      {/* Level and points display (on hover) - simple text below progress bar */}
       <div
-        className="pointer-events-none font-display text-[0.5rem] tracking-[1px]"
+        className="pointer-events-none font-display text-[0.45rem] tracking-[1px]"
         style={{
           position: 'absolute',
-          bottom: '-28px',
+          bottom: '-24px',
           left: '50%',
           transform: 'translateX(-50%)',
-          color: 'rgba(255, 255, 255, 0.5)',
+          color: 'rgba(255, 255, 255, 0.4)',
           opacity: showProgressBar ? 1 : 0,
           transition: 'opacity 0.3s ease-out',
           zIndex: 10002,
           whiteSpace: 'nowrap',
           display: 'flex',
           alignItems: 'center',
-          gap: '8px',
+          gap: '6px',
         }}
       >
-        <span>{affection.points} pts</span>
-        <span style={{ color: getMoodColor(affection.mood) }}>
+        <span style={{ color: 'rgba(255, 255, 255, 0.35)' }}>
+          Lv.{affection.tier}
+        </span>
+        <span style={{ color: 'rgba(255, 255, 255, 0.25)' }}>·</span>
+        <span>{affection.points}pts</span>
+        <span style={{ color: getMoodColor(affection.mood), fontSize: '0.5rem' }}>
           {getMoodEmoji(moodState)}
         </span>
+        {affection.streakDays > 1 && (
+          <span style={{ color: 'rgba(255, 200, 100, 0.6)', marginLeft: '2px' }}>
+            🔥{affection.streakDays}
+          </span>
+        )}
       </div>
-      
-      {/* Streak indicator (when applicable) */}
-      {affection.streakDays > 1 && showProgressBar && (
-        <div
-          className="pointer-events-none font-display text-[0.45rem] tracking-[1px]"
-          style={{
-            position: 'absolute',
-            bottom: '-40px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            color: 'rgba(255, 200, 100, 0.7)',
-            zIndex: 10002,
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {affection.streakDays} day streak
-        </div>
-      )}
       
       {/* Greeting bubble - Sci-Fi style */}
       <div
