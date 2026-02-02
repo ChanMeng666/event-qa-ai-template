@@ -6,14 +6,27 @@ import * as THREE from 'three';
 import { cn } from '@/lib/utils';
 import {
   gestureConfigs,
+  negativeBehaviorConfigs,
   affectionLevels,
   levelUpPhrases,
+  moodConfigs,
+  emotionConfigs,
+  timePeriodConfigs,
+  streakBonuses,
   getAffectionLevel,
   getLevelProgress,
+  getMoodState,
+  getTimePeriod,
+  getStreakBonus,
+  calculateDaysSinceLastInteraction,
   AFFECTION_STORAGE_KEY,
+  defaultAffectionState,
   type AffectionState,
   type AffectionTier,
   type GestureType,
+  type NegativeBehaviorType,
+  type EmotionCategory,
+  type MoodState,
 } from '@/config/sprite-affection.config';
 
 // Gesture detection state
@@ -37,6 +50,16 @@ interface GestureState {
   isInPatZone: boolean;
 }
 
+// Negative behavior detection state
+interface NegativeBehaviorState {
+  lastClickTime: number;
+  clickCount: number;
+  lastRoughMovementTime: number;
+  hoverStartTime: number | null;
+  lastIgnoreWarningTime: number;
+  consecutiveCircles: number;
+}
+
 const initialGestureState: GestureState = {
   circleAngleAccumulator: 0,
   lastAngle: null,
@@ -50,97 +73,23 @@ const initialGestureState: GestureState = {
   isInPatZone: false,
 };
 
-// Emotion Category System
-type EmotionCategory = 
-  | 'happy'      // Yellow/Gold glow
-  | 'excited'    // Orange/Bright glow
-  | 'shy'        // Pink/Red blush
-  | 'love'       // Deep pink/Heart shapes
-  | 'surprised'  // White flash
-  | 'curious'    // Cyan/Blue glow
-  | 'playful'    // Rainbow/Multi-color
-  | 'sleepy'     // Dim blue/Slow pulse
-  | 'cool'       // Light blue/Ice
-  | 'confused';  // Purple wobble
-
-type AnimationType = 'bounce' | 'shake' | 'pulse' | 'spin' | 'wobble';
-
-interface EmotionConfig {
-  earColor: { r: number; g: number; b: number };
-  glowColor: string;
-  particleColor: { r: number; g: number; b: number };
-  animationType: AnimationType;
-}
-
-// Emotion-to-Color Mapping
-const emotionConfigs: Record<EmotionCategory, EmotionConfig> = {
-  happy: {
-    earColor: { r: 1, g: 0.86, b: 0.4 },
-    glowColor: 'rgba(255, 220, 100, 0.4)',
-    particleColor: { r: 1, g: 0.9, b: 0.6 },
-    animationType: 'bounce',
-  },
-  excited: {
-    earColor: { r: 1, g: 0.6, b: 0.2 },
-    glowColor: 'rgba(255, 150, 50, 0.5)',
-    particleColor: { r: 1, g: 0.7, b: 0.3 },
-    animationType: 'spin',
-  },
-  shy: {
-    earColor: { r: 1, g: 0.5, b: 0.63 },
-    glowColor: 'rgba(255, 130, 160, 0.4)',
-    particleColor: { r: 1, g: 0.8, b: 0.85 },
-    animationType: 'pulse',
-  },
-  love: {
-    earColor: { r: 1, g: 0.4, b: 0.6 },
-    glowColor: 'rgba(255, 100, 150, 0.5)',
-    particleColor: { r: 1, g: 0.6, b: 0.75 },
-    animationType: 'pulse',
-  },
-  surprised: {
-    earColor: { r: 1, g: 1, b: 1 },
-    glowColor: 'rgba(255, 255, 255, 0.6)',
-    particleColor: { r: 1, g: 1, b: 1 },
-    animationType: 'shake',
-  },
-  curious: {
-    earColor: { r: 0.4, g: 0.78, b: 1 },
-    glowColor: 'rgba(100, 200, 255, 0.4)',
-    particleColor: { r: 0.7, g: 0.9, b: 1 },
-    animationType: 'wobble',
-  },
-  playful: {
-    earColor: { r: 0.9, g: 0.5, b: 1 },
-    glowColor: 'rgba(230, 130, 255, 0.5)',
-    particleColor: { r: 0.85, g: 0.7, b: 1 },
-    animationType: 'spin',
-  },
-  sleepy: {
-    earColor: { r: 0.6, g: 0.7, b: 0.86 },
-    glowColor: 'rgba(150, 180, 220, 0.3)',
-    particleColor: { r: 0.75, g: 0.8, b: 0.9 },
-    animationType: 'wobble',
-  },
-  cool: {
-    earColor: { r: 0.78, g: 0.9, b: 1 },
-    glowColor: 'rgba(200, 230, 255, 0.4)',
-    particleColor: { r: 0.85, g: 0.95, b: 1 },
-    animationType: 'bounce',
-  },
-  confused: {
-    earColor: { r: 0.7, g: 0.5, b: 0.86 },
-    glowColor: 'rgba(180, 130, 220, 0.4)',
-    particleColor: { r: 0.8, g: 0.7, b: 0.9 },
-    animationType: 'shake',
-  },
+const initialNegativeBehaviorState: NegativeBehaviorState = {
+  lastClickTime: 0,
+  clickCount: 0,
+  lastRoughMovementTime: 0,
+  hoverStartTime: null,
+  lastIgnoreWarningTime: 0,
+  consecutiveCircles: 0,
 };
+
+// Animation types (extended)
+type AnimationType = 'bounce' | 'shake' | 'pulse' | 'spin' | 'wobble' | 'tremble' | 'droop';
 
 interface Reaction {
   msg: string;
   emotion: EmotionCategory;
   eyeScale: { x: number; y: number };
-  shape: 'sphere' | 'arc' | 'star' | 'heart' | 'crescent';
+  shape: 'sphere' | 'arc' | 'star' | 'heart' | 'crescent' | 'spiral' | 'teardrop';
   rotation?: number;
 }
 
@@ -157,20 +106,25 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
   const [greetingText, setGreetingText] = useState('');
   const [glowColor, setGlowColor] = useState('rgba(255, 255, 255, 0.15)');
   const [currentEmotion, setCurrentEmotion] = useState<EmotionCategory | null>(null);
+  const [moodState, setMoodState] = useState<MoodState>('neutral');
   const greetingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hoverStartTimeRef = useRef<number | null>(null);
   const longHoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const ignoreCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastMouseMoveRef = useRef<number>(Date.now());
   
-  // Affection system state
-  const [affection, setAffection] = useState<AffectionState>({ points: 0, tier: 0 as AffectionTier, lastInteraction: Date.now() });
+  // Affection & Mood system state
+  const [affection, setAffection] = useState<AffectionState>({ ...defaultAffectionState });
   const [showFloatingText, setShowFloatingText] = useState(false);
   const [floatingText, setFloatingText] = useState('');
-  const [floatingTextType, setFloatingTextType] = useState<'points' | 'levelup'>('points');
+  const [floatingTextType, setFloatingTextType] = useState<'points' | 'levelup' | 'mood' | 'streak'>('points');
   const [showProgressBar, setShowProgressBar] = useState(false);
+  const [showMoodIndicator, setShowMoodIndicator] = useState(false);
   const gestureStateRef = useRef<GestureState>({ ...initialGestureState });
+  const negativeBehaviorStateRef = useRef<NegativeBehaviorState>({ ...initialNegativeBehaviorState });
   const lastMousePosRef = useRef<{ x: number; y: number } | null>(null);
+  const lastMouseSpeedRef = useRef<number>(0);
   
   // Load affection from localStorage on mount
   useEffect(() => {
@@ -180,13 +134,46 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
         try {
           const parsed = JSON.parse(saved);
           const level = getAffectionLevel(parsed.points || 0);
+          
+          // Calculate decay based on days since last interaction
+          const daysSince = calculateDaysSinceLastInteraction(parsed.lastInteraction || Date.now());
+          let decayedPoints = parsed.points || 0;
+          
+          if (daysSince > 0 && level.decayRate > 0) {
+            const decay = Math.min(daysSince * level.decayRate, decayedPoints - level.minPoints);
+            decayedPoints = Math.max(level.minPoints, decayedPoints - decay);
+          }
+          
+          // Check streak
+          const lastBonusDate = new Date(parsed.lastDailyBonus || 0).toDateString();
+          const today = new Date().toDateString();
+          const yesterday = new Date(Date.now() - 86400000).toDateString();
+          
+          let streakDays = parsed.streakDays || 0;
+          if (lastBonusDate !== today && lastBonusDate !== yesterday) {
+            streakDays = 0; // Streak broken
+          }
+          
+          const newLevel = getAffectionLevel(decayedPoints);
           setAffection({
-            points: parsed.points || 0,
-            tier: level.tier,
+            points: decayedPoints,
+            tier: newLevel.tier,
+            mood: parsed.mood || 0,
+            streakDays,
             lastInteraction: parsed.lastInteraction || Date.now(),
+            lastDailyBonus: parsed.lastDailyBonus || 0,
+            totalInteractions: parsed.totalInteractions || 0,
+            circleCount: 0,
           });
-          // Apply level-specific glow color
-          setGlowColor(level.glowColor);
+          setMoodState(getMoodState(parsed.mood || 0));
+          
+          // Show return message if was away
+          if (daysSince > 0) {
+            const returnPhrase = newLevel.returnPhrases[Math.floor(Math.random() * newLevel.returnPhrases.length)];
+            setGreetingText(returnPhrase);
+            setShowGreeting(true);
+            setTimeout(() => setShowGreeting(false), 3000);
+          }
         } catch {
           // Invalid data, use default
         }
@@ -198,6 +185,7 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
   useEffect(() => {
     if (mounted && typeof window !== 'undefined') {
       localStorage.setItem(AFFECTION_STORAGE_KEY, JSON.stringify(affection));
+      setMoodState(getMoodState(affection.mood));
     }
   }, [affection, mounted]);
   
@@ -214,6 +202,8 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
     starEyeGeo: THREE.BufferGeometry;
     heartEyeGeo: THREE.BufferGeometry;
     crescentEyeGeo: THREE.TorusGeometry;
+    spiralEyeGeo: THREE.TorusKnotGeometry;
+    teardropEyeGeo: THREE.BufferGeometry;
   } | null>(null);
   
   useEffect(() => {
@@ -313,6 +303,17 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
     // Crescent eye geometry (for sleepy)
     const crescentEyeGeo = new THREE.TorusGeometry(0.4, 0.12, 16, 32, Math.PI * 0.6);
     
+    // Spiral eye geometry (for dizzy) - using torus knot
+    const spiralEyeGeo = new THREE.TorusKnotGeometry(0.25, 0.08, 64, 8, 2, 3);
+    
+    // Teardrop eye geometry (for sad)
+    const teardropShape = new THREE.Shape();
+    teardropShape.moveTo(0, 0.4);
+    teardropShape.bezierCurveTo(0.3, 0.2, 0.3, -0.2, 0, -0.4);
+    teardropShape.bezierCurveTo(-0.3, -0.2, -0.3, 0.2, 0, 0.4);
+    const teardropEyeGeo = new THREE.ExtrudeGeometry(teardropShape, { depth: 0.1, bevelEnabled: false });
+    teardropEyeGeo.center();
+    
     const eyeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
     
     const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
@@ -361,6 +362,8 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
       starEyeGeo,
       heartEyeGeo,
       crescentEyeGeo,
+      spiralEyeGeo,
+      teardropEyeGeo,
     };
     
     // Store original positions for wave animation
@@ -448,6 +451,8 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
       starEyeGeo.dispose();
       heartEyeGeo.dispose();
       crescentEyeGeo.dispose();
+      spiralEyeGeo.dispose();
+      teardropEyeGeo.dispose();
       eyeMat.dispose();
       earGeo.dispose();
       leftEarMat.dispose();
@@ -541,7 +546,8 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
     
     const { 
       leftEye, rightEye, leftEar, rightEar, particleSphere, sphereGeometry,
-      eyeGeo, archedEyeGeo, starEyeGeo, heartEyeGeo, crescentEyeGeo 
+      eyeGeo, archedEyeGeo, starEyeGeo, heartEyeGeo, crescentEyeGeo,
+      spiralEyeGeo, teardropEyeGeo
     } = sceneRef.current;
     
     // Get emotion config
@@ -556,6 +562,8 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
         case 'star': return starEyeGeo;
         case 'heart': return heartEyeGeo;
         case 'crescent': return crescentEyeGeo;
+        case 'spiral': return spiralEyeGeo;
+        case 'teardrop': return teardropEyeGeo;
         default: return eyeGeo;
       }
     };
@@ -570,11 +578,17 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
       rightEye.rotation.x = reaction.rotation || 0;
       leftEye.rotation.y = 0;
       rightEye.rotation.y = 0;
-    } else if (reaction.shape === 'star' || reaction.shape === 'heart') {
+    } else if (reaction.shape === 'star' || reaction.shape === 'heart' || reaction.shape === 'teardrop') {
       leftEye.rotation.x = 0;
       rightEye.rotation.x = 0;
       leftEye.rotation.y = 0;
       rightEye.rotation.y = 0;
+    } else if (reaction.shape === 'spiral') {
+      // Spiral eyes get a slight rotation for effect
+      leftEye.rotation.x = 0;
+      rightEye.rotation.x = 0;
+      leftEye.rotation.z = Math.PI / 6;
+      rightEye.rotation.z = -Math.PI / 6;
     } else {
       leftEye.rotation.x = 0;
       rightEye.rotation.x = 0;
@@ -689,6 +703,12 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
         case 'wobble':
           animateWobble();
           break;
+        case 'tremble':
+          animateTremble();
+          break;
+        case 'droop':
+          animateDroop();
+          break;
       }
     };
     
@@ -795,6 +815,61 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
       animate();
     };
     
+    // Tremble animation (for annoyed/overwhelmed)
+    const animateTremble = () => {
+      const trembleDuration = 500;
+      const startTime = performance.now();
+      const startX = particleSphere.position.x;
+      const startY = particleSphere.position.y;
+      
+      const animate = () => {
+        const elapsed = performance.now() - startTime;
+        const progress = Math.min(elapsed / trembleDuration, 1);
+        const intensity = 0.5 * (1 - progress);
+        const trembleX = (Math.random() - 0.5) * intensity;
+        const trembleY = (Math.random() - 0.5) * intensity;
+        particleSphere.position.x = startX + trembleX;
+        particleSphere.position.y = startY + trembleY;
+        
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          particleSphere.position.x = startX;
+          particleSphere.position.y = startY;
+        }
+      };
+      animate();
+    };
+    
+    // Droop animation (for sad)
+    const animateDroop = () => {
+      const droopDuration = 600;
+      const startTime = performance.now();
+      const startY = particleSphere.position.y;
+      const startScale = particleSphere.scale.y;
+      
+      const animate = () => {
+        const elapsed = performance.now() - startTime;
+        const progress = Math.min(elapsed / droopDuration, 1);
+        const eased = 1 - Math.pow(1 - progress, 2);
+        
+        // Slightly droop down and squish
+        const droopAmount = Math.sin(eased * Math.PI) * 1.5;
+        const squishAmount = 1 - Math.sin(eased * Math.PI) * 0.05;
+        
+        particleSphere.position.y = startY - droopAmount;
+        particleSphere.scale.y = startScale * squishAmount;
+        
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          particleSphere.position.y = startY;
+          particleSphere.scale.y = startScale;
+        }
+      };
+      animate();
+    };
+    
     playAnimation(emotionConfig.animationType);
   }, []);
   
@@ -810,6 +885,8 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
     rightEye.rotation.x = 0;
     leftEye.rotation.y = 0;
     rightEye.rotation.y = 0;
+    leftEye.rotation.z = 0;
+    rightEye.rotation.z = 0;
     
     // Reset emotion state
     setCurrentEmotion(null);
@@ -873,19 +950,177 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
     animateReset();
   }, []);
   
-  // Add affection points and check for level up
+  // Weighted emotion selection based on mood, level, and time
+  const selectWeightedEmotion = useCallback((
+    availableEmotions: EmotionCategory[],
+    currentMood: number,
+    interactionType?: 'positive' | 'negative' | 'neutral'
+  ): EmotionCategory => {
+    const moodStateValue = getMoodState(currentMood);
+    const moodConfig = moodConfigs[moodStateValue];
+    const hour = new Date().getHours();
+    const timeConfig = getTimePeriod(hour);
+    
+    // Build weights for each emotion
+    const weights: Record<string, number> = {};
+    for (const emotion of availableEmotions) {
+      let weight = 1;
+      
+      // Apply mood bias
+      if (moodConfig.emotionBias[emotion]) {
+        weight *= moodConfig.emotionBias[emotion]!;
+      }
+      
+      // Apply time bias
+      if (timeConfig.emotionBias[emotion]) {
+        weight *= timeConfig.emotionBias[emotion]!;
+      }
+      
+      // Apply interaction type bias
+      if (interactionType === 'negative') {
+        const negativeEmotions: EmotionCategory[] = ['confused', 'annoyed', 'sad', 'dizzy', 'overwhelmed'];
+        if (negativeEmotions.includes(emotion)) {
+          weight *= 2;
+        }
+      } else if (interactionType === 'positive') {
+        const positiveEmotions: EmotionCategory[] = ['happy', 'excited', 'love', 'playful'];
+        if (positiveEmotions.includes(emotion)) {
+          weight *= 1.5;
+        }
+      }
+      
+      weights[emotion] = weight;
+    }
+    
+    // 20% chance for pure random (surprise factor)
+    if (Math.random() < 0.2) {
+      return availableEmotions[Math.floor(Math.random() * availableEmotions.length)];
+    }
+    
+    // Weighted random selection
+    const totalWeight = Object.values(weights).reduce((a, b) => a + b, 0);
+    let random = Math.random() * totalWeight;
+    
+    for (const emotion of availableEmotions) {
+      random -= weights[emotion];
+      if (random <= 0) {
+        return emotion;
+      }
+    }
+    
+    return availableEmotions[0];
+  }, []);
+  
+  // Update mood value
+  const updateMood = useCallback((delta: number, showFeedback: boolean = false) => {
+    setAffection(prev => {
+      const newMood = Math.max(-100, Math.min(100, prev.mood + delta));
+      
+      if (showFeedback && Math.abs(delta) >= 5) {
+        setFloatingText(delta > 0 ? `Mood +${delta}` : `Mood ${delta}`);
+        setFloatingTextType('mood');
+        setShowFloatingText(true);
+        setTimeout(() => setShowFloatingText(false), 800);
+      }
+      
+      return { ...prev, mood: newMood };
+    });
+  }, []);
+  
+  // Handle negative behavior
+  const handleNegativeBehavior = useCallback((behaviorType: NegativeBehaviorType) => {
+    const config = negativeBehaviorConfigs[behaviorType];
+    const nbs = negativeBehaviorStateRef.current;
+    const now = Date.now();
+    
+    // Check cooldown
+    const lastTriggerKey = `last${behaviorType.charAt(0).toUpperCase() + behaviorType.slice(1)}Time` as keyof NegativeBehaviorState;
+    if (typeof nbs[lastTriggerKey] === 'number' && now - (nbs[lastTriggerKey] as number) < config.cooldown) {
+      return; // Still in cooldown
+    }
+    
+    // Apply penalties
+    updateMood(config.moodPenalty, true);
+    
+    if (config.affectionPenalty < 0) {
+      setAffection(prev => {
+        const level = getAffectionLevel(prev.points);
+        const newPoints = Math.max(level.minPoints, prev.points + config.affectionPenalty);
+        return { ...prev, points: newPoints };
+      });
+    }
+    
+    // Show reaction
+    const phrase = config.phrases[Math.floor(Math.random() * config.phrases.length)];
+    const emotionConfig = emotionConfigs[config.emotion];
+    const reaction: Reaction = {
+      msg: phrase,
+      emotion: config.emotion,
+      eyeScale: { x: 1.5, y: 1.5 },
+      shape: emotionConfig.eyeShape,
+    };
+    setGreetingText(reaction.msg);
+    setShowGreeting(true);
+    applyReaction(reaction);
+    
+    // Update last trigger time
+    if (behaviorType === 'roughMovement') {
+      nbs.lastRoughMovementTime = now;
+    } else if (behaviorType === 'longIgnore') {
+      nbs.lastIgnoreWarningTime = now;
+    }
+  }, [applyReaction, updateMood]);
+  
+  // Add affection points with mood and streak system
   const addAffection = useCallback((points: number, gestureType: GestureType) => {
     const config = gestureConfigs[gestureType];
     const randomPhrase = config.phrases[Math.floor(Math.random() * config.phrases.length)];
     
     setAffection(prev => {
-      const newPoints = prev.points + points;
+      const level = getAffectionLevel(prev.points);
+      const streakBonus = getStreakBonus(prev.streakDays);
+      
+      // Apply streak multiplier
+      let adjustedPoints = points;
+      if (streakBonus) {
+        adjustedPoints = Math.floor(points * streakBonus.affectionMultiplier);
+      }
+      
+      // Check for daily bonus
+      const lastBonusDate = new Date(prev.lastDailyBonus).toDateString();
+      const today = new Date().toDateString();
+      let newStreakDays = prev.streakDays;
+      let newLastDailyBonus = prev.lastDailyBonus;
+      
+      if (lastBonusDate !== today) {
+        // First interaction of the day
+        const yesterday = new Date(Date.now() - 86400000).toDateString();
+        if (lastBonusDate === yesterday) {
+          newStreakDays = prev.streakDays + 1;
+        } else {
+          newStreakDays = 1;
+        }
+        newLastDailyBonus = Date.now();
+        
+        // Show streak notification
+        if (newStreakDays > 1) {
+          const currentStreakBonus = getStreakBonus(newStreakDays);
+          if (currentStreakBonus && currentStreakBonus.days === newStreakDays) {
+            setFloatingText(currentStreakBonus.specialPhrase);
+            setFloatingTextType('streak');
+            setShowFloatingText(true);
+            setTimeout(() => setShowFloatingText(false), 2000);
+          }
+        }
+      }
+      
+      const newPoints = prev.points + adjustedPoints;
+      const newMood = Math.min(100, prev.mood + config.moodReward);
       const newLevel = getAffectionLevel(newPoints);
       const oldLevel = getAffectionLevel(prev.points);
       
       // Check for level up
       if (newLevel.tier > oldLevel.tier) {
-        // Level up celebration
         const celebrationPhrase = levelUpPhrases[newLevel.tier as AffectionTier][
           Math.floor(Math.random() * levelUpPhrases[newLevel.tier as AffectionTier].length)
         ];
@@ -893,33 +1128,36 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
         setFloatingTextType('levelup');
         setShowFloatingText(true);
         
-        // Show celebration reaction
+        // Select celebration emotion from newly unlocked pool
+        const celebrationEmotion = selectWeightedEmotion(newLevel.baseEmotions, newMood, 'positive');
+        const celebrationConfig = emotionConfigs[celebrationEmotion];
+        
         const celebrationReaction: Reaction = {
           msg: celebrationPhrase || randomPhrase,
-          emotion: newLevel.defaultEmotion,
+          emotion: celebrationEmotion,
           eyeScale: { x: 2, y: 2 },
-          shape: 'star',
+          shape: celebrationConfig.eyeShape,
         };
         setGreetingText(celebrationReaction.msg);
         setShowGreeting(true);
         applyReaction(celebrationReaction);
         
-        // Update glow color to new level
-        setGlowColor(newLevel.glowColor);
-        
         setTimeout(() => setShowFloatingText(false), 2000);
       } else {
-        // Normal points gain
-        setFloatingText(`+${points}`);
+        // Normal points gain - use weighted emotion selection
+        const availableEmotions = level.unlockedEmotions.filter(e => !emotionConfigs[e].isNegative);
+        const selectedEmotion = selectWeightedEmotion(availableEmotions, newMood, 'positive');
+        const selectedConfig = emotionConfigs[selectedEmotion];
+        
+        setFloatingText(`+${adjustedPoints}`);
         setFloatingTextType('points');
         setShowFloatingText(true);
         
-        // Show gesture reaction
         const gestureReaction: Reaction = {
           msg: randomPhrase,
-          emotion: config.emotion,
+          emotion: selectedEmotion,
           eyeScale: { x: 1.5, y: 1.5 },
-          shape: 'sphere',
+          shape: selectedConfig.eyeShape,
         };
         setGreetingText(gestureReaction.msg);
         setShowGreeting(true);
@@ -929,14 +1167,19 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
       }
       
       return {
+        ...prev,
         points: newPoints,
         tier: newLevel.tier,
+        mood: newMood,
+        streakDays: newStreakDays,
         lastInteraction: Date.now(),
+        lastDailyBonus: newLastDailyBonus,
+        totalInteractions: prev.totalInteractions + 1,
       };
     });
-  }, [applyReaction]);
+  }, [applyReaction, selectWeightedEmotion]);
   
-  // Gesture detection handler
+  // Gesture detection handler with negative behavior detection
   const detectGestures = useCallback((clientX: number, clientY: number) => {
     if (!containerRef.current) return;
     
@@ -948,6 +1191,19 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
     
     const gs = gestureStateRef.current;
     const now = Date.now();
+    
+    // Detect rough/fast movement (negative behavior)
+    if (lastMousePosRef.current) {
+      const dx = clientX - lastMousePosRef.current.x;
+      const dy = clientY - lastMousePosRef.current.y;
+      const speed = Math.sqrt(dx * dx + dy * dy);
+      lastMouseSpeedRef.current = speed;
+      
+      // Rough movement detection (speed > 50 pixels)
+      if (speed > 50) {
+        handleNegativeBehavior('roughMovement');
+      }
+    }
     
     // 1. Circle detection - track angle changes
     const currentAngle = Math.atan2(relY, relX);
@@ -972,6 +1228,19 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
         // Check for 5 complete circles (5 * 2π)
         const circleConfig = gestureConfigs.circle;
         if (gs.circleAngleAccumulator >= circleConfig.requiredCount * 2 * Math.PI) {
+          // Track consecutive circles for excessive circle detection
+          setAffection(prev => {
+            const newCircleCount = prev.circleCount + 1;
+            
+            // Check for excessive circles (>10 in a session)
+            if (newCircleCount > 10) {
+              handleNegativeBehavior('excessiveCircle');
+              return { ...prev, circleCount: 0 };
+            }
+            
+            return { ...prev, circleCount: newCircleCount };
+          });
+          
           addAffection(circleConfig.affectionReward, 'circle');
           gs.circleAngleAccumulator = 0;
           gs.circleDirection = null;
@@ -1046,7 +1315,7 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
     lastMousePosRef.current = null;
   }, []);
   
-  // Handle mouse enter - show level-based reaction
+  // Handle mouse enter - show dynamic mood/level-based reaction
   const handleMouseEnter = useCallback(() => {
     if (showGreeting) return;
     
@@ -1057,79 +1326,139 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
     if (idleTimeoutRef.current) {
       clearTimeout(idleTimeoutRef.current);
     }
+    if (ignoreCheckIntervalRef.current) {
+      clearTimeout(ignoreCheckIntervalRef.current);
+    }
     
     // Track hover start time
     hoverStartTimeRef.current = Date.now();
+    negativeBehaviorStateRef.current.hoverStartTime = Date.now();
     
-    // Show progress bar on hover
+    // Show progress bar and mood indicator on hover
     setShowProgressBar(true);
+    setShowMoodIndicator(true);
     
-    // Get level-appropriate greeting
+    // Get level-appropriate greeting based on time of day
     const currentLevel = affectionLevels[affection.tier];
-    const greetingPhrase = currentLevel.greetingPhrases[
-      Math.floor(Math.random() * currentLevel.greetingPhrases.length)
-    ];
+    const hour = new Date().getHours();
+    const timeConfig = getTimePeriod(hour);
     
-    // Create level-based reaction
+    // Choose between time-based greeting and level greeting
+    const useTimeGreeting = Math.random() < 0.3;
+    const greetingPhrase = useTimeGreeting
+      ? timeConfig.greetings[Math.floor(Math.random() * timeConfig.greetings.length)]
+      : currentLevel.greetingPhrases[Math.floor(Math.random() * currentLevel.greetingPhrases.length)];
+    
+    // Select emotion using weighted system
+    const availableEmotions = currentLevel.unlockedEmotions.filter(e => !emotionConfigs[e].isNegative);
+    const selectedEmotion = selectWeightedEmotion(availableEmotions, affection.mood, 'neutral');
+    const emotionConfig = emotionConfigs[selectedEmotion];
+    
+    // Create dynamic reaction
     const levelReaction: Reaction = {
       msg: greetingPhrase,
-      emotion: currentLevel.defaultEmotion,
+      emotion: selectedEmotion,
       eyeScale: { x: 1.3 + affection.tier * 0.1, y: 1.3 + affection.tier * 0.1 },
-      shape: affection.tier >= 4 ? 'heart' : affection.tier >= 3 ? 'star' : 'sphere',
+      shape: emotionConfig.eyeShape,
     };
     
     setGreetingText(levelReaction.msg);
     setShowGreeting(true);
     applyReaction(levelReaction);
     
-    // Apply level-specific glow
-    setGlowColor(currentLevel.glowColor);
+    // Apply emotion-specific glow
+    setGlowColor(emotionConfig.glowColor);
     
     if (greetingTimeoutRef.current) {
       clearTimeout(greetingTimeoutRef.current);
     }
     
-    // Set up long hover detection (3 seconds)
+    // Set up long hover detection (5 seconds) - mood decreases if just staring
     longHoverTimeoutRef.current = setTimeout(() => {
-      // After 3 seconds of hovering, show sleepy reaction
-      const sleepyReaction = sleepyReactions[Math.floor(Math.random() * sleepyReactions.length)];
-      setGreetingText(sleepyReaction.msg);
-      applyReaction(sleepyReaction);
-    }, 3000);
-  }, [showGreeting, applyReaction, sleepyReactions, affection.tier]);
+      // After 5 seconds of hovering without interaction, show bored reaction
+      const boredEmotions: EmotionCategory[] = ['sleepy', 'confused', 'curious'];
+      const boredEmotion = boredEmotions[Math.floor(Math.random() * boredEmotions.length)];
+      const boredConfig = emotionConfigs[boredEmotion];
+      const boredPhrases = boredConfig.phrases;
+      const boredPhrase = boredPhrases[Math.floor(Math.random() * boredPhrases.length)];
+      
+      const boredReaction: Reaction = {
+        msg: boredPhrase,
+        emotion: boredEmotion,
+        eyeScale: { x: 1, y: 0.5 },
+        shape: boredConfig.eyeShape,
+      };
+      setGreetingText(boredReaction.msg);
+      applyReaction(boredReaction);
+      updateMood(-3, false);
+    }, 5000);
+  }, [showGreeting, applyReaction, affection.tier, affection.mood, selectWeightedEmotion, updateMood]);
   
-  // Handle mouse leave - reset after delay
+  // Handle mouse leave - reset after delay, check for sudden leave
   const handleMouseLeave = useCallback(() => {
     // Clear long hover timeout
     if (longHoverTimeoutRef.current) {
       clearTimeout(longHoverTimeoutRef.current);
     }
+    if (ignoreCheckIntervalRef.current) {
+      clearTimeout(ignoreCheckIntervalRef.current);
+    }
+    
+    // Check for sudden leave (less than 500ms hover)
+    const hoverDuration = negativeBehaviorStateRef.current.hoverStartTime 
+      ? Date.now() - negativeBehaviorStateRef.current.hoverStartTime 
+      : 1000;
+    
+    if (hoverDuration < 500 && hoverDuration > 100) {
+      handleNegativeBehavior('suddenLeave');
+    }
     
     hoverStartTimeRef.current = null;
+    negativeBehaviorStateRef.current.hoverStartTime = null;
     
     // Reset gesture tracking
     resetGestureState();
     
-    // Hide progress bar
+    // Hide progress bar and mood indicator
     setShowProgressBar(false);
+    setShowMoodIndicator(false);
     
     greetingTimeoutRef.current = setTimeout(() => {
       setShowGreeting(false);
       resetState();
       
-      // Set up idle timeout (30 seconds without interaction)
+      // Set up idle check - mood slowly decreases when ignored
+      let ignoreCount = 0;
+      ignoreCheckIntervalRef.current = setInterval(() => {
+        ignoreCount++;
+        
+        // Every minute, decrease mood slightly
+        if (ignoreCount >= 60) { // 60 seconds
+          updateMood(-5, false);
+          ignoreCount = 0;
+          
+          // After 5 minutes of ignore, show sad reaction
+          handleNegativeBehavior('longIgnore');
+        }
+      }, 1000);
+      
+      // Set up idle animation (30 seconds)
       idleTimeoutRef.current = setTimeout(() => {
-        // Show level-appropriate idle reaction
+        // Show level-appropriate idle reaction with weighted emotion
         const currentLevel = affectionLevels[affection.tier];
         const idlePhrase = currentLevel.idlePhrases[
           Math.floor(Math.random() * currentLevel.idlePhrases.length)
         ];
         
+        const availableEmotions = currentLevel.unlockedEmotions;
+        const selectedEmotion = selectWeightedEmotion(availableEmotions, affection.mood, 'neutral');
+        const emotionConfig = emotionConfigs[selectedEmotion];
+        
         const idleReaction: Reaction = {
           msg: idlePhrase,
-          emotion: currentLevel.defaultEmotion,
+          emotion: selectedEmotion,
           eyeScale: { x: 1.2, y: 1.2 },
-          shape: 'sphere',
+          shape: emotionConfig.eyeShape,
         };
         
         setGreetingText(idleReaction.msg);
@@ -1143,10 +1472,26 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
         }, 2000);
       }, 30000);
     }, 500);
-  }, [resetState, applyReaction, resetGestureState, affection.tier]);
+  }, [resetState, applyReaction, resetGestureState, affection.tier, affection.mood, handleNegativeBehavior, selectWeightedEmotion, updateMood]);
   
   // Handle click - show special click reaction and open dialog
   const handleClick = useCallback(() => {
+    const now = Date.now();
+    const nbs = negativeBehaviorStateRef.current;
+    
+    // Detect spam clicking
+    if (now - nbs.lastClickTime < 200) {
+      nbs.clickCount++;
+      if (nbs.clickCount >= 5) {
+        handleNegativeBehavior('spamClick');
+        nbs.clickCount = 0;
+        return; // Don't process this click
+      }
+    } else {
+      nbs.clickCount = 1;
+    }
+    nbs.lastClickTime = now;
+    
     // Clear timeouts
     if (greetingTimeoutRef.current) {
       clearTimeout(greetingTimeoutRef.current);
@@ -1158,24 +1503,62 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
     // Add click affection
     addAffection(gestureConfigs.click.affectionReward, 'click');
     
-    // Show click-specific reaction
-    const clickReaction = clickReactions[Math.floor(Math.random() * clickReactions.length)];
+    // Select click reaction using weighted emotion system
+    const currentLevel = affectionLevels[affection.tier];
+    const availableEmotions = currentLevel.unlockedEmotions.filter(e => !emotionConfigs[e].isNegative);
+    const selectedEmotion = selectWeightedEmotion(availableEmotions, affection.mood, 'positive');
+    const emotionConfig = emotionConfigs[selectedEmotion];
+    
+    const clickReaction: Reaction = {
+      msg: clickReactions[Math.floor(Math.random() * clickReactions.length)].msg,
+      emotion: selectedEmotion,
+      eyeScale: { x: 1.5, y: 1.5 },
+      shape: emotionConfig.eyeShape,
+    };
+    
     setGreetingText(clickReaction.msg);
     setShowGreeting(true);
     applyReaction(clickReaction);
     
     // Trigger the click callback
     onSpriteClick?.();
-  }, [onSpriteClick, applyReaction, clickReactions, addAffection]);
+  }, [onSpriteClick, applyReaction, clickReactions, addAffection, handleNegativeBehavior, affection.tier, affection.mood, selectWeightedEmotion]);
   
   // Handle mouse move for gesture detection
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     detectGestures(e.clientX, e.clientY);
   }, [detectGestures]);
   
+  // Helper function to get mood color
+  const getMoodColor = (mood: number): string => {
+    if (mood >= 50) return 'rgba(100, 255, 150, 0.8)'; // Green - happy
+    if (mood >= 20) return 'rgba(200, 255, 150, 0.7)'; // Light green - content
+    if (mood >= -19) return 'rgba(255, 255, 255, 0.6)'; // White - neutral
+    if (mood >= -49) return 'rgba(255, 200, 100, 0.7)'; // Orange - bored
+    if (mood >= -79) return 'rgba(255, 150, 100, 0.8)'; // Dark orange - annoyed
+    return 'rgba(255, 100, 100, 0.8)'; // Red - upset
+  };
+  
+  // Helper function to get mood emoji
+  const getMoodEmoji = (state: MoodState): string => {
+    switch (state) {
+      case 'ecstatic': return '(ノ´ヮ`)ノ';
+      case 'happy': return '(◕‿◕)';
+      case 'content': return '(◠‿◠)';
+      case 'neutral': return '( ・_・)';
+      case 'bored': return '(－_－)';
+      case 'annoyed': return '(￣^￣)';
+      case 'upset': return '(´;ω;`)';
+      default: return '(・・?)';
+    }
+  };
+  
   // Get current level info for display
   const currentLevelInfo = affectionLevels[affection.tier];
   const progressPercent = getLevelProgress(affection.points);
+  // Get glow color based on level's primary emotion
+  const levelPrimaryEmotion = currentLevelInfo.baseEmotions[0] || 'curious';
+  const levelGlowColor = emotionConfigs[levelPrimaryEmotion]?.glowColor || 'rgba(255, 255, 255, 0.4)';
   
   // Sprite content
   const spriteContent = (
@@ -1249,7 +1632,7 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
           transform: 'translateX(-50%)',
           background: 'rgba(10, 10, 10, 0.9)',
           backdropFilter: 'blur(10px)',
-          border: `2px solid ${currentLevelInfo.glowColor.replace('0.', '0.6').replace(')', ')')}`,
+          border: `2px solid ${levelGlowColor.replace('0.', '0.6').replace(')', ')')}`,
           padding: '4px 12px',
           borderRadius: '20px',
           zIndex: 10002,
@@ -1259,7 +1642,7 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
       >
         <span
           className="font-display text-[0.6rem] tracking-[2px] uppercase"
-          style={{ color: currentLevelInfo.glowColor.replace('0.', '1').replace(')', ')') }}
+          style={{ color: levelGlowColor.replace('0.', '1').replace(')', ')') }}
         >
           Lv.{affection.tier} {currentLevelInfo.nameEn}
         </span>
@@ -1288,15 +1671,15 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
           style={{
             width: `${progressPercent}%`,
             height: '100%',
-            background: `linear-gradient(90deg, ${currentLevelInfo.glowColor}, ${currentLevelInfo.glowColor.replace('0.', '0.8')})`,
+            background: `linear-gradient(90deg, ${levelGlowColor}, ${levelGlowColor.replace('0.', '0.8')})`,
             borderRadius: '3px',
             transition: 'width 0.3s ease-out',
-            boxShadow: `0 0 10px ${currentLevelInfo.glowColor}`,
+            boxShadow: `0 0 10px ${levelGlowColor}`,
           }}
         />
       </div>
       
-      {/* Affection points display (on hover) */}
+      {/* Affection points and mood display (on hover) */}
       <div
         className="pointer-events-none font-display text-[0.5rem] tracking-[1px]"
         style={{
@@ -1309,10 +1692,34 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
           transition: 'opacity 0.3s ease-out',
           zIndex: 10002,
           whiteSpace: 'nowrap',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
         }}
       >
-        {affection.points} pts
+        <span>{affection.points} pts</span>
+        <span style={{ color: getMoodColor(affection.mood) }}>
+          {getMoodEmoji(moodState)}
+        </span>
       </div>
+      
+      {/* Streak indicator (when applicable) */}
+      {affection.streakDays > 1 && showProgressBar && (
+        <div
+          className="pointer-events-none font-display text-[0.45rem] tracking-[1px]"
+          style={{
+            position: 'absolute',
+            bottom: '-40px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            color: 'rgba(255, 200, 100, 0.7)',
+            zIndex: 10002,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {affection.streakDays} day streak
+        </div>
+      )}
       
       {/* Greeting bubble - Sci-Fi style */}
       <div
