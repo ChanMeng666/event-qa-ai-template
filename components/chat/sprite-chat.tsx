@@ -19,6 +19,11 @@ import {
   getTimePeriod,
   getStreakBonus,
   calculateDaysSinceLastInteraction,
+  getMoodMultiplier,
+  getMoodProtection,
+  applyMoodFloor,
+  calculateMoodRecovery,
+  getSpecialState,
   AFFECTION_STORAGE_KEY,
   defaultAffectionState,
   type AffectionState,
@@ -112,6 +117,7 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
   const longHoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const ignoreCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const moodRecoveryIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastMouseMoveRef = useRef<number>(Date.now());
   
   // Affection & Mood system state
@@ -1011,16 +1017,23 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
     return availableEmotions[0];
   }, []);
   
-  // Update mood value
+  // Update mood value with floor protection based on affection tier
   const updateMood = useCallback((delta: number, showFeedback: boolean = false) => {
     setAffection(prev => {
-      const newMood = Math.max(-100, Math.min(100, prev.mood + delta));
+      // Apply mood floor protection based on affection tier
+      const rawMood = prev.mood + delta;
+      const newMood = applyMoodFloor(rawMood, prev.tier);
+      
+      // Check if floor was hit
+      const protection = getMoodProtection(prev.tier);
+      const hitFloor = rawMood < protection.moodFloor && delta < 0;
       
       if (showFeedback && Math.abs(delta) >= 5) {
-        setFloatingText(delta > 0 ? `Mood +${delta}` : `Mood ${delta}`);
+        const floorNote = hitFloor ? ' (protected!)' : '';
+        setFloatingText(delta > 0 ? `Mood +${delta}` : `Mood ${delta}${floorNote}`);
         setFloatingTextType('mood');
         setShowFloatingText(true);
-        setTimeout(() => setShowFloatingText(false), 800);
+        setTimeout(() => setShowFloatingText(false), 1000);
       }
       
       return { ...prev, mood: newMood };
@@ -1105,11 +1118,20 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
     setAffection(prev => {
       const level = getAffectionLevel(prev.points);
       const streakBonus = getStreakBonus(prev.streakDays);
+      const moodMultiplierConfig = getMoodMultiplier(prev.mood);
       
       // Apply streak multiplier
       let adjustedPoints = points;
       if (streakBonus) {
-        adjustedPoints = Math.floor(points * streakBonus.affectionMultiplier);
+        adjustedPoints = Math.floor(adjustedPoints * streakBonus.affectionMultiplier);
+      }
+      
+      // Apply mood multiplier (happy = more gains, sad = less gains)
+      adjustedPoints = Math.floor(adjustedPoints * moodMultiplierConfig.affectionMultiplier);
+      
+      // Ensure at least 1 point if original was positive
+      if (points > 0 && adjustedPoints < 1) {
+        adjustedPoints = 1;
       }
       
       // Check for daily bonus
@@ -1146,6 +1168,11 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
       const newLevel = getAffectionLevel(newPoints);
       const oldLevel = getAffectionLevel(prev.points);
       
+      // Show mood bonus indicator if multiplier is active
+      const moodBonusText = moodMultiplierConfig.affectionMultiplier !== 1.0 
+        ? ` ${moodMultiplierConfig.emoji}x${moodMultiplierConfig.affectionMultiplier}` 
+        : '';
+      
       // Check for level up
       if (newLevel.tier > oldLevel.tier) {
         const celebrationPhrase = levelUpPhrases[newLevel.tier as AffectionTier][
@@ -1176,9 +1203,9 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
         const selectedEmotion = selectWeightedEmotion(availableEmotions, newMood, 'positive');
         const selectedConfig = emotionConfigs[selectedEmotion];
         
-        // Show combined feedback: affection + mood
+        // Show combined feedback: affection + mood + bonus indicator
         const moodText = moodGain > 0 ? ` 😊+${moodGain}` : '';
-        setFloatingText(`+${adjustedPoints}${moodText}`);
+        setFloatingText(`+${adjustedPoints}${moodBonusText}${moodText}`);
         setFloatingTextType('points');
         setShowFloatingText(true);
         
@@ -1421,6 +1448,29 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
       applyReaction(boredReaction);
       updateMood(-3, false);
     }, 5000);
+    
+    // Set up mood recovery interval (every 10 seconds while hovering)
+    // Higher affection = faster mood recovery toward target
+    if (moodRecoveryIntervalRef.current) {
+      clearInterval(moodRecoveryIntervalRef.current);
+    }
+    moodRecoveryIntervalRef.current = setInterval(() => {
+      setAffection(prev => {
+        const recovery = calculateMoodRecovery(prev.mood, prev.tier);
+        if (recovery > 0) {
+          const newMood = Math.min(100, prev.mood + recovery);
+          // Show subtle feedback for mood recovery
+          if (recovery >= 2) {
+            setFloatingText(`💚+${recovery}`);
+            setFloatingTextType('mood');
+            setShowFloatingText(true);
+            setTimeout(() => setShowFloatingText(false), 600);
+          }
+          return { ...prev, mood: newMood };
+        }
+        return prev;
+      });
+    }, 10000); // Every 10 seconds (recovery values are per minute, so we divide by 6)
   }, [showGreeting, applyReaction, affection.tier, affection.mood, selectWeightedEmotion, updateMood]);
   
   // Handle mouse leave - reset after delay, check for sudden leave
@@ -1431,6 +1481,10 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
     }
     if (ignoreCheckIntervalRef.current) {
       clearTimeout(ignoreCheckIntervalRef.current);
+    }
+    // Clear mood recovery interval
+    if (moodRecoveryIntervalRef.current) {
+      clearInterval(moodRecoveryIntervalRef.current);
     }
     
     // Check for sudden leave (less than 500ms hover)
@@ -1762,7 +1816,7 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
           </span>
         </div>
         
-        {/* Level and streak info */}
+        {/* Level, streak, and mood multiplier info */}
         <div 
           className="font-display text-[0.35rem]"
           style={{ 
@@ -1778,7 +1832,42 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
               🔥{affection.streakDays}
             </span>
           )}
+          {/* Mood multiplier indicator */}
+          {(() => {
+            const moodMult = getMoodMultiplier(affection.mood);
+            if (moodMult.affectionMultiplier !== 1.0) {
+              return (
+                <span style={{ 
+                  color: moodMult.affectionMultiplier > 1 ? 'rgba(74, 222, 128, 0.8)' : 'rgba(248, 113, 113, 0.8)',
+                  marginLeft: '2px',
+                }}>
+                  {moodMult.emoji}×{moodMult.affectionMultiplier}
+                </span>
+              );
+            }
+            return null;
+          })()}
         </div>
+        
+        {/* Special state indicator */}
+        {(() => {
+          const specialState = getSpecialState(affection.mood, affection.tier);
+          if (specialState) {
+            return (
+              <div 
+                className="font-display text-[0.3rem]"
+                style={{ 
+                  color: specialState.color,
+                  marginTop: '2px',
+                  textShadow: `0 0 4px ${specialState.color}`,
+                }}
+              >
+                ✨ {specialState.labelEn}
+              </div>
+            );
+          }
+          return null;
+        })()}
       </div>
       
       {/* Greeting bubble - Sci-Fi style */}

@@ -734,3 +734,226 @@ export const defaultAffectionState: AffectionState = {
   totalInteractions: 0,
   circleCount: 0,
 };
+
+// ============================================================================
+// Mood-Affection Relationship System
+// ============================================================================
+
+/**
+ * Mood affects how much affection you gain/lose
+ * Higher mood = more affection gains
+ * Lower mood = reduced affection gains
+ */
+export interface MoodMultiplierConfig {
+  minMood: number;
+  maxMood: number;
+  affectionMultiplier: number;
+  label: string;
+  labelEn: string;
+  emoji: string;
+  description: string;
+}
+
+export const moodMultiplierConfigs: MoodMultiplierConfig[] = [
+  {
+    minMood: 80,
+    maxMood: 100,
+    affectionMultiplier: 1.5,
+    label: '欣喜若狂',
+    labelEn: 'Euphoric',
+    emoji: '😆',
+    description: 'Affection gains x1.5! Keep the good vibes!',
+  },
+  {
+    minMood: 50,
+    maxMood: 79,
+    affectionMultiplier: 1.25,
+    label: '开心',
+    labelEn: 'Happy',
+    emoji: '😊',
+    description: 'Affection gains x1.25',
+  },
+  {
+    minMood: -49,
+    maxMood: 49,
+    affectionMultiplier: 1.0,
+    label: '平静',
+    labelEn: 'Neutral',
+    emoji: '😐',
+    description: 'Normal affection gains',
+  },
+  {
+    minMood: -79,
+    maxMood: -50,
+    affectionMultiplier: 0.75,
+    label: '低落',
+    labelEn: 'Sad',
+    emoji: '😢',
+    description: 'Affection gains x0.75 - Cheer me up!',
+  },
+  {
+    minMood: -100,
+    maxMood: -80,
+    affectionMultiplier: 0.5,
+    label: '沮丧',
+    labelEn: 'Depressed',
+    emoji: '😭',
+    description: 'Affection gains x0.5 - I need care...',
+  },
+];
+
+/**
+ * Higher affection level provides mood protection and recovery
+ */
+export interface AffectionMoodProtection {
+  tier: AffectionTier;
+  moodFloor: number; // Minimum mood value (can't go lower)
+  moodRecoveryPerMinute: number; // How much mood recovers per minute
+  moodTarget: number; // What value mood recovers toward
+  description: string;
+}
+
+export const affectionMoodProtections: AffectionMoodProtection[] = [
+  {
+    tier: 0,
+    moodFloor: -100,
+    moodRecoveryPerMinute: 0,
+    moodTarget: 0,
+    description: 'No protection - mood can drop to -100',
+  },
+  {
+    tier: 1,
+    moodFloor: -100,
+    moodRecoveryPerMinute: 0,
+    moodTarget: 0,
+    description: 'No protection yet',
+  },
+  {
+    tier: 2,
+    moodFloor: -80,
+    moodRecoveryPerMinute: 1,
+    moodTarget: 0,
+    description: 'Mood floor: -80, Recovery: +1/min',
+  },
+  {
+    tier: 3,
+    moodFloor: -50,
+    moodRecoveryPerMinute: 2,
+    moodTarget: 0,
+    description: 'Mood floor: -50, Recovery: +2/min',
+  },
+  {
+    tier: 4,
+    moodFloor: -30,
+    moodRecoveryPerMinute: 3,
+    moodTarget: 10,
+    description: 'Mood floor: -30, Recovery: +3/min → +10',
+  },
+  {
+    tier: 5,
+    moodFloor: -10,
+    moodRecoveryPerMinute: 5,
+    moodTarget: 20,
+    description: 'Mood floor: -10, Recovery: +5/min → +20',
+  },
+];
+
+/**
+ * Get the affection multiplier based on current mood
+ */
+export function getMoodMultiplier(mood: number): MoodMultiplierConfig {
+  for (const config of moodMultiplierConfigs) {
+    if (mood >= config.minMood && mood <= config.maxMood) {
+      return config;
+    }
+  }
+  return moodMultiplierConfigs[2]; // Default to neutral
+}
+
+/**
+ * Get mood protection config based on affection tier
+ */
+export function getMoodProtection(tier: AffectionTier): AffectionMoodProtection {
+  return affectionMoodProtections[tier] || affectionMoodProtections[0];
+}
+
+/**
+ * Calculate mood with floor protection applied
+ */
+export function applyMoodFloor(newMood: number, tier: AffectionTier): number {
+  const protection = getMoodProtection(tier);
+  return Math.max(protection.moodFloor, Math.min(100, newMood));
+}
+
+/**
+ * Calculate mood recovery based on affection tier
+ * Returns the amount of mood to recover toward target
+ */
+export function calculateMoodRecovery(currentMood: number, tier: AffectionTier): number {
+  const protection = getMoodProtection(tier);
+  
+  if (protection.moodRecoveryPerMinute === 0) return 0;
+  
+  // If mood is below target, recover toward target
+  if (currentMood < protection.moodTarget) {
+    return Math.min(protection.moodRecoveryPerMinute, protection.moodTarget - currentMood);
+  }
+  
+  // If mood is above target but below 0, still recover
+  if (currentMood < 0 && currentMood >= protection.moodTarget) {
+    return 0; // Already at or above target
+  }
+  
+  return 0;
+}
+
+/**
+ * Special state messages based on mood-affection combination
+ */
+export interface SpecialStateConfig {
+  condition: (mood: number, tier: AffectionTier) => boolean;
+  label: string;
+  labelEn: string;
+  color: string;
+  phrases: string[];
+}
+
+export const specialStateConfigs: SpecialStateConfig[] = [
+  {
+    condition: (mood, tier) => mood >= 80 && tier >= 4,
+    label: '最佳状态',
+    labelEn: 'Best Friends!',
+    color: '#FFD700',
+    phrases: ['We\'re the best team!', 'I love spending time with you!', '(◕‿◕)♡', 'You\'re amazing!'],
+  },
+  {
+    condition: (mood, tier) => mood >= 80 && tier < 4,
+    label: '超级开心',
+    labelEn: 'Super Happy!',
+    color: '#4ADE80',
+    phrases: ['This is so fun!', 'Yay!', '(≧▽≦)', 'More more!'],
+  },
+  {
+    condition: (mood, tier) => mood <= -80 && tier <= 1,
+    label: '需要关心',
+    labelEn: 'Needs Care',
+    color: '#F87171',
+    phrases: ['Please be gentle...', '(´;ω;`)', 'I\'m feeling down...', 'Help...'],
+  },
+  {
+    condition: (mood, tier) => mood <= -50 && tier >= 3,
+    label: '信任你',
+    labelEn: 'Trusts You',
+    color: '#60A5FA',
+    phrases: ['I know you\'ll cheer me up...', 'At least I have you...', '(´･ω･`)', 'Stay with me...'],
+  },
+];
+
+export function getSpecialState(mood: number, tier: AffectionTier): SpecialStateConfig | null {
+  for (const config of specialStateConfigs) {
+    if (config.condition(mood, tier)) {
+      return config;
+    }
+  }
+  return null;
+}
