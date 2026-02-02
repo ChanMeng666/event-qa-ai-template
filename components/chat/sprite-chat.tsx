@@ -1042,12 +1042,29 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
     // Apply penalties
     updateMood(config.moodPenalty, true);
     
+    // Apply affection penalty and show feedback
     if (config.affectionPenalty < 0) {
       setAffection(prev => {
         const level = getAffectionLevel(prev.points);
         const newPoints = Math.max(level.minPoints, prev.points + config.affectionPenalty);
         return { ...prev, points: newPoints };
       });
+      
+      // Show progress bar to display the change
+      setShowProgressBar(true);
+      
+      // Show floating text with negative points
+      setFloatingText(`${config.affectionPenalty}`);
+      setFloatingTextType('points');
+      setShowFloatingText(true);
+      setTimeout(() => setShowFloatingText(false), 1500);
+      
+      // Hide progress bar after a delay (if not hovering)
+      setTimeout(() => {
+        if (!negativeBehaviorStateRef.current.hoverStartTime) {
+          setShowProgressBar(false);
+        }
+      }, 2000);
     }
     
     // Show reaction
@@ -1592,7 +1609,7 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
         }}
       />
       
-      {/* Floating text for affection gain */}
+      {/* Floating text for affection gain/loss */}
       <div
         className="pointer-events-none"
         style={{
@@ -1611,10 +1628,16 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
           className="font-display font-bold"
           style={{
             fontSize: floatingTextType === 'levelup' ? '1rem' : '1.2rem',
-            color: floatingTextType === 'levelup' ? '#FFD700' : '#4ADE80',
+            color: floatingTextType === 'levelup' 
+              ? '#FFD700' 
+              : floatingText.startsWith('-') 
+                ? '#F87171' // Red for negative
+                : '#4ADE80', // Green for positive
             textShadow: floatingTextType === 'levelup' 
               ? '0 0 20px rgba(255, 215, 0, 0.8), 0 0 40px rgba(255, 215, 0, 0.4)'
-              : '0 0 10px rgba(74, 222, 128, 0.8)',
+              : floatingText.startsWith('-')
+                ? '0 0 10px rgba(248, 113, 113, 0.8)' // Red glow for negative
+                : '0 0 10px rgba(74, 222, 128, 0.8)',
             letterSpacing: '2px',
           }}
         >

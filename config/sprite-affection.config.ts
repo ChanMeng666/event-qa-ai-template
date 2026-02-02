@@ -121,7 +121,7 @@ export const negativeBehaviorConfigs: Record<NegativeBehaviorType, NegativeBehav
   roughMovement: {
     type: 'roughMovement',
     moodPenalty: -10,
-    affectionPenalty: 0,
+    affectionPenalty: -1, // Now reduces affection
     emotion: 'surprised',
     phrases: ['Whoa!', 'Too fast!', '(°△°)', 'Slow down!', 'Eek!'],
     cooldown: 2000,
@@ -129,7 +129,7 @@ export const negativeBehaviorConfigs: Record<NegativeBehaviorType, NegativeBehav
   spamClick: {
     type: 'spamClick',
     moodPenalty: -15,
-    affectionPenalty: -1,
+    affectionPenalty: -2, // Increased penalty
     emotion: 'overwhelmed',
     phrases: ['Too much!', '(>_<)', 'Stop stop!', 'Overwhelmed...', 'Aaah!'],
     cooldown: 3000,
@@ -137,7 +137,7 @@ export const negativeBehaviorConfigs: Record<NegativeBehaviorType, NegativeBehav
   suddenLeave: {
     type: 'suddenLeave',
     moodPenalty: -5,
-    affectionPenalty: 0,
+    affectionPenalty: -1, // Now reduces affection
     emotion: 'sad',
     phrases: ['Wait...', "(´;ω;`)", 'Come back...', 'Aww...'],
     cooldown: 5000,
@@ -145,7 +145,7 @@ export const negativeBehaviorConfigs: Record<NegativeBehaviorType, NegativeBehav
   longIgnore: {
     type: 'longIgnore',
     moodPenalty: -5, // per minute
-    affectionPenalty: 0,
+    affectionPenalty: -3, // Significant penalty for ignoring
     emotion: 'sad',
     phrases: ['Hello...?', 'Still there?', '(._.)','Anyone...?', 'So lonely...'],
     cooldown: 60000,
@@ -153,7 +153,7 @@ export const negativeBehaviorConfigs: Record<NegativeBehaviorType, NegativeBehav
   excessiveCircle: {
     type: 'excessiveCircle',
     moodPenalty: -20,
-    affectionPenalty: -2,
+    affectionPenalty: -3, // Increased penalty
     emotion: 'dizzy',
     phrases: ['Dizzy...', '@_@', 'Stop spinning!', 'The world is turning...', 'Ugh...'],
     cooldown: 5000,
