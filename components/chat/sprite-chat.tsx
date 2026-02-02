@@ -1726,19 +1726,21 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
           flexDirection: 'column',
           alignItems: 'center',
           gap: '4px',
+          whiteSpace: 'nowrap',
         }}
       >
         {/* Affection bar with label */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <span className="font-display text-[0.4rem]" style={{ color: 'rgba(255, 255, 255, 0.4)', width: '14px' }}>❤️</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
+          <span className="font-display text-[0.5rem]" style={{ color: 'rgba(255, 255, 255, 0.4)', flexShrink: 0 }}>❤️</span>
           <div
             style={{
-              width: '70px',
+              width: '90px',
               height: '4px',
               background: 'rgba(10, 10, 10, 0.6)',
               borderRadius: '2px',
               overflow: 'hidden',
               border: '1px solid rgba(255, 255, 255, 0.08)',
+              flexShrink: 0,
             }}
           >
             <div
@@ -1752,24 +1754,32 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
               }}
             />
           </div>
-          <span className="font-display text-[0.35rem]" style={{ color: 'rgba(255, 255, 255, 0.35)', width: '28px' }}>
+          <span className="font-display text-[0.35rem]" style={{ color: 'rgba(255, 255, 255, 0.35)', minWidth: '28px', flexShrink: 0 }}>
             {affection.points}
           </span>
         </div>
         
         {/* Mood bar with label */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <span className="font-display text-[0.4rem]" style={{ color: getMoodColor(affection.mood), width: '14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
+          <span 
+            className="font-display text-[0.5rem]" 
+            style={{ 
+              color: getMoodColor(affection.mood), 
+              flexShrink: 0,
+              display: 'inline-block',
+            }}
+          >
             {getMoodEmoji(moodState)}
           </span>
           <div
             style={{
-              width: '70px',
+              width: '90px',
               height: '4px',
               background: 'rgba(10, 10, 10, 0.6)',
               borderRadius: '2px',
               overflow: 'hidden',
               border: '1px solid rgba(255, 255, 255, 0.08)',
+              flexShrink: 0,
             }}
           >
             {/* Mood bar - centered at 50%, extends left for negative, right for positive */}
@@ -1810,7 +1820,8 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
           </div>
           <span className="font-display text-[0.35rem]" style={{ 
             color: affection.mood >= 0 ? 'rgba(74, 222, 128, 0.7)' : 'rgba(248, 113, 113, 0.7)', 
-            width: '28px' 
+            minWidth: '28px',
+            flexShrink: 0,
           }}>
             {affection.mood >= 0 ? `+${affection.mood}` : affection.mood}
           </span>
