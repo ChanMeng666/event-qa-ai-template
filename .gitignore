@@ -72,3 +72,8 @@ pids
 
 # Optional eslint cache
 .eslintcache
+
+# Cloudflare
+.open-next
+.wrangler
+.dev.vars
