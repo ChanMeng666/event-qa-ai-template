@@ -32,7 +32,20 @@
       "Bash(gh repo view:*)",
       "Bash(gh repo rename:*)",
       "Bash(git remote set-url:*)",
-      "Bash(gh repo edit:*)"
+      "Bash(gh repo edit:*)",
+      "Bash(npx wrangler login)",
+      "Bash(npx wrangler secret put:*)",
+      "Bash(npm run deploy:*)",
+      "Bash(npx wrangler deploy:*)",
+      "Bash(npx wrangler whoami:*)",
+      "Bash(git remote get-url:*)",
+      "Bash(gh auth status:*)",
+      "Bash(gh secret set:*)",
+      "WebFetch(domain:dash.cloudflare.com)",
+      "Bash(gh secret list:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run watch:*)",
+      "Bash(gh run view:*)"
     ]
   }
 }
