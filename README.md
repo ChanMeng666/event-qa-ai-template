@@ -9,7 +9,7 @@ Built with Next.js 16, featuring a full-screen chat interface with Google Gemini
 **Current Example**: AI Hackathon Festival 2025 (New Zealand)
 
 [![📖 Quick Start Guide](https://img.shields.io/badge/%F0%9F%93%96-Quick%20Start%20Guide-blue?style=for-the-badge)](docs/TEMPLATE-SETUP.md)
-[![🚀 Visit Live Demo 🚀](https://img.shields.io/badge/%F0%9F%9A%80-Visit%20Live%20Demo-%2300C851?style=for-the-badge&logo=vercel&logoColor=white)](https://event-qa-ai-template.vercel.app)
+[![🚀 Visit Live Demo 🚀](https://img.shields.io/badge/%F0%9F%9A%80-Visit%20Live%20Demo-%2300C851?style=for-the-badge&logo=vercel&logoColor=white)](https://ai-hackathon-assistant.chanmeng-dev.workers.dev/)
 
 <!-- SHIELD GROUP -->
 
@@ -844,7 +844,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 </div>
 
 **Author Contact:**
-- 🌐 **Website**: [chanmeng.live](https://2d-portfolio-eta.vercel.app/)
+- 🌐 **Website**: [chanmeng.org](https://chanmeng.org/)
 - 💼 **LinkedIn**: [chanmeng666](https://www.linkedin.com/in/chanmeng666/)
 - 📧 **Email**: [chanmeng.dev@gmail.com](mailto:chanmeng.dev@gmail.com)
 - 🔗 **GitHub**: [ChanMeng666](https://github.com/ChanMeng666)
@@ -882,7 +882,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 [github-license-link]: https://github.com/ChanMeng666/event-qa-ai-template/blob/main/LICENSE
 
 <!-- Deployment Links -->
-[vercel-link]: https://event-qa-ai-template.vercel.app
+[vercel-link]: https://ai-hackathon-assistant.chanmeng-dev.workers.dev/
 
 <!-- Shield Badges -->
 [github-release-shield]: https://img.shields.io/github/v/release/ChanMeng666/event-qa-ai-template?color=369eff&labelColor=black&logo=github&style=flat-square
