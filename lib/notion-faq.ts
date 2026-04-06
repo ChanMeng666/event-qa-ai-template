@@ -1,19 +1,31 @@
-import { Client } from '@notionhq/client';
 import { PresetQuestion, FAQStats } from '@/components/chatbot/types';
 
-// Initialize Notion client (server-side only)
-let notionClient: Client | null = null;
+const NOTION_API_BASE = 'https://api.notion.com/v1';
+const NOTION_VERSION = '2022-06-28';
 
-function getNotionClient(): Client {
-  if (!notionClient) {
-    if (!process.env.NOTION_TOKEN) {
-      throw new Error('NOTION_TOKEN environment variable is not set');
-    }
-    notionClient = new Client({
-      auth: process.env.NOTION_TOKEN,
-    });
+// Fetch helper for Notion REST API (uses native fetch, compatible with Cloudflare Workers)
+async function notionFetch(endpoint: string, options: { method?: string; body?: unknown } = {}) {
+  const token = process.env.NOTION_TOKEN;
+  if (!token) {
+    throw new Error('NOTION_TOKEN environment variable is not set');
   }
-  return notionClient;
+
+  const res = await fetch(`${NOTION_API_BASE}${endpoint}`, {
+    method: options.method || 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Notion-Version': NOTION_VERSION,
+      'Content-Type': 'application/json',
+    },
+    ...(options.body ? { body: JSON.stringify(options.body) } : {}),
+  });
+
+  if (!res.ok) {
+    const errorBody = await res.text();
+    throw new Error(`Notion API error ${res.status}: ${errorBody}`);
+  }
+
+  return res.json();
 }
 
 // Helper to safely get property values
@@ -42,19 +54,20 @@ export async function fetchFAQQuestionsFromNotion(): Promise<{
   questions: PresetQuestion[];
   stats: FAQStats[];
 }> {
-  const notion = getNotionClient();
   const databaseId = process.env.NOTION_FAQ_DATABASE_ID;
 
   if (!databaseId) {
     throw new Error('NOTION_FAQ_DATABASE_ID environment variable is not set');
   }
 
-  const response = await notion.databases.query({
-    database_id: databaseId,
-    filter: {
-      property: 'IsActive',
-      checkbox: {
-        equals: true,
+  const response = await notionFetch(`/databases/${databaseId}/query`, {
+    method: 'POST',
+    body: {
+      filter: {
+        property: 'IsActive',
+        checkbox: {
+          equals: true,
+        },
       },
     },
   });
@@ -63,7 +76,7 @@ export async function fetchFAQQuestionsFromNotion(): Promise<{
   const stats: FAQStats[] = [];
 
   for (const page of response.results) {
-    if (!('properties' in page)) continue;
+    if (!page.properties) continue;
 
     const props = page.properties as Record<string, unknown>;
     const questionId = getRichText(props, 'QuestionID') || page.id;
@@ -91,19 +104,20 @@ export async function fetchFAQQuestionsFromNotion(): Promise<{
 
 // Find a page by QuestionID
 async function findPageByQuestionId(questionId: string): Promise<string | null> {
-  const notion = getNotionClient();
   const databaseId = process.env.NOTION_FAQ_DATABASE_ID;
 
   if (!databaseId) {
     throw new Error('NOTION_FAQ_DATABASE_ID environment variable is not set');
   }
 
-  const response = await notion.databases.query({
-    database_id: databaseId,
-    filter: {
-      property: 'QuestionID',
-      rich_text: {
-        equals: questionId,
+  const response = await notionFetch(`/databases/${databaseId}/query`, {
+    method: 'POST',
+    body: {
+      filter: {
+        property: 'QuestionID',
+        rich_text: {
+          equals: questionId,
+        },
       },
     },
   });
@@ -121,8 +135,6 @@ export async function updateVoteInNotion(
   voteType: 'up' | 'down',
   previousVote: 'up' | 'down' | null
 ): Promise<boolean> {
-  const notion = getNotionClient();
-
   const pageId = await findPageByQuestionId(questionId);
   if (!pageId) {
     console.error(`Page not found for questionId: ${questionId}`);
@@ -130,8 +142,8 @@ export async function updateVoteInNotion(
   }
 
   // Get current vote counts
-  const page = await notion.pages.retrieve({ page_id: pageId });
-  if (!('properties' in page)) return false;
+  const page = await notionFetch(`/pages/${pageId}`);
+  if (!page.properties) return false;
 
   const props = page.properties as Record<string, unknown>;
   let upVotes = getNumber(props, 'UpVotes');
@@ -148,11 +160,13 @@ export async function updateVoteInNotion(
   }
 
   // Update the page
-  await notion.pages.update({
-    page_id: pageId,
-    properties: {
-      UpVotes: { number: Math.max(0, upVotes) },
-      DownVotes: { number: Math.max(0, downVotes) },
+  await notionFetch(`/pages/${pageId}`, {
+    method: 'PATCH',
+    body: {
+      properties: {
+        UpVotes: { number: Math.max(0, upVotes) },
+        DownVotes: { number: Math.max(0, downVotes) },
+      },
     },
   });
 
@@ -161,8 +175,6 @@ export async function updateVoteInNotion(
 
 // Increment view count for a question
 export async function incrementViewInNotion(questionId: string): Promise<boolean> {
-  const notion = getNotionClient();
-
   const pageId = await findPageByQuestionId(questionId);
   if (!pageId) {
     console.error(`Page not found for questionId: ${questionId}`);
@@ -170,17 +182,19 @@ export async function incrementViewInNotion(questionId: string): Promise<boolean
   }
 
   // Get current view count
-  const page = await notion.pages.retrieve({ page_id: pageId });
-  if (!('properties' in page)) return false;
+  const page = await notionFetch(`/pages/${pageId}`);
+  if (!page.properties) return false;
 
   const props = page.properties as Record<string, unknown>;
   const currentViews = getNumber(props, 'TotalViews');
 
   // Update the page
-  await notion.pages.update({
-    page_id: pageId,
-    properties: {
-      TotalViews: { number: currentViews + 1 },
+  await notionFetch(`/pages/${pageId}`, {
+    method: 'PATCH',
+    body: {
+      properties: {
+        TotalViews: { number: currentViews + 1 },
+      },
     },
   });
 
