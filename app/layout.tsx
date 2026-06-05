@@ -41,6 +41,34 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className} ${orbitron.variable} ${spaceGrotesk.variable} h-full antialiased`}>
         {children}
+        {/* Developer brand credit — Chan Meng */}
+        <a
+          href="https://github.com/ChanMeng666"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Built by Chan Meng — need a custom app like this one? chanmeng.dev@gmail.com"
+          style={{
+            position: 'fixed',
+            bottom: '12px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 50,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '6px 14px',
+            borderRadius: '9999px',
+            background: 'rgba(0,0,0,0.4)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            color: 'rgba(255,255,255,0.8)',
+            textDecoration: 'none',
+            fontSize: '12px',
+          }}
+        >
+          <img src="/images/chan_logo.svg" alt="Chan Meng" style={{ width: '18px', height: '18px' }} />
+          <span>Built by Chan Meng</span>
+        </a>
       </body>
     </html>
   )
