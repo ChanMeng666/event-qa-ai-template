@@ -1,0 +1,72 @@
+{
+  "project": "ai-hackathon-assistant",
+  "baseUrl": "https://ai-hackathon-assistant.chanmeng-dev.workers.dev",
+  "outDir": "docs/showcase",
+
+  "viewports": {
+    "desktop": { "width": 1280, "height": 800, "deviceScaleFactor": 2 },
+    "mobile":  { "width": 390,  "height": 844, "deviceScaleFactor": 3, "isMobile": true }
+  },
+
+  "reducedMotion": "reduce",
+
+  "pages": [
+    {
+      "label": "hero",
+      "url": "/",
+      "viewport": "desktop",
+      "fullPage": false,
+      "before": [
+        { "action": "wait", "ms": 2500 }
+      ]
+    },
+    {
+      "label": "faq",
+      "url": "/chat",
+      "viewport": "desktop",
+      "fullPage": false,
+      "before": [
+        { "action": "wait", "ms": 2000 },
+        { "action": "scroll", "by": 380 },
+        { "action": "wait", "ms": 800 }
+      ]
+    },
+    {
+      "label": "chat-open",
+      "url": "/chat",
+      "viewport": "desktop",
+      "fullPage": false,
+      "before": [
+        { "action": "wait", "ms": 2000 },
+        { "action": "click", "selector": "div.cursor-pointer.group" },
+        { "action": "wait", "ms": 1500 }
+      ]
+    },
+    {
+      "label": "mobile-hero",
+      "url": "/",
+      "viewport": "mobile",
+      "fullPage": false,
+      "before": [
+        { "action": "wait", "ms": 2500 }
+      ]
+    }
+  ],
+
+  "demo": {
+    "size": { "width": 1280, "height": 720 },
+    "stepPauseMs": 400,
+    "steps": [
+      { "action": "goto", "url": "/chat", "timeoutMs": 15000 },
+      { "action": "wait", "ms": 1200 },
+      { "action": "scroll", "by": 380 },
+      { "action": "wait", "ms": 500 },
+      { "action": "scroll", "by": -380 },
+      { "action": "wait", "ms": 400 },
+      { "action": "click", "selector": "div.cursor-pointer.group" },
+      { "action": "wait", "ms": 1200 },
+      { "action": "fill", "selector": "textarea[placeholder=\"Ask me anything...\"]", "value": "What are the judging criteria?" },
+      { "action": "wait", "ms": 800 }
+    ]
+  }
+}
