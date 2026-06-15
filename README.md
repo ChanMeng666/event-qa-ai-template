@@ -57,22 +57,6 @@ Built with Next.js 16, featuring a full-screen chat interface with Google Gemini
 <!-- docs/showcase/demo.mp4 holds a higher-quality version of the demo — drag it into a GitHub release or comment for crisp playback. -->
 <!-- SHOWCASE:END -->
 
-## 📸 Project Screenshots
-
-> [!TIP]
-> Experience the full-screen AI chat interface and community-driven FAQ system in action.
-
-<div align="center">
-  <img src="public/screenshots/屏幕截图 2025-09-06 001458.png" alt="Desktop Interface" width="800"/>
-  <p><em>Main Interface - AI Chat (70%) + FAQ Sidebar (30%)</em></p>
-</div>
-
-<div align="center">
-  <img src="public/screenshots/屏幕截图 2025-09-06 001525.png" alt="Mobile Chat" width="300"/>
-  <img src="public/screenshots/屏幕截图 2025-09-06 001712.png" alt="Mobile FAQ" width="300"/>
-  <p><em>Mobile Views - Responsive Tabbed Interface</em></p>
-</div>
-
 **Tech Stack Badges:**
 
 <div align="center">
