@@ -73,7 +73,5 @@ pids
 # Optional eslint cache
 .eslintcache
 
-# Cloudflare
-.open-next
+# Wrangler local cache (Cloudflare CLI, retained only for decommissioning)
 .wrangler
-.dev.vars

@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter, Orbitron, Space_Grotesk } from 'next/font/google'
+import { Analytics } from '@vercel/analytics/next'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import './globals.css'
 import { siteConfig, brandingConfig } from '@/config'
 
@@ -18,7 +20,7 @@ const spaceGrotesk = Space_Grotesk({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://ai-hackathon-assistant.chanmeng-dev.workers.dev'),
+  metadataBase: new URL(brandingConfig.project.deployment),
   title: `${siteConfig.name} - ${siteConfig.tagline}`,
   description: siteConfig.description,
   keywords: siteConfig.seo.keywords,
@@ -27,20 +29,12 @@ export const metadata: Metadata = {
     title: `${siteConfig.name} - ${siteConfig.tagline}`,
     description: siteConfig.description,
     type: siteConfig.seo.ogType as 'website',
-    images: [
-      {
-        url: '/og-cover.png',
-        width: 1200,
-        height: 630,
-        alt: `${siteConfig.name} - ${siteConfig.tagline}`,
-      },
-    ],
+    url: brandingConfig.project.deployment,
   },
   twitter: {
     card: 'summary_large_image',
     title: `${siteConfig.name} - ${siteConfig.tagline}`,
     description: siteConfig.description,
-    images: ['/og-cover.png'],
   },
 }
 
@@ -56,34 +50,8 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className} ${orbitron.variable} ${spaceGrotesk.variable} h-full antialiased`}>
         {children}
-        {/* Developer brand credit — Chan Meng */}
-        <a
-          href="https://github.com/ChanMeng666"
-          target="_blank"
-          rel="noopener noreferrer"
-          title="Built by Chan Meng — need a custom app like this one? chanmeng.dev@gmail.com"
-          style={{
-            position: 'fixed',
-            bottom: '12px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 50,
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '6px 14px',
-            borderRadius: '9999px',
-            background: 'rgba(0,0,0,0.4)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
-            color: 'rgba(255,255,255,0.8)',
-            textDecoration: 'none',
-            fontSize: '12px',
-          }}
-        >
-          <img src="/images/chan_logo.svg" alt="Chan Meng" style={{ width: '18px', height: '18px' }} />
-          <span>Built by Chan Meng</span>
-        </a>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )

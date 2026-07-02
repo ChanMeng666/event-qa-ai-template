@@ -2,21 +2,20 @@
 
 ## Project Overview
 
-This is a **reusable template** for creating AI-powered Q&A assistants for events. Built with Next.js 16, React, and TypeScript, featuring a full-screen chat interface powered by OpenAI GPT-4o-mini and a community-driven FAQ voting system backed by Notion database.
+This is a **single-page, voice-first AI agent** for the Aotearoa AI Hackathon Festival 2026. Built with Next.js 16, React, and TypeScript. The whole site is one page: an audio-reactive orb that runs a two-way voice conversation (OpenAI Realtime API over WebRTC) and also accepts typed input. Deployed on Vercel.
 
-**Template Documentation**: See **[docs/TEMPLATE-SETUP.md](docs/TEMPLATE-SETUP.md)** for quick start guide.
-
-**Current Example**: AI Hackathon Festival 2025 (New Zealand)
+**Current Event**: Aotearoa AI Hackathon Festival 2026 - AUT City Campus (New Zealand)
 
 ## Tech Stack
 
-- **Framework**: Next.js 16.1.1 (App Router)
+- **Framework**: Next.js 16 (App Router), deployed on Vercel
 - **Language**: TypeScript 5.2.2
-- **Styling**: Tailwind CSS v3
-- **UI Components**: shadcn/ui (customized) + Radix UI primitives
-- **Animation**: Framer Motion v12
-- **AI**: OpenAI GPT-4o-mini via Vercel AI SDK v4.3
-- **Backend**: Notion API (@notionhq/client ^2.3.0) for FAQ voting & statistics
+- **Styling**: Tailwind CSS v3 + Framer Motion v12
+- **3D/Orb**: Three.js (audio-reactive particle sphere)
+- **Voice AI**: OpenAI Realtime API (speech-to-speech) via WebRTC; ephemeral tokens minted server-side
+- **Text AI**: OpenAI `gpt-4o-mini` via the Vercel AI SDK (`streamText`)
+- **Storage**: Vercel Postgres (Neon) for knowledge base + transcripts; Vercel KV (Upstash) for rate limiting. Both optional with graceful static fallback.
+- **All AI models are OpenAI.** No other model providers.
 
 ## Configuration System
 
@@ -183,47 +182,54 @@ Required in `.env.local`:
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `OPENAI_API_KEY` | OpenAI API key | Yes |
-| `NOTION_TOKEN` | Notion Integration token | Yes (for FAQ) |
-| `NOTION_FAQ_DATABASE_ID` | Notion FAQ database ID | Yes (for FAQ) |
+| `OPENAI_API_KEY` | OpenAI API key (Realtime voice + text chat) | Yes |
+| `DATABASE_URL` / `POSTGRES_URL` | Vercel Postgres (Neon): knowledge base + transcripts | Optional |
+| `KV_REST_API_URL` / `KV_REST_API_TOKEN` | Vercel KV (Upstash): rate limiting | Optional |
 
-> **Note**: If Notion is not configured, the app falls back to static preset questions from `config/content.config.ts`.
+> **Note**: With no DB configured, knowledge falls back to `config/ai.config.ts` and transcript persistence is skipped. With no KV configured, rate limiting is disabled (allow-all).
 
 ## Architecture Overview
 
 ### Data Flow
 
 ```
-Chat Flow:
-User Input → EmbeddedChat → /api/chat → OpenAI GPT-4o-mini → Streaming Response
-                                ↓
-                         config/ai.config.ts (system prompt)
+Voice Flow:
+Orb/mic → useRealtimeVoice → POST /api/realtime/session (mint ephemeral key)
+        → WebRTC to OpenAI Realtime API (audio in/out + captions)
+        → POST /api/transcript (persist turns)
 
-FAQ Flow:
-Page Load → useFAQVoting → /api/faq/questions → Notion DB (or static fallback)
-                                                      ↓
-                                         config/content.config.ts (fallback)
+Text Flow:
+Text input → POST /api/chat → OpenAI gpt-4o-mini (Vercel AI SDK) → streamed reply
+                                   ↓
+                            lib/knowledge.ts (DB knowledge or config fallback)
 
 Configuration Flow:
-config/*.config.ts → Components import from @/config → Dynamic content
+config/*.config.ts → components import from @/config → dynamic content
 ```
 
 ### Key Features
-- **AI Chat**: Real-time streaming, 50-message history in localStorage
-- **FAQ Voting**: Upvote/downvote with Notion persistence, 5-min client cache
-- **Responsive**: Desktop 70/30 split layout, mobile tabbed interface
-- **Fallback**: Static questions when Notion unavailable
-- **Configurable**: All event-specific content in `config/` directory
+- **Voice agent**: Two-way speech (OpenAI Realtime API), audio-reactive orb, live captions
+- **Text mode**: Streamed OpenAI chat sharing the same knowledge base
+- **Editable knowledge**: DB-backed `knowledge` table (seed via `npm run db:seed`), static fallback in config
+- **Graceful degradation**: Works with just `OPENAI_API_KEY`; DB/KV optional
+- **Configurable**: Event-specific content in `config/`
 
-For detailed Notion architecture, see: [docs/NOTION-INTEGRATION.md](docs/NOTION-INTEGRATION.md)
+## Key Files
+
+- `app/page.tsx` - the single page
+- `components/agent/voice-agent.tsx` - orchestrates orb + controls + captions
+- `components/agent/agent-orb.tsx` - audio-reactive Three.js orb
+- `hooks/use-realtime-voice.ts` - WebRTC realtime session + audio level
+- `app/api/realtime/session/route.ts` - mints the ephemeral Realtime token
+- `app/api/chat/route.ts` - text chat (Vercel AI SDK + OpenAI)
+- `lib/knowledge.ts`, `lib/db.ts`, `lib/transcripts.ts`, `lib/ratelimit.ts`
+- `config/ai.config.ts` - prompt/knowledge + realtime model & voice
 
 ## Best Practices
 
-1. **Read TEMPLATE-SETUP.md** first when setting up a new event
-2. **Edit config files** instead of hardcoding event information
-3. **Always read UI-DESIGN-SYSTEM.md** before making visual changes
-4. **Read NOTION-INTEGRATION.md** before modifying FAQ/voting features
-5. Use existing component patterns from the codebase
-6. Maintain the stagger shadow aesthetic throughout
-7. Test on both desktop and mobile layouts
-8. Use Framer Motion for animations following existing patterns
+1. **Edit config files** (`config/*.config.ts`) instead of hardcoding event information
+2. **Always read UI-DESIGN-SYSTEM.md** before making visual changes
+3. All AI must use **OpenAI** models via the **Vercel AI SDK** / Realtime API
+4. Keep the app working without DB/KV (respect the graceful fallbacks)
+5. Maintain the stagger shadow aesthetic and sharp corners throughout
+6. Use Framer Motion for animations following existing patterns

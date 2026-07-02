@@ -4,7 +4,7 @@
  * This file contains all the event-specific information.
  * Modify this file to customize your event Q&A AI.
  *
- * Example: AI Hackathon Festival 2025
+ * Current event: Aotearoa AI Hackathon Festival 2026 (AUT City Campus)
  */
 
 import type { SiteConfig } from './types';
@@ -14,20 +14,20 @@ export const siteConfig: SiteConfig = {
   // Basic Event Information
   // ============================================================================
 
-  name: 'AI Hackathon Festival 2025',
-  shortName: 'AI Hackathon 2025',
-  tagline: 'Interactive Assistant',
+  name: 'Aotearoa AI Hackathon Festival 2026',
+  shortName: 'AI Hackathon 2026',
+  tagline: 'Voice AI Agent',
   description:
-    'Get instant answers about the AI Hackathon Festival 2025. Learn about schedules, team formation, judging criteria, and more.',
+    'Talk or type to the AI agent for the Aotearoa AI Hackathon Festival 2026 at AUT City Campus. Ask about dates, venue, themes, teams, judging, and how to take part.',
 
   // ============================================================================
   // Event Dates
   // ============================================================================
 
   dates: {
-    start: '2025-08-15',
-    end: '2025-08-16',
-    displayFormat: 'Aug 15-16, 2025',
+    start: '2026-08-07',
+    end: '2026-08-08',
+    displayFormat: 'Fri 7 Aug 5:00pm - Sat 8 Aug 2026 (NZST)',
   },
 
   // ============================================================================
@@ -36,8 +36,8 @@ export const siteConfig: SiteConfig = {
 
   venue: {
     name: 'AUT City Campus',
-    building: 'WG Building',
-    address: '55 Wellesley Street East, Auckland Central, Auckland 1010',
+    building: 'AUT City Campus',
+    address: '55 Wellesley Street East, Auckland CBD, Auckland 1010',
     city: 'Auckland',
     country: 'New Zealand',
     mapEmbed:
@@ -56,16 +56,16 @@ export const siteConfig: SiteConfig = {
       logo: '/images/organizers/aut.svg',
     },
     {
-      name: 'AI Forum New Zealand',
-      shortName: 'AI Forum NZ',
-      url: 'https://aiforum.org.nz/',
-      logo: '/images/organizers/aiforum_white.svg',
-    },
-    {
       name: 'She Sharp',
       shortName: 'She Sharp',
       url: 'https://www.shesharp.org.nz/',
       logo: '/images/organizers/shesharp.svg',
+    },
+    {
+      name: 'AI Forum New Zealand',
+      shortName: 'AI Forum NZ',
+      url: 'https://aiforum.org.nz/',
+      logo: '/images/organizers/aiforum_white.svg',
     },
   ],
 
@@ -74,9 +74,9 @@ export const siteConfig: SiteConfig = {
   // ============================================================================
 
   theme: {
-    name: 'UN Sustainable Development Goals (SDGs)',
+    name: 'AI for Good - UN Sustainable Development Goals',
     description:
-      'Develop strong, evidence-supported conceptual ideas for AI-driven solutions that address challenges related to reducing poverty or improving lives and skills.',
+      'Teams build AI-enabled solutions to real-world challenges aligned to five UN Sustainable Development Goals. Venue winners advance to national judging and the Aotearoa AI Summit 2026.',
   },
 
   // ============================================================================
@@ -84,9 +84,10 @@ export const siteConfig: SiteConfig = {
   // ============================================================================
 
   links: {
-    website: 'https://aiforum.org.nz/hackathon',
-    discord: 'https://discord.gg/hackathon',
-    registration: 'https://aiforum.org.nz/hackathon/register',
+    website: 'https://aihackathon.nz',
+    discord:
+      'https://tnz-ecosystem-hub.circle.so/c/ai-hackathon-festival-2026/aut-city-campus',
+    registration: 'https://aihackathon.nz',
     github: 'https://github.com/ChanMeng666/event-qa-ai-template',
   },
 
@@ -96,18 +97,19 @@ export const siteConfig: SiteConfig = {
 
   seo: {
     keywords: [
+      'Aotearoa AI Hackathon Festival 2026',
       'AI Hackathon',
-      'Festival 2025',
-      'AUT',
-      'AI Forum',
+      'AUT City Campus',
       'She Sharp',
+      'AI Forum New Zealand',
       'Auckland',
       'Sustainable Development Goals',
       'SDGs',
       'Artificial Intelligence',
       'Hackathon New Zealand',
+      'Voice AI Agent',
     ],
-    authors: [{ name: 'AI Hackathon Festival 2025 Team' }],
+    authors: [{ name: 'Aotearoa AI Hackathon Festival 2026 Team' }],
     ogType: 'website',
   },
 };

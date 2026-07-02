@@ -53,6 +53,6 @@ export const brandingConfig: BrandingConfig = {
     repository: 'https://github.com/ChanMeng666/event-qa-ai-template',
 
     /** Live deployment URL */
-    deployment: 'https://ai-hackathon-assistant.chanmeng-dev.workers.dev/',
+    deployment: 'https://aihackathon-2026.vercel.app',
   },
 };

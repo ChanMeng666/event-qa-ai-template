@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useEffect, useState, useCallback, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
 import * as THREE from 'three';
 import { cn } from '@/lib/utils';
@@ -98,13 +98,48 @@ interface Reaction {
   rotation?: number;
 }
 
+/** High-level state of the voice agent, used to tint the orb. */
+export type OrbState =
+  | 'idle'
+  | 'connecting'
+  | 'listening'
+  | 'thinking'
+  | 'speaking'
+  | 'error';
+
+// Particle tint per voice-agent state (multiplies the white vertex colors).
+const ORB_STATE_COLORS: Record<OrbState, [number, number, number]> = {
+  idle: [1, 1, 1],
+  connecting: [0.62, 0.66, 0.82],
+  listening: [0.45, 0.95, 0.85],
+  thinking: [0.98, 0.8, 0.45],
+  speaking: [0.6, 0.82, 1.0],
+  error: [1.0, 0.5, 0.5],
+};
+
 interface SpriteChatProps {
   className?: string;
   onSpriteClick?: () => void;
+  /** Rendered size in px (canvas + container). Default 180 (legacy). */
+  size?: number;
+  /** When true (default) the sprite is portaled fixed to the body (legacy floating mode). When false it renders inline, centered in its parent. */
+  portal?: boolean;
+  /** Live audio level 0..1 from the voice hook - drives surface reactivity. */
+  levelRef?: RefObject<number>;
+  /** Voice-agent state - tints the orb. */
+  agentState?: OrbState;
 }
 
-export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
+export function SpriteChat({
+  className = '',
+  onSpriteClick,
+  size = 180,
+  portal = true,
+  levelRef,
+  agentState = 'idle',
+}: SpriteChatProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const agentStateRef = useRef<OrbState>(agentState);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
   const [showGreeting, setShowGreeting] = useState(false);
@@ -212,6 +247,11 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
     teardropEyeGeo: THREE.BufferGeometry;
   } | null>(null);
   
+  // Keep the animation loop's view of the voice state current.
+  useEffect(() => {
+    agentStateRef.current = agentState;
+  }, [agentState]);
+
   useEffect(() => {
     setMounted(true);
     return () => {
@@ -231,8 +271,8 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
     if (!mounted || !canvasContainerRef.current) return;
     
     const container = canvasContainerRef.current;
-    const width = 180;
-    const height = 180;
+    const width = size;
+    const height = size;
     
     // Scene setup
     const scene = new THREE.Scene();
@@ -394,13 +434,27 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
     
     window.addEventListener('mousemove', handleMouseMove);
     
+    // Voice-state color + audio-reactivity trackers
+    const stateColor = new THREE.Color(1, 1, 1);
+    const targetStateColor = new THREE.Color(1, 1, 1);
+    let displayLevel = 0;
+
     // Animation loop
     let animationId: number;
     
     const animate = () => {
       animationId = requestAnimationFrame(animate);
       time += 0.015;
-      
+
+      // Smoothed live audio level (0..1) drives the surface energy.
+      const rawLevel = levelRef?.current ?? 0;
+      displayLevel += (rawLevel - displayLevel) * 0.2;
+      const state = agentStateRef.current;
+      // A gentle idle shimmer so it never looks like a static circle,
+      // plus a stronger pulse while thinking, plus audio reactivity.
+      const thinkingPulse = state === 'thinking' ? Math.abs(Math.sin(time * 5)) * 0.12 : 0;
+      const waveAmp = 0.15 + displayLevel * 0.6 + thinkingPulse;
+
       // Wave animation on particles
       const positions = sphereGeometry.attributes.position.array as Float32Array;
       for (let i = 0; i < count; i++) {
@@ -408,12 +462,21 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
         const py = originalPositions[i * 3 + 1];
         const pz = originalPositions[i * 3 + 2];
         const noise = Math.sin(px * 0.4 + time) * Math.cos(py * 0.4 + time) * Math.sin(pz * 0.4 + time);
-        const displacement = 1 + noise * 0.15;
+        const displacement = 1 + noise * waveAmp;
         positions[i * 3] = px * displacement;
         positions[i * 3 + 1] = py * displacement;
         positions[i * 3 + 2] = pz * displacement;
       }
       sphereGeometry.attributes.position.needsUpdate = true;
+
+      // Tint the particles toward the current voice-agent state and make
+      // them glow brighter/larger with the audio level.
+      const [cr, cg, cb] = ORB_STATE_COLORS[state] || ORB_STATE_COLORS.idle;
+      targetStateColor.setRGB(cr, cg, cb);
+      stateColor.lerp(targetStateColor, 0.08);
+      sphereMaterial.color.copy(stateColor);
+      sphereMaterial.size = 0.12 + displayLevel * 0.14;
+      sphereMaterial.opacity = 0.85 + displayLevel * 0.15;
       
       // Floating animation - apply to particle sphere position, NOT the container
       const floatY = Math.sin(time * 0.8) * 1.5;
@@ -1650,12 +1713,11 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
       id="sprite-container"
       className={cn("cursor-pointer group", className)}
       style={{
-        position: 'fixed',
-        top: '20px',
-        right: '20px',
-        width: 180,
-        height: 180,
-        zIndex: 10000,
+        ...(portal
+          ? { position: 'fixed' as const, top: '20px', right: '20px', zIndex: 10000 }
+          : { position: 'relative' as const }),
+        width: size,
+        height: size,
         pointerEvents: 'auto',
         filter: `drop-shadow(0 0 30px ${glowColor})`,
         transition: 'filter 0.3s ease-out',
@@ -1933,8 +1995,9 @@ export function SpriteChat({ className = '', onSpriteClick }: SpriteChatProps) {
     return null;
   }
   
-  // Use portal to render directly to body, avoiding any transform ancestors
-  return createPortal(spriteContent, document.body);
+  // Legacy floating mode renders via a portal to avoid transform ancestors.
+  // Inline mode (voice agent) renders centered in place within its parent.
+  return portal ? createPortal(spriteContent, document.body) : spriteContent;
 }
 
 export default SpriteChat;
