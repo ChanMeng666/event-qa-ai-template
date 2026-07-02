@@ -7,8 +7,9 @@
  * of the way so the orb remains the focus of the single-page experience.
  */
 
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, MapPin, ExternalLink, X, Users, Code2 } from 'lucide-react';
+import { Calendar, MapPin, ExternalLink, X, Users } from 'lucide-react';
 import { siteConfig, brandingConfig } from '@/config';
 
 interface InfoPanelProps {
@@ -94,19 +95,63 @@ export function InfoPanel({ open, onClose }: InfoPanelProps) {
               )}
             </div>
 
-            <div className="mt-6 pt-4 border-t border-white/10 flex flex-wrap gap-4">
-              {siteConfig.organizers.map((org) => (
-                <a
-                  key={org.name}
-                  href={org.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-white/40 hover:text-white/80 text-xs font-primary transition-colors"
-                >
-                  {org.shortName}
-                </a>
-              ))}
+            {/* Hosted by - organizer logos */}
+            <div className="mt-6 pt-4 border-t border-white/10">
+              <p className="text-white/35 text-[10px] font-display tracking-[2px] uppercase mb-3">
+                Hosted by
+              </p>
+              <div className="flex flex-wrap gap-3">
+                {siteConfig.organizers.map((org) => (
+                  <a
+                    key={org.name}
+                    href={org.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={org.name}
+                    aria-label={org.name}
+                    className="flex items-center justify-center h-12 w-24 bg-white border-2 border-white/20 hover:border-white/50 transition-colors p-2"
+                  >
+                    <Image
+                      src={org.logo}
+                      alt={org.name}
+                      width={88}
+                      height={40}
+                      className="max-h-full w-auto object-contain"
+                    />
+                  </a>
+                ))}
+              </div>
             </div>
+
+            {/* Supported by - partner logos */}
+            {siteConfig.partners && siteConfig.partners.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-white/10">
+                <p className="text-white/35 text-[10px] font-display tracking-[2px] uppercase mb-3">
+                  Supported by
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  {siteConfig.partners.map((partner) => (
+                    <a
+                      key={partner.name}
+                      href={partner.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={partner.name}
+                      aria-label={partner.name}
+                      className="flex items-center justify-center h-12 w-28 bg-white border-2 border-white/20 hover:border-white/50 transition-colors p-2"
+                    >
+                      <Image
+                        src={partner.logo}
+                        alt={partner.name}
+                        width={104}
+                        height={40}
+                        className="max-h-full w-auto object-contain"
+                      />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Developer credit - lives here rather than pinned to the screen */}
             {brandingConfig.showDeveloper && brandingConfig.developer && (
@@ -115,12 +160,17 @@ export function InfoPanel({ open, onClose }: InfoPanelProps) {
                   href={brandingConfig.developer.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group flex items-start gap-3 text-white/40 hover:text-white/80 transition-colors"
+                  className="group flex items-center gap-3 text-white/40 hover:text-white/80 transition-colors"
                 >
-                  <Code2
-                    size={16}
-                    className="mt-0.5 shrink-0 text-white/40 group-hover:text-white/70"
-                  />
+                  <span className="flex items-center justify-center h-10 w-10 shrink-0 bg-white border-2 border-white/20 group-hover:border-white/50 transition-colors p-1.5">
+                    <Image
+                      src={brandingConfig.developer.logo}
+                      alt={brandingConfig.developer.name}
+                      width={28}
+                      height={28}
+                      className="max-h-full w-auto object-contain"
+                    />
+                  </span>
                   <span className="text-xs font-primary leading-relaxed">
                     Built by{' '}
                     <span className="text-white/70 group-hover:text-white">

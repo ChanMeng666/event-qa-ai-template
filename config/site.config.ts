@@ -65,7 +65,20 @@ export const siteConfig: SiteConfig = {
       name: 'AI Forum New Zealand',
       shortName: 'AI Forum NZ',
       url: 'https://aiforum.org.nz/',
-      logo: '/images/organizers/aiforum_white.svg',
+      logo: '/images/organizers/aiforum.svg',
+    },
+  ],
+
+  // ============================================================================
+  // Supporting Partners
+  // ============================================================================
+
+  partners: [
+    {
+      name: 'Fisher & Paykel Healthcare',
+      shortName: 'F&P Healthcare',
+      url: 'https://www.fphcare.com/',
+      logo: '/images/organizers/fisher-paykel-healthcare.svg',
     },
   ],
 

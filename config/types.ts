@@ -59,6 +59,9 @@ export interface SiteConfig {
   /** List of event organizers/sponsors */
   organizers: Organizer[];
 
+  /** Optional list of supporting partners (shown alongside organizers) */
+  partners?: Organizer[];
+
   /** Event theme/focus */
   theme: {
     /** Theme name */

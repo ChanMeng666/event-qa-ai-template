@@ -74,6 +74,11 @@ export const additionalContext = `
 - Teams create AI-enabled solutions to real-world challenges aligned to five UN Sustainable Development Goals.
 - Around a third of participants are new to hackathons. Mentors from AUT and industry support teams throughout.
 
+### Kaupapa - AI for good
+- The festival is built around one idea: AI for good - building solutions that matter. Over an intense weekend, diverse teams turn real-world challenges into working, AI-enabled prototypes.
+- Its symbol is the koru, the unfurling silver fern frond, representing new growth.
+- Hackathons are a safe, inclusive space for a wide range of people to unite and solve problems. A team with a variety of skills - not just coding - is the surest path to a strong pitch, so all backgrounds are genuinely welcome.
+
 ### Dates, time & venue
 - Friday 7 August 2026, 5:00pm through Saturday 8 August 2026 (NZST).
 - AUT City Campus, 55 Wellesley Street East, Auckland CBD, Auckland 1010. In the heart of the CBD, well served by public transport.
@@ -170,10 +175,12 @@ export const additionalContext = `
 - Register online at https://aihackathon.nz
 - AUT City Campus Community Hub: https://tnz-ecosystem-hub.circle.so/c/ai-hackathon-festival-2026/aut-city-campus
 - Aotearoa AI Summit: https://aotearoaai.nz
+- Aotearoa AI Awards: https://aotearoaai.nz/aotearoa-ai-awards-2025/
 - AI Forum mailing list: https://aiforum.org.nz/subscribe/
 
 ### Hosts & partners
-- Hosted at AUT City Campus by AUT and She Sharp, as part of the AI Forum's nationwide festival. Supporting partners named include Fisher & Paykel Healthcare.
+- Hosted at AUT City Campus by AUT and She Sharp, as part of the AI Forum New Zealand's nationwide festival.
+- Supporting partner: Fisher & Paykel Healthcare.
 `;
 
 // ============================================================================
