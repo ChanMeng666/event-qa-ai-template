@@ -16,9 +16,17 @@ html, body {
   transform: none !important;
 }
 
-/* Smooth scrolling */
+/* Smooth scrolling + prevent iOS text auto-zoom on orientation change */
 html {
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Never allow horizontal scrolling; contain overscroll bounce on mobile */
+body {
+  overflow-x: hidden;
+  overscroll-behavior-y: none;
 }
 
 /* Optimize touch interactions on mobile */

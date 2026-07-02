@@ -15,7 +15,7 @@ const CosmicBackground = dynamic(
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-[#050505] relative overflow-hidden">
+    <div className="min-h-[100svh] bg-[#050505] relative overflow-x-hidden">
       <CosmicBackground className="fixed inset-0 z-0" />
       <NoiseOverlay opacity={0.04} />
       <VoiceAgent />

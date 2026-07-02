@@ -52,12 +52,23 @@ export function VoiceAgent() {
   const pendingTextRef = useRef<string | null>(null);
 
   // Responsive orb size (set before the client-only SpriteChat mounts).
+  // Sized from BOTH viewport dimensions so it always fits alongside the
+  // header, controls and captions - including short/landscape screens.
   useEffect(() => {
-    const compute = () =>
-      setOrbSize(Math.min(400, Math.max(260, Math.floor(window.innerWidth * 0.82))));
+    const compute = () => {
+      const fromViewport = Math.min(
+        window.innerWidth * 0.8,
+        window.innerHeight * 0.42
+      );
+      setOrbSize(Math.max(160, Math.min(400, Math.floor(fromViewport))));
+    };
     compute();
     window.addEventListener('resize', compute);
-    return () => window.removeEventListener('resize', compute);
+    window.addEventListener('orientationchange', compute);
+    return () => {
+      window.removeEventListener('resize', compute);
+      window.removeEventListener('orientationchange', compute);
+    };
   }, []);
 
   // Flush any queued text once the session is connected.
@@ -88,17 +99,17 @@ export function VoiceAgent() {
   const busy = state === 'connecting';
 
   return (
-    <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 py-16">
+    <div className="relative z-10 min-h-[100svh] flex flex-col items-center justify-center px-4 py-24 sm:py-16">
       {/* Header */}
-      <div className="fixed top-0 inset-x-0 z-20 flex items-center justify-between px-5 py-4">
-        <span className="font-display text-[11px] sm:text-xs tracking-[3px] uppercase text-white/50">
+      <div className="fixed top-0 inset-x-0 z-20 flex items-center justify-between gap-2 px-[max(1rem,env(safe-area-inset-left))] pb-3 pt-[calc(env(safe-area-inset-top)_+_0.75rem)] sm:pb-4 sm:pt-[calc(env(safe-area-inset-top)_+_1rem)]">
+        <span className="font-display text-[11px] sm:text-xs tracking-[3px] uppercase text-white/50 truncate">
           {siteConfig.shortName}
         </span>
         <button
           onClick={() => setInfoOpen(true)}
-          className="inline-flex items-center gap-2 px-3 py-2 border-2 border-white/20 text-white/70 hover:text-white hover:border-white/40 bg-transparent transition-colors text-[11px] font-display tracking-[2px] uppercase"
+          className="inline-flex shrink-0 items-center gap-2 px-3 py-2 border-2 border-white/20 text-white/70 hover:text-white hover:border-white/40 bg-transparent transition-colors text-[11px] font-display tracking-[2px] uppercase"
         >
-          <Info size={14} /> Event Info
+          <Info size={14} /> <span className="hidden sm:inline">Event Info</span>
         </button>
       </div>
 
@@ -174,7 +185,7 @@ export function VoiceAgent() {
       )}
 
       {/* Captions */}
-      <div className="mt-6 w-full max-w-2xl min-h-[80px] text-center space-y-2 px-2">
+      <div className="mt-6 w-full max-w-2xl min-h-[80px] text-center space-y-2 px-2 pb-32 sm:pb-0">
         <AnimatePresence mode="popLayout">
           {caption.user && (
             <motion.p
@@ -203,9 +214,9 @@ export function VoiceAgent() {
 
       {/* Secondary: text fallback + quick questions, tucked into the corner.
           Voice is the headline; typing is available but intentionally quiet. */}
-      <div className="fixed bottom-4 right-4 z-20 w-[min(300px,calc(100vw-2rem))] flex flex-col items-end gap-2">
+      <div className="fixed bottom-0 inset-x-0 z-20 flex flex-col items-stretch gap-2 pt-3 px-[max(0.75rem,env(safe-area-inset-left))] pb-[calc(env(safe-area-inset-bottom)_+_0.75rem)] bg-gradient-to-t from-black/80 via-black/50 to-transparent backdrop-blur-sm sm:bottom-4 sm:right-4 sm:inset-x-auto sm:left-auto sm:w-[min(300px,calc(100vw-2rem))] sm:items-end sm:p-0 sm:bg-none sm:backdrop-blur-none">
         {!caption.assistant && !caption.user && (
-          <div className="flex flex-wrap justify-end gap-1.5 opacity-50 hover:opacity-100 transition-opacity">
+          <div className="flex flex-wrap justify-center sm:justify-end gap-1.5 opacity-70 sm:opacity-50 hover:opacity-100 transition-opacity">
             {contentConfig.chatSuggestions.slice(0, 3).map((s) => (
               <button
                 key={s.text}

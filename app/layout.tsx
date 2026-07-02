@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter, Orbitron, Space_Grotesk } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
@@ -36,6 +36,13 @@ export const metadata: Metadata = {
     title: `${siteConfig.name} - ${siteConfig.tagline}`,
     description: siteConfig.description,
   },
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: '#050505',
 }
 
 export default function RootLayout({

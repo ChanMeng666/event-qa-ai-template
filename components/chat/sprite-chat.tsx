@@ -142,6 +142,7 @@ export function SpriteChat({
   const agentStateRef = useRef<OrbState>(agentState);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
+  const [isNarrow, setIsNarrow] = useState(false);
   const [showGreeting, setShowGreeting] = useState(false);
   const [greetingText, setGreetingText] = useState('');
   const [glowColor, setGlowColor] = useState('rgba(255, 255, 255, 0.15)');
@@ -230,6 +231,11 @@ export function SpriteChat({
     }
   }, [affection, mounted]);
   
+  // Renderer + camera refs so we can resize the canvas when `size` changes
+  // (orientation change, window resize) without rebuilding the whole scene.
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+
   // Three.js refs for animation control
   const sceneRef = useRef<{
     leftEye: THREE.Mesh;
@@ -251,6 +257,17 @@ export function SpriteChat({
   useEffect(() => {
     agentStateRef.current = agentState;
   }, [agentState]);
+
+  // Track narrow screens so the greeting bubble can reposition above the orb
+  // instead of to its left (which would overflow horizontally on phones).
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia('(max-width: 640px)');
+    const update = () => setIsNarrow(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
 
   useEffect(() => {
     setMounted(true);
@@ -284,8 +301,12 @@ export function SpriteChat({
     // Renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
-    renderer.setPixelRatio(window.devicePixelRatio);
+    // Cap pixel ratio at 2 to save battery/perf on high-DPI phones.
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     container.appendChild(renderer.domElement);
+
+    rendererRef.current = renderer;
+    cameraRef.current = camera;
     
     // Particle Sphere
     const sphereGeometry = new THREE.SphereGeometry(7, 128, 128);
@@ -432,7 +453,21 @@ export function SpriteChat({
       mouseY = Math.max(-1.5, Math.min(1.5, mouseY));
     };
     
+    // Touch equivalent so the eyes also track a finger on touch devices.
+    const handleTouchMoveWindow = (e: TouchEvent) => {
+      const t = e.touches[0];
+      if (!t || !containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      mouseX = ((t.clientX - centerX) / window.innerWidth) * 4;
+      mouseY = ((t.clientY - centerY) / window.innerHeight) * 4;
+      mouseX = Math.max(-1.5, Math.min(1.5, mouseX));
+      mouseY = Math.max(-1.5, Math.min(1.5, mouseY));
+    };
+
     window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('touchmove', handleTouchMoveWindow, { passive: true });
     
     // Voice-state color + audio-reactivity trackers
     const stateColor = new THREE.Color(1, 1, 1);
@@ -513,6 +548,7 @@ export function SpriteChat({
     return () => {
       cancelAnimationFrame(animationId);
       window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('touchmove', handleTouchMoveWindow);
       sphereGeometry.dispose();
       sphereMaterial.dispose();
       eyeGeo.dispose();
@@ -530,8 +566,22 @@ export function SpriteChat({
       if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
       }
+      rendererRef.current = null;
+      cameraRef.current = null;
     };
   }, [mounted]);
+
+  // Keep the canvas crisp and correctly sized when `size` changes
+  // (responsive orb sizing on resize / orientation change).
+  useEffect(() => {
+    const renderer = rendererRef.current;
+    const camera = cameraRef.current;
+    if (!renderer || !camera) return;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(size, size);
+    camera.aspect = 1;
+    camera.updateProjectionMatrix();
+  }, [size, mounted]);
   
   // Enhanced reactions with emotion categories - 35+ expressions
   const reactions: Reaction[] = [
@@ -1674,6 +1724,25 @@ export function SpriteChat({
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     detectGestures(e.clientX, e.clientY);
   }, [detectGestures]);
+
+  // Touch equivalents so the orb's personality (greetings + gestures) works
+  // on touch devices. Tap-to-talk still fires via onClick.
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    const t = e.touches[0];
+    if (t) {
+      lastMousePosRef.current = { x: t.clientX, y: t.clientY };
+    }
+    handleMouseEnter();
+  }, [handleMouseEnter]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    const t = e.touches[0];
+    if (t) detectGestures(t.clientX, t.clientY);
+  }, [detectGestures]);
+
+  const handleTouchEnd = useCallback(() => {
+    handleMouseLeave();
+  }, [handleMouseLeave]);
   
   // Helper function to get mood color
   const getMoodColor = (mood: number): string => {
@@ -1719,12 +1788,16 @@ export function SpriteChat({
         width: size,
         height: size,
         pointerEvents: 'auto',
+        touchAction: 'none',
         filter: `drop-shadow(0 0 30px ${glowColor})`,
         transition: 'filter 0.3s ease-out',
       }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onMouseMove={handleMouseMove}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
       onClick={handleClick}
     >
       {/* Ambient glow ring - color changes with emotion */}
@@ -1948,11 +2021,30 @@ export function SpriteChat({
         className="sprite-greeting font-display"
         style={{
           position: 'absolute',
-          top: '50%',
-          right: '110%',
-          transform: showGreeting 
-            ? 'translateY(-50%) scale(1) translateX(0)' 
-            : 'translateY(-50%) scale(0.8) translateX(20px)',
+          // On phones the bubble sits above the orb (centered) so long text
+          // can't push past the viewport edge; on wider screens it sits to
+          // the left of the orb as before.
+          ...(isNarrow
+            ? {
+                bottom: '104%',
+                left: '50%',
+                right: 'auto',
+                transform: showGreeting
+                  ? 'translateX(-50%) scale(1) translateY(0)'
+                  : 'translateX(-50%) scale(0.8) translateY(10px)',
+                whiteSpace: 'normal',
+                textAlign: 'center',
+                maxWidth: 'min(80vw, 320px)',
+              }
+            : {
+                top: '50%',
+                right: '110%',
+                transform: showGreeting
+                  ? 'translateY(-50%) scale(1) translateX(0)'
+                  : 'translateY(-50%) scale(0.8) translateX(20px)',
+                whiteSpace: 'nowrap',
+                maxWidth: 'min(70vw, 320px)',
+              }),
           background: 'rgba(10, 10, 10, 0.8)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
@@ -1968,7 +2060,6 @@ export function SpriteChat({
           opacity: showGreeting ? 1 : 0,
           transition: 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
           zIndex: 10001,
-          whiteSpace: 'nowrap',
           boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 255, 255, 0.1)',
         }}
       >
