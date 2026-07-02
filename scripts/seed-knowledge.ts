@@ -62,6 +62,60 @@ const sections: { section: string; content: string; sort: number }[] = [
       'Open to all experience levels; beginners are welcome. Teams of 3-7 people. Register as a team or an individual - solo registrants are helped to find a team on the day. Concession and complimentary places are available for AUT students, mentors and supporting staff (details via the AUT City Campus Community Hub).',
   },
   {
+    section: 'Tickets & pricing',
+    sort: 72,
+    content:
+      'Standard tickets: NZ$15 for students, NZ$25 for everyone else. Mentors attend free. Some venues also offer free student entry by arrangement. Entry is for the registered individual only - tickets cannot be shared, but you may send a substitute delegate in your place. Register at https://aihackathon.nz.',
+  },
+  {
+    section: 'What to bring & on-site',
+    sort: 74,
+    content:
+      'Bring your own laptop and charger. Provided on site across both days: power, Wi-Fi, mentoring and technical support, and refreshments.',
+  },
+  {
+    section: 'Two-day flow (participant view)',
+    sort: 76,
+    content:
+      'Friday 7 August (evening): registration opens from 5:00pm, dinner is provided, then a welcome, health & safety briefing, intro to the themes, team formation, and a keynote - after which the build begins with mentor and technical support. Saturday 8 August: a full day of building with ongoing mentor support, lunch provided, pitch practice around midday, then live pitches to the local judging panel in the afternoon, followed by awards and a networking celebration in the evening. Top teams are recognised (typically a winner, a runner-up, and a highly commended team).',
+  },
+  {
+    section: 'Pitch & judging format',
+    sort: 78,
+    content:
+      'Each team gives a 5-minute pitch (allow about 7 minutes per team including changeover). Pitching usually starts mid-afternoon on Day 2; larger events may start slightly earlier. The hackathon ends about 30 minutes before judging so teams can finalise. A local judging panel (typically 3-4 judges) selects one venue winner, and Aotearoa AI provides at least one judge per venue. All pitches are recorded for national judging.',
+  },
+  {
+    section: 'National judging & progression',
+    sort: 52,
+    content:
+      'Venue winners are reviewed by a national judging panel, chaired by Professor Albert Bifet, which reviews the recorded winning pitches. The panel selects four national finalists, announced around 20 August 2026 (finalists have two days to confirm availability; if a team declines, the next-ranked team is invited). Finalists pitch live at the Aotearoa AI Summit on 18 September 2026 in Auckland, where the Summit audience votes for the winning solution.',
+  },
+  {
+    section: 'Intellectual property',
+    sort: 92,
+    content:
+      'Intellectual property created during the event remains with the participants. Neither the AI Forum nor sponsors claim ownership. Participants are responsible for complying with any third-party intellectual property rights when using external content, tools, or materials.',
+  },
+  {
+    section: 'Rules of engagement & conduct',
+    sort: 94,
+    content:
+      'Participants of all backgrounds are welcome and expected to contribute to an inclusive environment: treat others with respect, be open to learning and collaboration, work within the spirit of the event, and follow venue guidance. A safe, inclusive and respectful environment is a priority; there is a health & safety briefing on Day 1, and welcome and closing karakia bookend the event.',
+  },
+  {
+    section: 'Training & resources',
+    sort: 96,
+    content:
+      'The AI Forum provides online training sessions, shared problem statements, and access to tools, datasets and tech credits. Example training tracks: Seen Ventures - Generative & Agentic AI for beginners; University of Waikato / NVIDIA - beginner and advanced coding. Problem statements and judging criteria are shared in the Community Hub (Circle) by the end of July, along with participant guidance and example pitch decks.',
+  },
+  {
+    section: 'Photography & media',
+    sort: 98,
+    content:
+      'Events are photographed and pitches are recorded; images and footage may be used in event marketing and publicity. If you would prefer not to be photographed, let the organisers know via the official channels.',
+  },
+  {
     section: 'Live Q&A & Community Hub',
     sort: 80,
     content:
