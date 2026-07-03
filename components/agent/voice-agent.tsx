@@ -44,6 +44,7 @@ export function VoiceAgent() {
     disconnect,
     sendText,
     toggleMute,
+    maxTextLength,
   } = useRealtimeVoice();
 
   const [input, setInput] = useState('');
@@ -238,6 +239,7 @@ export function VoiceAgent() {
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            maxLength={maxTextLength}
             placeholder="Or type instead..."
             className="flex-1 min-w-0 px-3 py-2 bg-black/50 border border-white/15 text-white placeholder:text-white/30 focus:border-white/40 focus:outline-none text-xs font-primary backdrop-blur-sm"
           />

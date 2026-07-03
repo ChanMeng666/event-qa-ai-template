@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "db:seed": "tsx scripts/seed-knowledge.ts"
+    "db:seed": "tsx scripts/seed-knowledge.ts",
+    "verify:kv": "tsx scripts/verify-kv.ts",
+    "sync:vercel-env": "tsx scripts/sync-vercel-env.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^1.0.0",
@@ -37,7 +39,8 @@
     "remark-gfm": "^4.0.1",
     "tailwind-merge": "^2.0.0",
     "tailwindcss-animate": "^1.0.7",
-    "three": "^0.182.0"
+    "three": "^0.182.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/node": "20.5.2",

@@ -75,6 +75,18 @@ export async function ensureSchema(): Promise<boolean> {
     )
   `;
 
+  await sql`
+    CREATE TABLE IF NOT EXISTS usage_events (
+      id SERIAL PRIMARY KEY,
+      client_id TEXT NOT NULL,
+      route TEXT NOT NULL,
+      prompt_tokens INT NOT NULL DEFAULT 0,
+      completion_tokens INT NOT NULL DEFAULT 0,
+      estimated BOOLEAN NOT NULL DEFAULT true,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    )
+  `;
+
   schemaReady = true;
   return true;
 }

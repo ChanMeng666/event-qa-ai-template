@@ -1,9 +1,8 @@
 /**
  * Rate limiting (Vercel KV / Upstash Redis)
  *
- * Protects the realtime token endpoint (which spends OpenAI Realtime credits)
- * and the chat endpoint. If no KV/Upstash credentials are configured, limiting
- * is disabled (allow-all) so local development and unprovisioned previews work.
+ * Protects AI API routes from abuse. If no KV/Upstash credentials are
+ * configured, limiting is disabled (allow-all) for local dev.
  */
 
 import { Redis } from '@upstash/redis';
@@ -41,11 +40,25 @@ export interface RateLimitResult {
   success: boolean;
   remaining: number;
   limit: number;
+  /** Window length in seconds for the bucket that rejected (if any). */
+  windowSeconds?: number;
+}
+
+export interface RateLimitWindow {
+  limit: number;
+  windowSeconds: number;
+}
+
+export function isRateLimitEnabled(): boolean {
+  return redis !== null;
+}
+
+export function getRedis(): Redis | null {
+  return redis;
 }
 
 /**
- * Consumes one token for `identifier` under a named bucket. Returns success
- * true (allow) when limiting is disabled.
+ * Consumes one token for `identifier` under a named bucket.
  */
 export async function checkRateLimit(
   name: string,
@@ -58,7 +71,98 @@ export async function checkRateLimit(
     return { success: true, remaining: limit, limit };
   }
   const res = await limiter.limit(identifier);
-  return { success: res.success, remaining: res.remaining, limit };
+  return {
+    success: res.success,
+    remaining: res.remaining,
+    limit,
+    windowSeconds: res.success ? windowSeconds : windowSeconds,
+  };
+}
+
+/**
+ * Checks multiple sliding windows; consumes a token in each on success.
+ * Stops at the first window that would exceed its limit.
+ */
+export async function checkMultiWindowLimit(
+  name: string,
+  identifier: string,
+  windows: RateLimitWindow[]
+): Promise<RateLimitResult> {
+  if (!redis || windows.length === 0) {
+    const first = windows[0];
+    return {
+      success: true,
+      remaining: first?.limit ?? 999,
+      limit: first?.limit ?? 999,
+    };
+  }
+
+  let lastResult: RateLimitResult = {
+    success: true,
+    remaining: windows[0].limit,
+    limit: windows[0].limit,
+  };
+
+  for (const { limit, windowSeconds } of windows) {
+    const res = await checkRateLimit(name, identifier, limit, windowSeconds);
+    if (!res.success) {
+      return { ...res, windowSeconds };
+    }
+    lastResult = { ...res, windowSeconds };
+  }
+
+  return lastResult;
+}
+
+/** Atomic increment by amount with TTL on first write. */
+export async function incrementCounterBy(
+  key: string,
+  amount: number,
+  ttlSeconds: number
+): Promise<number> {
+  if (!redis || amount <= 0) return 0;
+  const count = await redis.incrby(key, amount);
+  if (count === amount) {
+    await redis.expire(key, ttlSeconds);
+  }
+  return count;
+}
+
+/** Atomic increment with TTL (seconds). Returns new count. */
+export async function incrementCounter(
+  key: string,
+  ttlSeconds: number
+): Promise<number> {
+  return incrementCounterBy(key, 1, ttlSeconds);
+}
+
+/** Read counter value; 0 when missing or KV disabled. */
+export async function getCounter(key: string): Promise<number> {
+  if (!redis) return 0;
+  const val = await redis.get<number>(key);
+  return typeof val === 'number' ? val : 0;
+}
+
+/** Set JSON value with TTL. */
+export async function setJsonWithTtl(
+  key: string,
+  value: unknown,
+  ttlSeconds: number
+): Promise<void> {
+  if (!redis) return;
+  await redis.set(key, JSON.stringify(value), { ex: ttlSeconds });
+}
+
+/** Get parsed JSON or null. */
+export async function getJson<T>(key: string): Promise<T | null> {
+  if (!redis) return null;
+  const raw = await redis.get<string>(key);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -68,4 +172,31 @@ export function getClientId(req: Request): string {
   const fwd = req.headers.get('x-forwarded-for');
   if (fwd) return fwd.split(',')[0].trim();
   return req.headers.get('x-real-ip') || 'anonymous';
+}
+
+/** Retry-After hint from window length (conservative). */
+function retryAfterSeconds(windowSeconds?: number): string {
+  if (!windowSeconds) return '60';
+  return String(Math.max(1, Math.ceil(windowSeconds / 2)));
+}
+
+/**
+ * Standard 429 JSON response with rate-limit headers.
+ */
+export function rateLimitResponse(
+  result: RateLimitResult,
+  message: string,
+  extra?: Record<string, unknown>
+): Response {
+  return Response.json(
+    { error: message, reason: 'rate_limited', ...extra },
+    {
+      status: 429,
+      headers: {
+        'Retry-After': retryAfterSeconds(result.windowSeconds),
+        'X-RateLimit-Limit': String(result.limit),
+        'X-RateLimit-Remaining': String(Math.max(0, result.remaining)),
+      },
+    }
+  );
 }

@@ -44,6 +44,8 @@ export { siteConfig } from './site.config';
 export { aiConfig, getSystemPrompt, generateSystemPrompt } from './ai.config';
 export { contentConfig } from './content.config';
 export { brandingConfig } from './branding.config';
+export { limitsConfig } from './limits.config';
+export type { LimitsConfig } from './limits.config';
 
 // ============================================================================
 // Combined Configuration

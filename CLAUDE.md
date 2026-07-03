@@ -174,6 +174,7 @@ className="border-white/30 text-white/80 bg-transparent hover:bg-white/20"
 npm run dev     # Start development server
 npm run build   # Build for production
 npm run lint    # Run ESLint
+npm run verify:kv  # Confirm Upstash KV is wired for rate limiting
 ```
 
 ## Environment Variables
@@ -184,9 +185,33 @@ Required in `.env.local`:
 |----------|-------------|----------|
 | `OPENAI_API_KEY` | OpenAI API key (Realtime voice + text chat) | Yes |
 | `DATABASE_URL` / `POSTGRES_URL` | Vercel Postgres (Neon): knowledge base + transcripts | Optional |
-| `KV_REST_API_URL` / `KV_REST_API_TOKEN` | Vercel KV (Upstash): rate limiting | Optional |
+| `KV_REST_API_URL` / `KV_REST_API_TOKEN` | Vercel KV (Upstash): rate limiting, turn quotas, token budgets | Recommended (production) |
 
 > **Note**: With no DB configured, knowledge falls back to `config/ai.config.ts` and transcript persistence is skipped. With no KV configured, rate limiting is disabled (allow-all).
+
+### Vercel KV setup (production)
+
+1. Vercel Dashboard → Project → **Storage** → **Create Database** → **KV**
+2. Name it (e.g. `event-qa-ratelimit`), pick a nearby region
+3. **Connect to Project** → select this repo’s Vercel project
+4. Redeploy — `KV_REST_API_URL` and `KV_REST_API_TOKEN` are injected automatically
+5. Verify: rapid session mint attempts should return HTTP 429
+
+Local dev with KV: `vercel env pull .env.local`
+
+### Rate limiting & token guardrails
+
+Multi-layer protection (see `config/limits.config.ts`, `lib/ratelimit.ts`, `lib/usage.ts`, `lib/guardrails.ts`, `middleware.ts`):
+
+| Layer | What it does |
+|-------|----------------|
+| Edge middleware | Burst limit across all AI API routes (30/min/IP default) |
+| Session mint | Multi-window limits (5/min, 20/hr, 50/day) + daily token budget check |
+| Transcript | Turn quotas per session/day, input validation, OpenAI Moderation |
+| Client hook | Max session duration, reconnect cooldown, text send throttle |
+| Chat API | Disabled by default (`ENABLE_CHAT_API=false`); hardened when enabled |
+
+Override quotas via `LIMITS_*` env vars (see `.env.example`).
 
 ## Architecture Overview
 
@@ -222,7 +247,9 @@ config/*.config.ts → components import from @/config → dynamic content
 - `hooks/use-realtime-voice.ts` - WebRTC realtime session + audio level
 - `app/api/realtime/session/route.ts` - mints the ephemeral Realtime token
 - `app/api/chat/route.ts` - text chat (Vercel AI SDK + OpenAI)
-- `lib/knowledge.ts`, `lib/db.ts`, `lib/transcripts.ts`, `lib/ratelimit.ts`
+- `lib/knowledge.ts`, `lib/db.ts`, `lib/transcripts.ts`, `lib/ratelimit.ts`, `lib/usage.ts`, `lib/guardrails.ts`
+- `middleware.ts` - Edge burst rate limiting for AI API routes
+- `config/limits.config.ts` - centralized quotas and token budgets
 - `config/ai.config.ts` - prompt/knowledge + realtime model & voice
 
 ## Best Practices
