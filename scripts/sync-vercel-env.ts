@@ -1,6 +1,9 @@
 /**
  * Sync required secrets from .env.local to Vercel (production, preview, development).
  * Run: npx tsx scripts/sync-vercel-env.ts
+ *
+ * GUARD: refuses to run unless .vercel/project.json links to aihackathon-2026.
+ * See AGENTS.md — never sync/deploy to a repo-named Vercel project (event-qa-ai-template).
  */
 
 import { readFileSync, existsSync } from 'fs';

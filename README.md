@@ -115,17 +115,25 @@ Open http://localhost:3000. The voice agent needs microphone permission and a se
 
 ## Deploying on Vercel
 
-The project must be linked to **`she-sharp1/aihackathon-2026`** (not `event-qa-ai-template`).
+> **For AI agents:** full rules and incident post-mortem → **[AGENTS.md](AGENTS.md)**
+
+| | |
+|--|--|
+| GitHub repo | `ChanMeng666/event-qa-ai-template` |
+| **Vercel project** | **`she-sharp1/aihackathon-2026`** |
+| Production | https://aihackathon-2026.vercel.app · https://hackathon.shesharp.org.nz |
+
+**Do not** run `vercel link` without `--project aihackathon-2026`. The CLI will otherwise create a **new** project named `event-qa-ai-template` (wrong). Always verify `.vercel/project.json` contains `"projectName": "aihackathon-2026"` before deploying.
 
 ```bash
-# Link to the correct project (once)
+# Link to the correct project (once, or after clone)
 npx vercel link --project aihackathon-2026 --scope she-sharp1 --yes
 
-# Set the OpenAI key (once) — or use npm run sync:vercel-env
-vercel env add OPENAI_API_KEY production --scope she-sharp1
+# Sync secrets (script refuses wrong project)
+npm run sync:vercel-env
 
 # Deploy
-vercel deploy --prod --scope she-sharp1
+vercel deploy --prod --scope she-sharp1 --yes
 ```
 
 To enable the database and rate limiting, add the **Vercel Postgres (Neon)** and **Vercel KV (Upstash)** integrations from the Vercel dashboard (Storage tab). They inject the env vars automatically. Then seed the knowledge base:

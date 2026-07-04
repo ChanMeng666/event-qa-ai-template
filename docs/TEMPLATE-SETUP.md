@@ -213,8 +213,9 @@ npm run dev
 # Build
 npm run build
 
-# Deploy to Vercel
-vercel
+# Deploy to Vercel (see AGENTS.md for this repo's production project name)
+npx vercel link --project aihackathon-2026 --scope she-sharp1 --yes
+vercel deploy --prod --scope she-sharp1 --yes
 ```
 
 ## Configuration Reference

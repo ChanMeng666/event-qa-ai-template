@@ -177,6 +177,26 @@ npm run lint    # Run ESLint
 npm run verify:kv  # Confirm Upstash KV is wired for rate limiting
 ```
 
+## Vercel deployment (CRITICAL for agents)
+
+> **Read [AGENTS.md](AGENTS.md) before any Vercel link, deploy, or env-var change.**
+
+| | |
+|--|--|
+| GitHub repo | `event-qa-ai-template` |
+| **Vercel project (production)** | **`aihackathon-2026`** (team `she-sharp1`) |
+| **Do NOT use** | `event-qa-ai-template` as a Vercel project name |
+
+Running `vercel link` without `--project aihackathon-2026` will **create a new wrong project** named after the repo folder. Always:
+
+```bash
+npx vercel link --project aihackathon-2026 --scope she-sharp1 --yes
+# Verify .vercel/project.json → "projectName": "aihackathon-2026"
+npx vercel deploy --prod --scope she-sharp1 --yes
+```
+
+Live: https://aihackathon-2026.vercel.app · https://hackathon.shesharp.org.nz
+
 ## Environment Variables
 
 Required in `.env.local`:
@@ -191,9 +211,9 @@ Required in `.env.local`:
 
 ### Vercel KV setup (production)
 
-1. Vercel Dashboard → Project → **Storage** → **Create Database** → **KV**
+1. Vercel Dashboard → Project **`aihackathon-2026`** → **Storage** → **Create Database** → **KV**
 2. Name it (e.g. `event-qa-ratelimit`), pick a nearby region
-3. **Connect to Project** → select this repo’s Vercel project
+3. **Connect to Project** → select **`aihackathon-2026`** (not `event-qa-ai-template`)
 4. Redeploy — `KV_REST_API_URL` and `KV_REST_API_TOKEN` are injected automatically
 5. Verify: rapid session mint attempts should return HTTP 429
 
@@ -260,3 +280,4 @@ config/*.config.ts → components import from @/config → dynamic content
 4. Keep the app working without DB/KV (respect the graceful fallbacks)
 5. Maintain the stagger shadow aesthetic and sharp corners throughout
 6. Use Framer Motion for animations following existing patterns
+7. **Vercel**: never `vercel link` without `--project aihackathon-2026` — see [AGENTS.md](AGENTS.md)
