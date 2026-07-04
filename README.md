@@ -115,10 +115,13 @@ Open http://localhost:3000. The voice agent needs microphone permission and a se
 
 ## Deploying on Vercel
 
-The project is linked to the Vercel project `she-sharp1/aihackathon-2026`.
+The project must be linked to **`she-sharp1/aihackathon-2026`** (not `event-qa-ai-template`).
 
 ```bash
-# Set the OpenAI key (once)
+# Link to the correct project (once)
+npx vercel link --project aihackathon-2026 --scope she-sharp1 --yes
+
+# Set the OpenAI key (once) — or use npm run sync:vercel-env
 vercel env add OPENAI_API_KEY production --scope she-sharp1
 
 # Deploy

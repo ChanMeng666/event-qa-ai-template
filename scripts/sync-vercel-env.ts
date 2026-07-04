@@ -8,6 +8,8 @@ import { resolve } from 'path';
 import { spawnSync } from 'child_process';
 
 const SCOPE = 'she-sharp1';
+/** Must match the Vercel project linked in .vercel/project.json */
+const EXPECTED_PROJECT = 'aihackathon-2026';
 const TARGETS = ['production', 'preview', 'development'] as const;
 
 const KEYS = [
@@ -60,7 +62,24 @@ function addEnv(key: string, value: string, target: string): boolean {
   return true;
 }
 
+function assertLinkedProject() {
+  const path = resolve(process.cwd(), '.vercel/project.json');
+  if (!existsSync(path)) {
+    throw new Error(
+      `Not linked to Vercel. Run: npx vercel link --project ${EXPECTED_PROJECT} --scope ${SCOPE} --yes`
+    );
+  }
+  const raw = readFileSync(path, 'utf8');
+  const { projectName } = JSON.parse(raw) as { projectName?: string };
+  if (projectName !== EXPECTED_PROJECT) {
+    throw new Error(
+      `Linked to "${projectName}" but expected "${EXPECTED_PROJECT}". Run: npx vercel link --project ${EXPECTED_PROJECT} --scope ${SCOPE} --yes`
+    );
+  }
+}
+
 function main() {
+  assertLinkedProject();
   const env = loadEnvLocal();
   let ok = true;
 
