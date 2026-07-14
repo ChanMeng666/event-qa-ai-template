@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect } from 'react';
 import * as THREE from 'three';
 
 interface CosmicBackgroundProps {
@@ -9,15 +9,13 @@ interface CosmicBackgroundProps {
 
 export function CosmicBackground({ className = '' }: CosmicBackgroundProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [mounted, setMounted] = useState(false);
-  
+
+  // No SSR mount gate needed: this component is loaded with
+  // `dynamic(..., { ssr: false })`, so it only ever renders on the client and
+  // the ref is populated on the first (and only) render. The effect runs once.
   useEffect(() => {
-    setMounted(true);
-  }, []);
-  
-  useEffect(() => {
-    if (!mounted || !containerRef.current) return;
-    
+    if (!containerRef.current) return;
+
     const container = containerRef.current;
     
     // Scene setup
@@ -33,18 +31,23 @@ export function CosmicBackground({ className = '' }: CosmicBackgroundProps) {
     );
     camera.position.z = 5;
     
-    // Renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    // Renderer. Antialiasing is off: these are additive point particles, so
+    // MSAA is effectively invisible while still costing fill rate. Pixel ratio
+    // is capped at 1.5 (was 2) to reduce fragment work on high-DPI phones.
+    const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     container.appendChild(renderer.domElement);
     
     // Clock for animation
     const clock = new THREE.Clock();
     
+    // Halve the background star count on phones to cut vertex/fill cost.
+    const isMobile = window.innerWidth < 768;
+
     // Particles Layer 1 - White stars
     const particlesGeometry = new THREE.BufferGeometry();
-    const particlesCount = 3000;
+    const particlesCount = isMobile ? 1500 : 3000;
     const posArray = new Float32Array(particlesCount * 3);
     
     for (let i = 0; i < particlesCount * 3; i++) {
@@ -66,7 +69,7 @@ export function CosmicBackground({ className = '' }: CosmicBackgroundProps) {
     
     // Particles Layer 2 - Blue stars
     const bgStarsGeometry = new THREE.BufferGeometry();
-    const bgStarsCount = 5000;
+    const bgStarsCount = isMobile ? 2500 : 5000;
     const bgPosArray = new Float32Array(bgStarsCount * 3);
     
     for (let i = 0; i < bgStarsCount * 3; i++) {
@@ -106,12 +109,19 @@ export function CosmicBackground({ className = '' }: CosmicBackgroundProps) {
     
     window.addEventListener('resize', handleResize);
     
-    // Animation loop
-    let animationId: number;
-    
+    // Animation loop (pausable). This background is always on, so pausing it
+    // while the tab is hidden or when it is scrolled off-screen is a pure perf
+    // win. It animates off THREE.Clock (wall-clock), so we stop/start the clock
+    // alongside the loop - that keeps elapsedTime from jumping on resume,
+    // making pause/resume visually seamless rather than snapping forward.
+    let animationId = 0;
+    let running = false;
+    let onScreen = true;
+
     const animate = () => {
+      if (!running) return;
       animationId = requestAnimationFrame(animate);
-      
+
       const elapsedTime = clock.getElapsedTime();
       
       // Rotation
@@ -132,11 +142,46 @@ export function CosmicBackground({ className = '' }: CosmicBackgroundProps) {
       renderer.render(scene, camera);
     };
     
-    animate();
-    
+    const stop = () => {
+      running = false;
+      clock.stop();
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+        animationId = 0;
+      }
+    };
+    const maybeStart = () => {
+      if (running || document.hidden || !onScreen) return;
+      running = true;
+      clock.start();
+      animationId = requestAnimationFrame(animate);
+    };
+
+    // Pause when the tab is backgrounded, resume when foregrounded.
+    const handleVisibility = () => {
+      if (document.hidden) stop();
+      else maybeStart();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    // Pause when the background is fully off-screen, resume when it returns.
+    const observer = new IntersectionObserver(
+      (entries) => {
+        onScreen = entries[0]?.isIntersecting ?? true;
+        if (onScreen) maybeStart();
+        else stop();
+      },
+      { threshold: 0 }
+    );
+    observer.observe(container);
+
+    maybeStart();
+
     // Cleanup
     return () => {
-      cancelAnimationFrame(animationId);
+      stop();
+      document.removeEventListener('visibilitychange', handleVisibility);
+      observer.disconnect();
       document.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('resize', handleResize);
       
@@ -151,12 +196,8 @@ export function CosmicBackground({ className = '' }: CosmicBackgroundProps) {
         container.removeChild(renderer.domElement);
       }
     };
-  }, [mounted]);
-  
-  if (!mounted) {
-    return <div className={className} />;
-  }
-  
+  }, []);
+
   return (
     <div 
       ref={containerRef} 

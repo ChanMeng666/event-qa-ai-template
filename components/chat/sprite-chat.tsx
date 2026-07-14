@@ -107,6 +107,15 @@ export type OrbState =
   | 'speaking'
   | 'error';
 
+// Special click reactions. Static data, so it lives at module scope - this
+// keeps its identity stable across renders (a component-local array would be
+// recreated every render and destabilize the useCallback that depends on it).
+const clickReactions: Reaction[] = [
+  { msg: 'Ask me anything!', emotion: 'excited', eyeScale: { x: 1.8, y: 1.8 }, shape: 'star' },
+  { msg: 'Let\'s chat!', emotion: 'happy', eyeScale: { x: 1.5, y: 1.5 }, shape: 'sphere' },
+  { msg: 'I\'m here to help!', emotion: 'happy', eyeScale: { x: 1.4, y: 1.4 }, shape: 'arc', rotation: Math.PI },
+];
+
 // Particle tint per voice-agent state (multiplies the white vertex colors).
 const ORB_STATE_COLORS: Record<OrbState, [number, number, number]> = {
   idle: [1, 1, 1],
@@ -309,7 +318,11 @@ export function SpriteChat({
     cameraRef.current = camera;
     
     // Particle Sphere
-    const sphereGeometry = new THREE.SphereGeometry(7, 128, 128);
+    // Adaptive tessellation: fewer segments on phones to cut vertex/GPU cost.
+    // Nothing downstream assumes a fixed vertex count - `count` is derived
+    // from the geometry below and the wave displacement runs on the GPU.
+    const segments = window.innerWidth < 768 ? 96 : 128;
+    const sphereGeometry = new THREE.SphereGeometry(7, segments, segments);
     const count = sphereGeometry.attributes.position.count;
     
     // Add vertex colors
@@ -327,7 +340,33 @@ export function SpriteChat({
       blending: THREE.AdditiveBlending,
       vertexColors: true,
     });
-    
+
+    // Move the per-vertex wave displacement onto the GPU. The exact CPU math
+    // this replaces (previously a JS loop re-uploading the position buffer
+    // every frame) was:
+    //   noise = sin(px*0.4 + t) * cos(py*0.4 + t) * sin(pz*0.4 + t)
+    //   transformed = original * (1 + noise * waveAmp)
+    // We keep PointsMaterial (so vertex colors, size, opacity and the
+    // per-frame material tweaks below all still apply) and inject the same
+    // displacement into the vertex shader after <begin_vertex>. The two
+    // driving values (time, audio-reactive amplitude) are pushed as uniforms.
+    sphereMaterial.onBeforeCompile = (shader) => {
+      shader.uniforms.uTime = { value: 0 };
+      shader.uniforms.uWaveAmp = { value: 0.15 };
+      shader.vertexShader =
+        'uniform float uTime;\nuniform float uWaveAmp;\n' + shader.vertexShader;
+      shader.vertexShader = shader.vertexShader.replace(
+        '#include <begin_vertex>',
+        [
+          '#include <begin_vertex>',
+          'float waveNoise = sin(position.x * 0.4 + uTime) * cos(position.y * 0.4 + uTime) * sin(position.z * 0.4 + uTime);',
+          'transformed = position * (1.0 + waveNoise * uWaveAmp);',
+        ].join('\n')
+      );
+      // Keep a handle so the animate loop can drive the uniforms.
+      sphereMaterial.userData.shader = shader;
+    };
+
     const particleSphere = new THREE.Points(sphereGeometry, sphereMaterial);
     scene.add(particleSphere);
     
@@ -433,9 +472,6 @@ export function SpriteChat({
       teardropEyeGeo,
     };
     
-    // Store original positions for wave animation
-    const originalPositions = sphereGeometry.attributes.position.array.slice() as Float32Array;
-    
     // Animation variables
     let time = 0;
     let mouseX = 0;
@@ -474,10 +510,17 @@ export function SpriteChat({
     const targetStateColor = new THREE.Color(1, 1, 1);
     let displayLevel = 0;
 
-    // Animation loop
-    let animationId: number;
-    
+    // Animation loop (pausable). We never render while the tab is hidden or
+    // the orb is fully scrolled off-screen - the WebRTC audio session is
+    // independent of rendering, so pausing here is purely a perf win. Because
+    // `time` advances by a fixed step per frame (not wall-clock), pausing and
+    // resuming is animation-safe: it just freezes rather than jumping.
+    let animationId = 0;
+    let running = false;
+    let onScreen = true;
+
     const animate = () => {
+      if (!running) return;
       animationId = requestAnimationFrame(animate);
       time += 0.015;
 
@@ -490,19 +533,15 @@ export function SpriteChat({
       const thinkingPulse = state === 'thinking' ? Math.abs(Math.sin(time * 5)) * 0.12 : 0;
       const waveAmp = 0.15 + displayLevel * 0.6 + thinkingPulse;
 
-      // Wave animation on particles
-      const positions = sphereGeometry.attributes.position.array as Float32Array;
-      for (let i = 0; i < count; i++) {
-        const px = originalPositions[i * 3];
-        const py = originalPositions[i * 3 + 1];
-        const pz = originalPositions[i * 3 + 2];
-        const noise = Math.sin(px * 0.4 + time) * Math.cos(py * 0.4 + time) * Math.sin(pz * 0.4 + time);
-        const displacement = 1 + noise * waveAmp;
-        positions[i * 3] = px * displacement;
-        positions[i * 3 + 1] = py * displacement;
-        positions[i * 3 + 2] = pz * displacement;
+      // Wave animation on particles - driven entirely on the GPU now.
+      // Push the current time + audio-reactive amplitude to the shader
+      // uniforms (see onBeforeCompile above); no CPU vertex loop / buffer
+      // re-upload. The shader is available once the material has compiled.
+      const waveShader = sphereMaterial.userData.shader;
+      if (waveShader) {
+        waveShader.uniforms.uTime.value = time;
+        waveShader.uniforms.uWaveAmp.value = waveAmp;
       }
-      sphereGeometry.attributes.position.needsUpdate = true;
 
       // Tint the particles toward the current voice-agent state and make
       // them glow brighter/larger with the audio level.
@@ -542,11 +581,44 @@ export function SpriteChat({
       renderer.render(scene, camera);
     };
     
-    animate();
-    
+    const stop = () => {
+      running = false;
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+        animationId = 0;
+      }
+    };
+    const maybeStart = () => {
+      if (running || document.hidden || !onScreen) return;
+      running = true;
+      animationId = requestAnimationFrame(animate);
+    };
+
+    // Pause when the tab is backgrounded, resume when foregrounded.
+    const handleVisibility = () => {
+      if (document.hidden) stop();
+      else maybeStart();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    // Pause when the orb scrolls fully off-screen, resume when it returns.
+    const observer = new IntersectionObserver(
+      (entries) => {
+        onScreen = entries[0]?.isIntersecting ?? true;
+        if (onScreen) maybeStart();
+        else stop();
+      },
+      { threshold: 0 }
+    );
+    observer.observe(container);
+
+    maybeStart();
+
     // Cleanup
     return () => {
-      cancelAnimationFrame(animationId);
+      stop();
+      document.removeEventListener('visibilitychange', handleVisibility);
+      observer.disconnect();
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('touchmove', handleTouchMoveWindow);
       sphereGeometry.dispose();
@@ -643,13 +715,6 @@ export function SpriteChat({
     { msg: '(・・?)', emotion: 'confused', eyeScale: { x: 1.5, y: 1.2 }, shape: 'sphere' },
     { msg: 'Huh...?', emotion: 'confused', eyeScale: { x: 1.4, y: 1.6 }, shape: 'sphere' },
     { msg: '(?_?)', emotion: 'confused', eyeScale: { x: 1.3, y: 1.4 }, shape: 'sphere' },
-  ];
-  
-  // Special click reactions
-  const clickReactions: Reaction[] = [
-    { msg: 'Ask me anything!', emotion: 'excited', eyeScale: { x: 1.8, y: 1.8 }, shape: 'star' },
-    { msg: 'Let\'s chat!', emotion: 'happy', eyeScale: { x: 1.5, y: 1.5 }, shape: 'sphere' },
-    { msg: 'I\'m here to help!', emotion: 'happy', eyeScale: { x: 1.4, y: 1.4 }, shape: 'arc', rotation: Math.PI },
   ];
   
   // Idle/long hover reactions
@@ -1476,7 +1541,7 @@ export function SpriteChat({
     }
     
     lastMousePosRef.current = { x: clientX, y: clientY };
-  }, [addAffection]);
+  }, [addAffection, handleNegativeBehavior]);
   
   // Reset gesture state when mouse leaves
   const resetGestureState = useCallback(() => {
@@ -1718,7 +1783,7 @@ export function SpriteChat({
     
     // Trigger the click callback
     onSpriteClick?.();
-  }, [onSpriteClick, applyReaction, clickReactions, addAffection, handleNegativeBehavior, affection.tier, affection.mood, selectWeightedEmotion]);
+  }, [onSpriteClick, applyReaction, addAffection, handleNegativeBehavior, affection.tier, affection.mood, selectWeightedEmotion]);
   
   // Handle mouse move for gesture detection
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
