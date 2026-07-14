@@ -67,12 +67,21 @@ export async function persistMessages(
     const sql = getSql();
     if (!sql) return null;
 
+    // Collect non-empty turns into parallel arrays for a single multi-row
+    // INSERT via unnest (one round-trip instead of one per turn).
+    const roles: string[] = [];
+    const contents: string[] = [];
     for (const turn of turns) {
       const content = (turn.content ?? '').trim();
       if (!content) continue;
+      roles.push(turn.role);
+      contents.push(content);
+    }
+
+    if (contents.length > 0) {
       await sql`
         INSERT INTO messages (conversation_id, role, content)
-        VALUES (${id}, ${turn.role}, ${content})
+        SELECT ${id}, * FROM unnest(${roles}::text[], ${contents}::text[])
       `;
     }
     return id;
