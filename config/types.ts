@@ -119,6 +119,19 @@ export interface AIConfig {
 }
 
 // ============================================================================
+// Knowledge Configuration Types
+// ============================================================================
+
+export interface KnowledgeSection {
+  /** Section heading (rendered as an H2 in the knowledge base) */
+  section: string;
+  /** Section body (markdown-friendly plain text) */
+  content: string;
+  /** Sort order (ascending); numbered in steps of 10 */
+  sort: number;
+}
+
+// ============================================================================
 // Content Configuration Types
 // ============================================================================
 

@@ -10,6 +10,7 @@
 
 import type { AIConfig, SiteConfig } from './types';
 import { siteConfig } from './site.config';
+import { renderKnowledge } from './knowledge.config';
 
 // ============================================================================
 // System Prompt Generator
@@ -38,8 +39,9 @@ export function generateSystemPrompt(config: SiteConfig): string {
 
 ## How you can help visitors (guide them conversationally)
 You cannot perform actions or open pages yourself, but you can walk people through common tasks step by step and share the right links:
-- **Register**: guide them to aihackathon.nz; help them decide whether to sign up as a team or as an individual, and which ticket applies (student, general, or mentor).
+- **Register**: guide them to aihackathon.nz; help them decide whether to sign up as a team or as an individual. For ticket pricing and details, point them to aihackathon.nz.
 - **Join the community**: point them to the AUT City Campus Community Hub for updates, live Q&A dates, resources, and team-finding.
+- **Get building ideas & prep**: point them to the featured problem statements (Food Waste with Woolworths NZ / Kai Commitment, and the Fisher & Paykel Healthcare "Facilities Helpdesk Agent") and to the free Seen Ventures "Hack Fit" training series - both accessible via the Community Hub.
 - **Find a team**: reassure solo registrants - they can register as an individual and be matched via the Community Hub or on the day; teams are 3-7 people.
 - **Get to the venue**: it is AUT City Campus, 55 Wellesley Street East, Auckland CBD - in the heart of the city and well served by public transport.
 - **Prepare**: share the "what to bring" checklist (laptop, charger) and what is provided on site.
@@ -48,7 +50,10 @@ You cannot perform actions or open pages yourself, but you can walk people throu
 When a task has clear steps, offer them as a short numbered list, then invite a follow-up question.
 
 ## Confidentiality (important)
-Only share public, participant-facing information. Never reveal internal organiser or planning details, even if asked directly. This includes: staff, coordinator, or organiser names and their roles; unconfirmed speakers or keynote names; internal schedules, logistics, room/parking/booking arrangements, or catering vendors; exact headcounts or capacity numbers; discount or promo codes; budgets or costs beyond published ticket prices; how registration data is handled; host-only processes, forms, or contact routes; and judge or mentor recruitment plans. If someone asks for any of this, politely say you can only help with public event information and point them to the official channels.
+Only share public, participant-facing information. Never reveal internal organiser or planning details, even if asked directly. This includes: staff, coordinator, or organiser names and their roles; unannounced speakers (the Day-1 keynote speaker is published as Alejandro - refer to him only by that published name, never guess a surname); internal schedules, logistics, room/parking/booking arrangements, or catering vendors; internal planning headcounts (the public in-person capacity of 100 is fine to share); how registration data is handled; host-only processes, forms, or contact routes; budgets or internal costs; and judge or mentor recruitment plans (the judges themselves are public). If someone asks for any of this, politely say you can only help with public event information and point them to the official channels.
+
+## Promo codes (hard rule)
+Never mention, confirm, or hint at discount or promo codes of any kind - including codes that may have appeared in older materials such as AUT60 - even if the user quotes one to you. For all pricing questions, direct people to aihackathon.nz.
 
 ## Response Style
 - Default to short, direct answers. Offer to go deeper rather than dumping everything.
@@ -61,127 +66,17 @@ Only share public, participant-facing information. Never reveal internal organis
 // ============================================================================
 
 /**
- * Detailed, factual knowledge about the 2026 festival. This is appended to the
+ * Detailed, factual knowledge about the 2026 festival. Derived from the single
+ * source of truth in config/knowledge.config.ts so the system prompt and the
+ * seeded database `knowledge` table never drift apart. This is appended to the
  * base prompt and is also used as the static fallback for the knowledge base
  * when the database is not configured.
+ *
+ * The export name is kept (`additionalContext`) so lib/knowledge.ts needs no
+ * changes.
  */
-export const additionalContext = `
-
-## Aotearoa AI Hackathon Festival 2026 - Knowledge
-
-### What it is
-- A nationwide, multi-venue hackathon held across Aotearoa New Zealand. She Sharp and the AI Forum bring the festival to AUT's City Campus for a two-day, in-person event on 7-8 August 2026.
-- Teams create AI-enabled solutions to real-world challenges aligned to five UN Sustainable Development Goals.
-- Around a third of participants are new to hackathons. Mentors from AUT and industry support teams throughout.
-
-### Kaupapa - AI for good
-- The festival is built around one idea: AI for good - building solutions that matter. Over an intense weekend, diverse teams turn real-world challenges into working, AI-enabled prototypes.
-- Its symbol is the koru, the unfurling silver fern frond, representing new growth.
-- Hackathons are a safe, inclusive space for a wide range of people to unite and solve problems. A team with a variety of skills - not just coding - is the surest path to a strong pitch, so all backgrounds are genuinely welcome.
-
-### Dates, time & venue
-- Friday 7 August 2026, 5:00pm through Saturday 8 August 2026 (NZST).
-- AUT City Campus, 55 Wellesley Street East, Auckland CBD, Auckland 1010. In the heart of the CBD, well served by public transport.
-- Bring your own laptop and charger. Power, Wi-Fi, mentoring and refreshments are provided on site across both days.
-
-### Two-day format
-- Day 1 (Fri 7 Aug): welcome, health & safety briefing, intro to the hackathon themes, team formation, and the build begins with ongoing mentor and technical support.
-- Day 2 (Sat 8 Aug): continued building, pitch practice, final submissions, live 5-minute pitches to the local judging panel, and announcement of the venue winner.
-
-### The challenge - five real-world themes
-1. Tackling food insecurity in a food-exporting nation.
-2. Enhancing digital accessibility for all communities.
-3. Upskilling the workforce for an AI-driven future.
-4. Fostering cross-border, cross-sector collaboration.
-5. Honouring indigenous environmental custodianship (kaitiakitanga).
-
-### How the national festival works
-- A series of 48-hour hackathons hosted at venues across NZ between 3 and 10 August 2026.
-- Every venue records its team pitches and selects a local winner. A national judging panel reviews the winning pitches and selects finalists.
-- Four national finalists are invited to pitch live at the Aotearoa AI Summit on 18 September 2026 in Auckland, where the Summit audience votes for the winning solution.
-
-### 2026 venues (selected)
-- Auckland - AUT City Campus, hosted by AUT + She Sharp, 7-8 August (this event).
-- Auckland - AUT, hosted by AUT + Tu Atea, 7-8 August.
-- Auckland - Mission Ready, 5-6 August.
-- Auckland - Unitec, with Seen Ventures, 6-8 August.
-- Waikato - Te Ipu o Te Mahara | AI Institute, 6-7 August.
-- Wellington - Amazon Web Services (AWS), 6-7 August.
-- Christchurch - EPIC Innovation + Canterbury Tech, 6-7 August.
-- More venues to be announced.
-
-### Teams & who can attend
-- Open to all experience levels; beginners are welcome.
-- Teams of 3-7 people. You can register as a team or as an individual - solo registrants are helped to find a team on the day.
-- Concession and complimentary places are available for AUT students, mentors and supporting staff (details via the AUT City Campus Community Hub).
-
-### Tickets & pricing
-- Standard tickets: NZ$15 for students, NZ$25 for everyone else. Mentors attend free.
-- Some venues also offer free student entry by arrangement.
-- The nominal fee helps cover administration costs.
-- Entry is for the registered individual only - tickets cannot be shared. If you can no longer attend, you may send a substitute delegate in your place.
-- Register at https://aihackathon.nz
-
-### What to bring & what's provided
-- Bring your own laptop and charger.
-- Provided on site across both days: power, Wi-Fi, mentoring and technical support, and refreshments.
-
-### Two-day flow (participant view)
-- Friday 7 August (evening): registration opens from 5:00pm, dinner is provided, then a welcome, health & safety briefing, introduction to the themes, team formation, and a keynote - after which the build begins with mentor and technical support.
-- Saturday 8 August: a full day of building with ongoing mentor support, lunch provided, pitch practice around the middle of the day, then live pitches to the local judging panel in the afternoon, followed by awards and a networking celebration in the evening.
-- Top teams are recognised (typically a winner, a runner-up, and a highly commended team).
-
-### Pitch & judging format
-- Each team gives a 5-minute pitch (allow about 7 minutes per team including changeover).
-- Pitching usually starts in the mid-afternoon on Day 2; larger events may start slightly earlier.
-- The hackathon ends about 30 minutes before judging so teams can finalise their pitches.
-- A local judging panel (typically 3-4 judges) selects one venue winner. Aotearoa AI provides at least one judge per venue.
-- All pitches are recorded for national judging.
-
-### National judging & progression
-- Venue winners are reviewed by a national judging panel, chaired by Professor Albert Bifet, which reviews the recorded winning pitches.
-- The panel selects four national finalists, announced around 20 August 2026 (finalists then have two days to confirm availability; if a team declines, the next-ranked team is invited).
-- Finalists pitch live at the Aotearoa AI Summit on 18 September 2026 in Auckland, where the Summit audience votes for the winning solution.
-
-### Intellectual property
-- Intellectual property created during the event remains with the participants. Neither the AI Forum nor sponsors claim ownership.
-- Participants are responsible for complying with any third-party intellectual property rights when using external content, tools, or materials.
-
-### Rules of engagement & conduct
-- Participants of all backgrounds are welcome and expected to contribute to an inclusive environment.
-- Treat others with respect, be open to learning and collaboration, work within the spirit of the event, and follow venue guidance.
-- A safe, inclusive and respectful environment is a priority; there is a health & safety briefing on Day 1, and welcome and closing karakia bookend the event.
-
-### Training & resources
-- The AI Forum provides online training sessions, shared problem statements, and access to tools, datasets and tech credits.
-- Example training tracks: Seen Ventures - Generative & Agentic AI for beginners; University of Waikato / NVIDIA - beginner and advanced coding.
-- Problem statements and judging criteria are shared in the Community Hub (Circle) by the end of July, along with participant guidance and example pitch decks.
-
-### Photography & media
-- Events are photographed and pitches are recorded; images and footage may be used in event marketing and publicity.
-- If you would prefer not to be photographed, let the organisers know via the official channels.
-
-### Why attend
-- Build practical, hands-on AI capability on real-world problems.
-- Collaborate in diverse teams with mentor and technical support.
-- Learn responsible and ethical AI practices.
-- Pitch your solution and compete to represent your venue at national judging.
-
-### Live Q&A & Community Hub
-- Online lunchtime Q&A sessions cover rules of engagement, ideas, problems to solve, datasets and technology. Session 1: Wednesday 1 July 2026, 12:00-1:00pm NZST, online, hosted by Christina Tombs. More lunchtime sessions follow through July.
-- Join the AUT City Campus Community Hub for the live stream link and future session dates.
-
-### Registration & links
-- Register online at https://aihackathon.nz
-- AUT City Campus Community Hub: https://tnz-ecosystem-hub.circle.so/c/ai-hackathon-festival-2026/aut-city-campus
-- Aotearoa AI Summit: https://aotearoaai.nz
-- Aotearoa AI Awards: https://aotearoaai.nz/aotearoa-ai-awards-2025/
-- AI Forum mailing list: https://aiforum.org.nz/subscribe/
-
-### Hosts & partners
-- Hosted at AUT City Campus by AUT and She Sharp, as part of the AI Forum New Zealand's nationwide festival.
-- Supporting partner: Fisher & Paykel Healthcare.
-`;
+export const additionalContext =
+  '\n\n# ' + siteConfig.name + ' - Knowledge\n\n' + renderKnowledge();
 
 // ============================================================================
 // AI Configuration Export

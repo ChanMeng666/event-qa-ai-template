@@ -1,15 +1,21 @@
 /**
  * Seed the `knowledge` table with the 2026 event content.
  *
+ * The knowledge itself lives in config/knowledge.config.ts (the single source
+ * of truth shared with the AI system prompt). This script only upserts those
+ * sections into Postgres and prunes any rows that are no longer defined there.
+ *
  * Usage:
  *   1. Ensure DATABASE_URL / POSTGRES_URL is set (Vercel Postgres / Neon).
  *      Locally you can run:  vercel env pull .env.local  then
  *      node --env-file=.env.local ./node_modules/tsx/dist/cli.mjs scripts/seed-knowledge.ts
  *      or simply: npm run db:seed   (with the env var exported in your shell)
- *   2. Re-running is safe: sections are upserted by name.
+ *   2. Re-running is safe: sections are upserted by name, and sections removed
+ *      from config/knowledge.config.ts are pruned from the table.
  */
 
 import { neon } from '@neondatabase/serverless';
+import { knowledgeSections as sections } from '../config/knowledge.config';
 
 const CONNECTION_STRING =
   process.env.DATABASE_URL ||
@@ -17,117 +23,6 @@ const CONNECTION_STRING =
   process.env.POSTGRES_PRISMA_URL ||
   process.env.NEON_DATABASE_URL ||
   '';
-
-const sections: { section: string; content: string; sort: number }[] = [
-  {
-    section: 'Overview',
-    sort: 10,
-    content:
-      "A nationwide, multi-venue hackathon across Aotearoa New Zealand. She Sharp and the AI Forum bring the festival to AUT's City Campus for a two-day, in-person event on 7-8 August 2026. Teams create AI-enabled solutions to real-world challenges aligned to five UN Sustainable Development Goals. Around a third of participants are new to hackathons; mentors from AUT and industry support teams throughout.",
-  },
-  {
-    section: 'Dates, time & venue',
-    sort: 20,
-    content:
-      'Friday 7 August 2026, 5:00pm through Saturday 8 August 2026 (NZST). AUT City Campus, 55 Wellesley Street East, Auckland CBD, Auckland 1010 - in the heart of the CBD, well served by public transport. Bring your own laptop and charger. Power, Wi-Fi, mentoring and refreshments are provided on site across both days.',
-  },
-  {
-    section: 'Two-day format',
-    sort: 30,
-    content:
-      'Day 1 (Fri 7 Aug): welcome, health & safety briefing, intro to the hackathon themes, team formation, and the build begins with ongoing mentor and technical support. Day 2 (Sat 8 Aug): continued building, pitch practice, final submissions, live 5-minute pitches to the local judging panel, and announcement of the venue winner.',
-  },
-  {
-    section: 'Challenge themes',
-    sort: 40,
-    content:
-      'Five real-world themes aligned to UN SDGs: (1) tackling food insecurity in a food-exporting nation; (2) enhancing digital accessibility for all communities; (3) upskilling the workforce for an AI-driven future; (4) fostering cross-border, cross-sector collaboration; (5) honouring indigenous environmental custodianship (kaitiakitanga).',
-  },
-  {
-    section: 'National festival & judging',
-    sort: 50,
-    content:
-      'A series of 48-hour hackathons hosted at venues across NZ between 3 and 10 August 2026. Every venue records its pitches and selects a local winner. A national judging panel reviews the winning pitches and selects finalists. Four national finalists pitch live at the Aotearoa AI Summit on 18 September 2026 in Auckland, where the Summit audience votes for the winning solution.',
-  },
-  {
-    section: '2026 venues',
-    sort: 60,
-    content:
-      'Auckland - AUT City Campus (AUT + She Sharp), 7-8 Aug (this event); Auckland - AUT (AUT + Tu Atea), 7-8 Aug; Auckland - Mission Ready, 5-6 Aug; Auckland - Unitec (with Seen Ventures), 6-8 Aug; Waikato - Te Ipu o Te Mahara AI Institute, 6-7 Aug; Wellington - AWS, 6-7 Aug; Christchurch - EPIC Innovation + Canterbury Tech, 6-7 Aug. More venues to be announced.',
-  },
-  {
-    section: 'Teams & eligibility',
-    sort: 70,
-    content:
-      'Open to all experience levels; beginners are welcome. Teams of 3-7 people. Register as a team or an individual - solo registrants are helped to find a team on the day. Concession and complimentary places are available for AUT students, mentors and supporting staff (details via the AUT City Campus Community Hub).',
-  },
-  {
-    section: 'Tickets & pricing',
-    sort: 72,
-    content:
-      'Standard tickets: NZ$15 for students, NZ$25 for everyone else. Mentors attend free. Some venues also offer free student entry by arrangement. Entry is for the registered individual only - tickets cannot be shared, but you may send a substitute delegate in your place. Register at https://aihackathon.nz.',
-  },
-  {
-    section: 'What to bring & on-site',
-    sort: 74,
-    content:
-      'Bring your own laptop and charger. Provided on site across both days: power, Wi-Fi, mentoring and technical support, and refreshments.',
-  },
-  {
-    section: 'Two-day flow (participant view)',
-    sort: 76,
-    content:
-      'Friday 7 August (evening): registration opens from 5:00pm, dinner is provided, then a welcome, health & safety briefing, intro to the themes, team formation, and a keynote - after which the build begins with mentor and technical support. Saturday 8 August: a full day of building with ongoing mentor support, lunch provided, pitch practice around midday, then live pitches to the local judging panel in the afternoon, followed by awards and a networking celebration in the evening. Top teams are recognised (typically a winner, a runner-up, and a highly commended team).',
-  },
-  {
-    section: 'Pitch & judging format',
-    sort: 78,
-    content:
-      'Each team gives a 5-minute pitch (allow about 7 minutes per team including changeover). Pitching usually starts mid-afternoon on Day 2; larger events may start slightly earlier. The hackathon ends about 30 minutes before judging so teams can finalise. A local judging panel (typically 3-4 judges) selects one venue winner, and Aotearoa AI provides at least one judge per venue. All pitches are recorded for national judging.',
-  },
-  {
-    section: 'National judging & progression',
-    sort: 52,
-    content:
-      'Venue winners are reviewed by a national judging panel, chaired by Professor Albert Bifet, which reviews the recorded winning pitches. The panel selects four national finalists, announced around 20 August 2026 (finalists have two days to confirm availability; if a team declines, the next-ranked team is invited). Finalists pitch live at the Aotearoa AI Summit on 18 September 2026 in Auckland, where the Summit audience votes for the winning solution.',
-  },
-  {
-    section: 'Intellectual property',
-    sort: 92,
-    content:
-      'Intellectual property created during the event remains with the participants. Neither the AI Forum nor sponsors claim ownership. Participants are responsible for complying with any third-party intellectual property rights when using external content, tools, or materials.',
-  },
-  {
-    section: 'Rules of engagement & conduct',
-    sort: 94,
-    content:
-      'Participants of all backgrounds are welcome and expected to contribute to an inclusive environment: treat others with respect, be open to learning and collaboration, work within the spirit of the event, and follow venue guidance. A safe, inclusive and respectful environment is a priority; there is a health & safety briefing on Day 1, and welcome and closing karakia bookend the event.',
-  },
-  {
-    section: 'Training & resources',
-    sort: 96,
-    content:
-      'The AI Forum provides online training sessions, shared problem statements, and access to tools, datasets and tech credits. Example training tracks: Seen Ventures - Generative & Agentic AI for beginners; University of Waikato / NVIDIA - beginner and advanced coding. Problem statements and judging criteria are shared in the Community Hub (Circle) by the end of July, along with participant guidance and example pitch decks.',
-  },
-  {
-    section: 'Photography & media',
-    sort: 98,
-    content:
-      'Events are photographed and pitches are recorded; images and footage may be used in event marketing and publicity. If you would prefer not to be photographed, let the organisers know via the official channels.',
-  },
-  {
-    section: 'Live Q&A & Community Hub',
-    sort: 80,
-    content:
-      'Online lunchtime Q&A sessions cover rules of engagement, ideas, problems to solve, datasets and technology. Session 1: Wednesday 1 July 2026, 12:00-1:00pm NZST, online, hosted by Christina Tombs. More lunchtime sessions follow through July. Join the AUT City Campus Community Hub for the live stream link and future dates.',
-  },
-  {
-    section: 'Registration & links',
-    sort: 90,
-    content:
-      'Register at aihackathon.nz. AUT City Campus Community Hub: tnz-ecosystem-hub.circle.so (AI Hackathon Festival 2026 / AUT City Campus). Aotearoa AI Summit: aotearoaai.nz. AI Forum mailing list: aiforum.org.nz/subscribe.',
-  },
-];
 
 async function main() {
   if (!CONNECTION_STRING) {
@@ -157,6 +52,26 @@ async function main() {
       DO UPDATE SET content = EXCLUDED.content, sort_order = EXCLUDED.sort_order, updated_at = now()
     `;
     console.log(`Seeded: ${s.section}`);
+  }
+
+  // Prune any DB rows whose section is no longer in the source of truth. This
+  // is deliberate: some sections are retired each round (e.g. "Two-day format",
+  // "Tickets & pricing", "Overview") and must not linger in the DB, which fully
+  // replaces the static config when it has rows.
+  const keepSections = sections.map((s) => s.section);
+  const pruned = (await sql`
+    DELETE FROM knowledge
+    WHERE section <> ALL(${keepSections})
+    RETURNING section
+  `) as { section: string }[];
+
+  if (pruned.length > 0) {
+    console.log(`\nPruned ${pruned.length} stale section(s):`);
+    for (const row of pruned) {
+      console.log(`  - ${row.section}`);
+    }
+  } else {
+    console.log('\nNo stale sections to prune.');
   }
 
   console.log(`\nDone. Seeded ${sections.length} knowledge sections.`);
