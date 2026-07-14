@@ -38,6 +38,7 @@ export function VoiceAgent() {
     error,
     muted,
     caption,
+    audioBlocked,
     audioLevelRef,
     isConnected,
     connect,
@@ -131,14 +132,24 @@ export function VoiceAgent() {
         />
       </motion.div>
 
-      {/* Status */}
+      {/* Status. While the browser blocks audio autoplay (common on iOS) the
+          slot shows a brighter "tap to enable audio" hint; the hook retries
+          play() on the next tap and clears the flag once it succeeds. */}
       <div className="mt-2 h-6 text-center">
         <span
           className={`font-display text-xs tracking-[3px] uppercase ${
-            state === 'error' ? 'text-red-400/80' : 'text-white/50'
+            state === 'error'
+              ? 'text-red-400/80'
+              : audioBlocked
+              ? 'text-white animate-pulse'
+              : 'text-white/50'
           }`}
         >
-          {state === 'error' && error ? error : STATUS_TEXT[state]}
+          {state === 'error' && error
+            ? error
+            : audioBlocked
+            ? 'Tap the screen to enable audio'
+            : STATUS_TEXT[state]}
         </span>
       </div>
 
