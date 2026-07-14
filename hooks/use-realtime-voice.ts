@@ -71,6 +71,9 @@ export function useRealtimeVoice() {
   const [error, setError] = useState<string | null>(null);
   const [muted, setMuted] = useState(false);
   const [caption, setCaption] = useState<Caption>({ user: '', assistant: '' });
+  // Set when the browser blocks autoplay of the remote audio (common on iOS).
+  // The UI can show a "tap to enable audio" hint; we retry on the next gesture.
+  const [audioBlocked, setAudioBlocked] = useState(false);
 
   const audioLevelRef = useRef(0);
 
@@ -86,6 +89,7 @@ export function useRealtimeVoice() {
   const sessionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastDisconnectAtRef = useRef<number>(0);
   const lastTextSentAtRef = useRef<number>(0);
+  const gestureRetryCleanupRef = useRef<(() => void) | null>(null);
 
   const userInterimRef = useRef('');
   const assistantInterimRef = useRef('');
@@ -112,9 +116,55 @@ export function useRealtimeVoice() {
     }
   }, []);
 
+  const clearGestureRetry = useCallback(() => {
+    if (gestureRetryCleanupRef.current) {
+      gestureRetryCleanupRef.current();
+      gestureRetryCleanupRef.current = null;
+    }
+  }, []);
+
+  // Attempt to play the remote audio. iOS Safari blocks autoplay unless the
+  // play() call is inside a user gesture; connect() runs from a tap so the
+  // first attempt is usually in-gesture. If it still rejects, flag the state
+  // and retry on the next user gesture instead of failing the session.
+  const playRemoteAudio = useCallback(
+    (audioEl: HTMLAudioElement) => {
+      audioEl
+        .play()
+        .then(() => setAudioBlocked(false))
+        .catch((err) => {
+          console.warn('Remote audio autoplay blocked; awaiting user gesture:', err);
+          setAudioBlocked(true);
+          if (gestureRetryCleanupRef.current) return;
+
+          const events = ['pointerdown', 'touchend', 'click'];
+          const onGesture = () => {
+            audioEl
+              .play()
+              .then(() => {
+                setAudioBlocked(false);
+                clearGestureRetry();
+              })
+              .catch(() => {});
+          };
+          events.forEach((ev) =>
+            document.addEventListener(ev, onGesture)
+          );
+          gestureRetryCleanupRef.current = () => {
+            events.forEach((ev) =>
+              document.removeEventListener(ev, onGesture)
+            );
+          };
+        });
+    },
+    [clearGestureRetry]
+  );
+
   const disconnect = useCallback(() => {
     clearSessionTimeout();
     stopLevelLoop();
+    clearGestureRetry();
+    setAudioBlocked(false);
     try {
       dcRef.current?.close();
     } catch {}
@@ -144,7 +194,7 @@ export function useRealtimeVoice() {
     sessionIdRef.current = null;
     lastDisconnectAtRef.current = Date.now();
     setState('idle');
-  }, [clearSessionTimeout, stopLevelLoop]);
+  }, [clearSessionTimeout, stopLevelLoop, clearGestureRetry]);
 
   const handleTranscriptLimit = useCallback(
     (data: {
@@ -272,6 +322,10 @@ export function useRealtimeVoice() {
     const ctx: AudioContext = new AudioCtx();
     audioCtxRef.current = ctx;
 
+    // iOS/Safari may create the context in a suspended state; resume it so the
+    // analyser receives samples for the audio-reactive orb.
+    if (ctx.state === 'suspended') void ctx.resume();
+
     const analyser = ctx.createAnalyser();
     analyser.fftSize = 512;
     const remoteSource = ctx.createMediaStreamSource(remoteStream);
@@ -290,6 +344,7 @@ export function useRealtimeVoice() {
     };
 
     const loop = () => {
+      if (ctx.state === 'suspended') void ctx.resume();
       const raw = rms(analyser, remoteData);
       const smoothed =
         audioLevelRef.current +
@@ -324,6 +379,7 @@ export function useRealtimeVoice() {
     }
 
     setError(null);
+    setAudioBlocked(false);
     setState('connecting');
     setCaption({ user: '', assistant: '' });
 
@@ -370,12 +426,18 @@ export function useRealtimeVoice() {
 
       const audioEl = document.createElement('audio');
       audioEl.autoplay = true;
+      // iOS Safari requires inline playback or it refuses to play the stream.
+      // `playsInline` is typed on HTMLVideoElement; set it on the audio element
+      // via a narrow cast plus the attribute so both paths are covered.
+      (audioEl as HTMLMediaElement & { playsInline: boolean }).playsInline = true;
+      audioEl.setAttribute('playsinline', '');
       audioEl.style.display = 'none';
       document.body.appendChild(audioEl);
       audioElRef.current = audioEl;
 
       pc.ontrack = (e) => {
         audioEl.srcObject = e.streams[0];
+        playRemoteAudio(audioEl);
         startLevelLoop(e.streams[0]);
       };
 
@@ -413,10 +475,20 @@ export function useRealtimeVoice() {
       await pc.setRemoteDescription({ type: 'answer', sdp: answerSdp });
     } catch (err: any) {
       console.error('Realtime connect failed:', err);
-      setError(
-        err?.message ||
-          'Could not access the microphone or start the session.'
-      );
+      const name = err?.name;
+      let message: string;
+      if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+        message =
+          'Microphone access is blocked. Enable it in your browser site settings ' +
+          '(on iPhone: Settings > your browser app > Microphone), then try again.';
+      } else if (name === 'NotFoundError') {
+        message = 'No microphone was found on this device.';
+      } else {
+        message =
+          err?.message ||
+          'Could not access the microphone or start the session.';
+      }
+      setError(message);
       setState('error');
       disconnect();
     }
@@ -424,6 +496,7 @@ export function useRealtimeVoice() {
     state,
     handleEvent,
     startLevelLoop,
+    playRemoteAudio,
     disconnect,
     failWithLimit,
     scheduleSessionTimeout,
@@ -485,6 +558,7 @@ export function useRealtimeVoice() {
     error,
     muted,
     caption,
+    audioBlocked,
     audioLevelRef,
     isConnected: state !== 'idle' && state !== 'connecting' && state !== 'error',
     connect,

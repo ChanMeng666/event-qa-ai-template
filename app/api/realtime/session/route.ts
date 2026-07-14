@@ -37,8 +37,24 @@ export async function POST(req: Request) {
   }
 
   const clientId = getClientId(req);
+  const { realtime } = limitsConfig;
 
-  const budget = await checkBudget(clientId);
+  // Kick off instruction loading (may hit Postgres) in parallel with the KV
+  // budget/rate checks below. The guard swallows the rejection so an early
+  // limit-rejection return can't produce an unhandled rejection; the real
+  // error still surfaces when we await instructionsPromise in the try block.
+  const instructionsPromise = getVoiceInstructions();
+  void instructionsPromise.catch(() => {});
+
+  const [budget, rl] = await Promise.all([
+    checkBudget(clientId),
+    checkMultiWindowLimit('realtime-session', clientId, [
+      { limit: realtime.sessionsPerMinute, windowSeconds: 60 },
+      { limit: realtime.sessionsPerHour, windowSeconds: 3600 },
+      { limit: realtime.sessionsPerDay, windowSeconds: 86400 },
+    ]),
+  ]);
+
   if (!budget.allowed) {
     const message =
       budget.reason === 'global_budget'
@@ -50,13 +66,6 @@ export async function POST(req: Request) {
     );
   }
 
-  const { realtime } = limitsConfig;
-  const rl = await checkMultiWindowLimit('realtime-session', clientId, [
-    { limit: realtime.sessionsPerMinute, windowSeconds: 60 },
-    { limit: realtime.sessionsPerHour, windowSeconds: 3600 },
-    { limit: realtime.sessionsPerDay, windowSeconds: 86400 },
-  ]);
-
   if (!rl.success) {
     return rateLimitResponse(
       rl,
@@ -65,10 +74,12 @@ export async function POST(req: Request) {
   }
 
   const sessionId = newSessionId();
-  await registerSession(sessionId, clientId);
 
   try {
-    const instructions = await getVoiceInstructions();
+    const [, instructions] = await Promise.all([
+      registerSession(sessionId, clientId),
+      instructionsPromise,
+    ]);
 
     const sessionConfig = {
       session: {
