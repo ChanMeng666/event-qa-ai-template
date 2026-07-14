@@ -107,6 +107,15 @@ export type OrbState =
   | 'speaking'
   | 'error';
 
+// Special click reactions. Static data, so it lives at module scope - this
+// keeps its identity stable across renders (a component-local array would be
+// recreated every render and destabilize the useCallback that depends on it).
+const clickReactions: Reaction[] = [
+  { msg: 'Ask me anything!', emotion: 'excited', eyeScale: { x: 1.8, y: 1.8 }, shape: 'star' },
+  { msg: 'Let\'s chat!', emotion: 'happy', eyeScale: { x: 1.5, y: 1.5 }, shape: 'sphere' },
+  { msg: 'I\'m here to help!', emotion: 'happy', eyeScale: { x: 1.4, y: 1.4 }, shape: 'arc', rotation: Math.PI },
+];
+
 // Particle tint per voice-agent state (multiplies the white vertex colors).
 const ORB_STATE_COLORS: Record<OrbState, [number, number, number]> = {
   idle: [1, 1, 1],
@@ -706,13 +715,6 @@ export function SpriteChat({
     { msg: '(・・?)', emotion: 'confused', eyeScale: { x: 1.5, y: 1.2 }, shape: 'sphere' },
     { msg: 'Huh...?', emotion: 'confused', eyeScale: { x: 1.4, y: 1.6 }, shape: 'sphere' },
     { msg: '(?_?)', emotion: 'confused', eyeScale: { x: 1.3, y: 1.4 }, shape: 'sphere' },
-  ];
-  
-  // Special click reactions
-  const clickReactions: Reaction[] = [
-    { msg: 'Ask me anything!', emotion: 'excited', eyeScale: { x: 1.8, y: 1.8 }, shape: 'star' },
-    { msg: 'Let\'s chat!', emotion: 'happy', eyeScale: { x: 1.5, y: 1.5 }, shape: 'sphere' },
-    { msg: 'I\'m here to help!', emotion: 'happy', eyeScale: { x: 1.4, y: 1.4 }, shape: 'arc', rotation: Math.PI },
   ];
   
   // Idle/long hover reactions
@@ -1539,7 +1541,7 @@ export function SpriteChat({
     }
     
     lastMousePosRef.current = { x: clientX, y: clientY };
-  }, [addAffection]);
+  }, [addAffection, handleNegativeBehavior]);
   
   // Reset gesture state when mouse leaves
   const resetGestureState = useCallback(() => {
@@ -1781,7 +1783,7 @@ export function SpriteChat({
     
     // Trigger the click callback
     onSpriteClick?.();
-  }, [onSpriteClick, applyReaction, clickReactions, addAffection, handleNegativeBehavior, affection.tier, affection.mood, selectWeightedEmotion]);
+  }, [onSpriteClick, applyReaction, addAffection, handleNegativeBehavior, affection.tier, affection.mood, selectWeightedEmotion]);
   
   // Handle mouse move for gesture detection
   const handleMouseMove = useCallback((e: React.MouseEvent) => {

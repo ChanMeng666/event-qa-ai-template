@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect } from 'react';
 import * as THREE from 'three';
 
 interface CosmicBackgroundProps {
@@ -9,15 +9,13 @@ interface CosmicBackgroundProps {
 
 export function CosmicBackground({ className = '' }: CosmicBackgroundProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [mounted, setMounted] = useState(false);
-  
+
+  // No SSR mount gate needed: this component is loaded with
+  // `dynamic(..., { ssr: false })`, so it only ever renders on the client and
+  // the ref is populated on the first (and only) render. The effect runs once.
   useEffect(() => {
-    setMounted(true);
-  }, []);
-  
-  useEffect(() => {
-    if (!mounted || !containerRef.current) return;
-    
+    if (!containerRef.current) return;
+
     const container = containerRef.current;
     
     // Scene setup
@@ -198,12 +196,8 @@ export function CosmicBackground({ className = '' }: CosmicBackgroundProps) {
         container.removeChild(renderer.domElement);
       }
     };
-  }, [mounted]);
-  
-  if (!mounted) {
-    return <div className={className} />;
-  }
-  
+  }, []);
+
   return (
     <div 
       ref={containerRef} 
