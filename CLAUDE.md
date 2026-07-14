@@ -23,12 +23,15 @@ This template uses a centralized configuration system. **All event-specific cont
 
 ```
 config/
-├── index.ts              # Unified exports
-├── types.ts              # TypeScript type definitions
-├── site.config.ts        # Event info (name, dates, venue, organizers)
-├── ai.config.ts          # AI system prompt and model settings
-├── content.config.ts     # FAQ, testimonials, chat suggestions
-└── branding.config.ts    # Logos, developer credits
+├── index.ts                  # Unified exports
+├── types.ts                  # TypeScript type definitions
+├── site.config.ts            # Event info (name, dates, venue, organizers)
+├── ai.config.ts              # AI system prompt, model & voice; derives static knowledge
+├── knowledge.config.ts       # ⭐ Single source of truth for knowledge base sections
+├── content.config.ts         # Preset Q&A + chat suggestions shown around the orb
+├── branding.config.ts        # Logos, developer credits
+├── limits.config.ts          # Rate-limit quotas + token budgets
+└── sprite-affection.config.ts # Orb "affection" reactions to user behavior
 ```
 
 ### Key Configuration Files
@@ -36,9 +39,11 @@ config/
 | File | Purpose | When to Edit |
 |------|---------|--------------|
 | `site.config.ts` | Event name, dates, venue, organizers, SEO | Setting up new event |
-| `ai.config.ts` | AI knowledge base, response style | Customizing AI behavior |
-| `content.config.ts` | FAQ questions, testimonials, suggestions | Adding content |
+| `ai.config.ts` | Response style, realtime model & voice | Customizing AI behavior |
+| `knowledge.config.ts` | Knowledge base sections (drives prompt **and** DB seed) | Adding/editing what the AI knows |
+| `content.config.ts` | Preset questions, chat suggestions | Adding on-screen prompts |
 | `branding.config.ts` | Logos, developer info, project links | Branding changes |
+| `limits.config.ts` | Rate limits, turn quotas, token budgets | Tuning guardrails |
 
 ### Using Configuration in Components
 
@@ -51,9 +56,18 @@ const eventName = siteConfig.name;
 // Access logos
 const logo = brandingConfig.logos.main;
 
-// Access FAQ questions
-const questions = contentConfig.presetQuestions;
+// Access the on-screen chat suggestions
+const suggestions = contentConfig.chatSuggestions;
 ```
+
+## Knowledge Pipeline
+
+`config/knowledge.config.ts` is the **single source of truth** for what the AI knows. It exports an array of `{ section, content, sort }` entries and a `renderKnowledge()` helper:
+
+- `config/ai.config.ts` calls `renderKnowledge()` to build the static `additionalContext` that is appended to the system prompt (the fallback used when no database is configured).
+- `scripts/seed-knowledge.ts` imports the **same** array and upserts + prunes the Postgres `knowledge` table (`npm run db:seed`).
+
+> **IMPORTANT: whenever `config/knowledge.config.ts` changes, re-run `npm run db:seed` against production.** In production the DB-backed `knowledge` table fully overrides the static config, so editing the config alone will not change live answers until the seed runs.
 
 ## UI Design System
 
@@ -105,75 +119,82 @@ className="border-white/30 text-white/80 bg-transparent hover:bg-white/20"
 ## Project Structure
 
 ```
-├── app/                      # Next.js App Router
+├── app/                          # Next.js App Router (single page)
 │   ├── api/
-│   │   ├── chat/            # AI chat streaming endpoint (OpenAI)
-│   │   └── faq/             # FAQ endpoints
-│   │       ├── questions/   # GET - Fetch FAQ with stats
-│   │       ├── vote/        # POST - Record up/down votes
-│   │       └── view/        # POST - Track view counts
-│   ├── chat/                # Main chat page (70/30 layout)
-│   ├── testimonials/        # Testimonials page
-│   └── page.tsx             # Home/landing page
-├── config/                  # ⭐ TEMPLATE CONFIGURATION
-│   ├── index.ts             # Unified exports
-│   ├── types.ts             # Type definitions
-│   ├── site.config.ts       # Event information
-│   ├── ai.config.ts         # AI system prompt
-│   ├── content.config.ts    # FAQ, testimonials, suggestions
-│   └── branding.config.ts   # Logos, credits
+│   │   ├── chat/                 # Text chat streaming endpoint (OpenAI, disabled by default)
+│   │   ├── realtime/session/     # Mints ephemeral Realtime voice token
+│   │   └── transcript/           # Persists voice conversation turns
+│   ├── globals.css               # CSS variables, stagger shadow utilities
+│   ├── layout.tsx                # Root layout, fonts, analytics
+│   ├── opengraph-image.tsx       # Dynamic OG image
+│   └── page.tsx                  # ⭐ The single page
+├── config/                       # ⭐ TEMPLATE CONFIGURATION (see above)
 ├── components/
-│   ├── chat/                # EmbeddedChat, ChatSuggestions
-│   ├── chatbot/             # Chatbot, ChatMessage, QuickActions, types
-│   ├── faq/                 # FAQList, FAQCard (voting UI)
-│   ├── layout/              # FloatingInfoButton, InfoModal, FooterContent
-│   └── ui/                  # shadcn/ui base components
-├── docs/                    # Documentation
-│   ├── TEMPLATE-SETUP.md    # Quick start guide
-│   ├── UI-DESIGN-SYSTEM.md  # Full UI design guide
-│   └── NOTION-INTEGRATION.md # Notion backend documentation
+│   ├── agent/
+│   │   ├── voice-agent.tsx       # Orchestrates orb + controls + captions + suggestions
+│   │   └── info-panel.tsx        # Event info / organizer + partner logos panel
+│   ├── chat/
+│   │   └── sprite-chat.tsx       # Audio-reactive particle sphere (the "orb") + text input
+│   ├── three/
+│   │   └── cosmic-background.tsx # Three.js starfield background
+│   └── effects/
+│       └── noise-overlay.tsx     # Film-grain overlay
+├── docs/
+│   ├── TEMPLATE-SETUP.md         # Quick start guide
+│   ├── UI-DESIGN-SYSTEM.md       # Full UI design guide
+│   └── showcase/                 # README screenshots / demo assets
 ├── hooks/
-│   ├── use-faq-voting.ts    # FAQ voting logic with Notion sync
-│   └── use-scroll-direction.ts  # Header visibility on scroll
+│   └── use-realtime-voice.ts     # WebRTC realtime session + audio level
 ├── lib/
-│   ├── notion-faq.ts        # Notion client & FAQ operations
-│   ├── testimonials-data.ts # Wrapper for config testimonials
-│   └── utils.ts             # cn() utility function
-└── public/images/           # Static assets
-    ├── event/               # Event logos
-    ├── organizers/          # Organizer logos
-    └── developer/           # Developer logo (optional)
+│   ├── knowledge.ts              # Loads DB knowledge or config fallback
+│   ├── db.ts                     # Postgres (Neon) client, optional
+│   ├── transcripts.ts            # Transcript persistence
+│   ├── ratelimit.ts              # Upstash KV rate limiting
+│   ├── usage.ts                  # Token budget tracking
+│   ├── guardrails.ts             # Input validation + OpenAI Moderation
+│   └── utils.ts                  # cn() utility function
+├── scripts/
+│   ├── seed-knowledge.ts         # Seeds the Postgres knowledge table (npm run db:seed)
+│   ├── verify-kv.ts              # Confirms Upstash KV wiring (npm run verify:kv)
+│   └── sync-vercel-env.ts        # Syncs Vercel env vars
+├── middleware.ts                 # Edge burst rate limiting for AI API routes
+└── public/images/                # Static assets
+    ├── event/                    # Event logos
+    ├── organizers/               # Organizer logos
+    └── developer/                # Developer logo (optional)
 ```
 
 ## Key Files
 
 ### Template Configuration
 - `config/site.config.ts` - Event name, dates, venue, organizers
-- `config/ai.config.ts` - AI system prompt generator
-- `config/content.config.ts` - FAQ, testimonials, chat suggestions
+- `config/knowledge.config.ts` - Single source of truth for the knowledge base
+- `config/ai.config.ts` - System prompt, realtime model & voice; derives static knowledge
+- `config/content.config.ts` - Preset questions + chat suggestions
 - `config/branding.config.ts` - Logos, developer credits
 
 ### Core Application
+- `app/page.tsx` - The single page
 - `app/globals.css` - CSS variables, stagger shadow utilities
 - `tailwind.config.js` - Tailwind configuration with stagger shadows
-- `components/ui/button.tsx` - Button variants including stagger styles
+- `components/agent/voice-agent.tsx` - Orchestrates orb + controls + captions
+- `components/chat/sprite-chat.tsx` - Audio-reactive particle sphere (the orb) + text input
 
-### AI Chat
-- `app/api/chat/route.ts` - OpenAI streaming endpoint (uses `aiConfig`)
-- `components/chat/embedded-chat.tsx` - Full-screen chat interface
-- `components/chatbot/chat-message.tsx` - Markdown message renderer
-
-### Notion Integration
-- `lib/notion-faq.ts` - Notion client, CRUD operations, caching
-- `hooks/use-faq-voting.ts` - Client-side voting with optimistic updates
-- `components/chatbot/types.ts` - TypeScript interfaces (FAQStats, FAQVote, etc.)
+### AI
+- `app/api/realtime/session/route.ts` - Mints the ephemeral Realtime voice token
+- `app/api/transcript/route.ts` - Persists voice conversation turns
+- `app/api/chat/route.ts` - OpenAI text streaming endpoint (uses `aiConfig`; disabled by default)
+- `hooks/use-realtime-voice.ts` - WebRTC realtime session + audio level
+- `lib/knowledge.ts` - Loads DB knowledge or config fallback
 
 ## Development Commands
 
 ```bash
-npm run dev     # Start development server
-npm run build   # Build for production
-npm run lint    # Run ESLint
+npm run dev        # Start development server
+npm run build      # Build for production
+npm run lint       # Run ESLint (flat config, eslint.config.mjs)
+npm run typecheck  # Type-check with tsc --noEmit
+npm run db:seed    # Seed the Postgres knowledge table from config/knowledge.config.ts
 npm run verify:kv  # Confirm Upstash KV is wired for rate limiting
 ```
 
@@ -263,7 +284,7 @@ config/*.config.ts → components import from @/config → dynamic content
 
 - `app/page.tsx` - the single page
 - `components/agent/voice-agent.tsx` - orchestrates orb + controls + captions
-- `components/agent/agent-orb.tsx` - audio-reactive Three.js orb
+- `components/chat/sprite-chat.tsx` - audio-reactive Three.js particle sphere (the orb)
 - `hooks/use-realtime-voice.ts` - WebRTC realtime session + audio level
 - `app/api/realtime/session/route.ts` - mints the ephemeral Realtime token
 - `app/api/chat/route.ts` - text chat (Vercel AI SDK + OpenAI)
