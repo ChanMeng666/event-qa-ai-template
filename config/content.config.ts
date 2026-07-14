@@ -38,39 +38,60 @@ const presetQuestions: PresetQuestion[] = [
       'Teams build AI solutions aligned to five UN SDG themes: food insecurity, digital accessibility, upskilling the workforce for AI, cross-border/cross-sector collaboration, and indigenous environmental custodianship (kaitiakitanga).',
   },
   {
-    id: 'teams',
-    category: 'teams',
-    question: 'Can beginners join, and how do teams work?',
+    id: 'schedule',
+    category: 'schedule',
+    question: 'What is the schedule for each day?',
     answer:
-      'Yes - beginners are welcome and about a third of participants are new to hackathons. Teams are 3-7 people. Register as a team or as an individual; solo registrants are helped to find a team on the day.',
+      'Friday 7 August runs 5:00pm to 8:00pm: registration and dinner, opening and keynote, team forming, then strategy planning. Saturday 8 August runs from 7:30am: a full day of building with mentor support, pitch practice midday, final presentations to judges 3:30-6:30pm, and awards from 7:00pm.',
   },
   {
-    id: 'national',
+    id: 'judges',
     category: 'awards',
-    question: 'What happens after the venue winner is chosen?',
+    question: 'Who are the judges?',
     answer:
-      'Each venue selects a winning team that advances to national judging. Four national finalists pitch live at the Aotearoa AI Summit on 18 September 2026 in Auckland, where the audience votes for the winning solution.',
+      'A 3-person panel of academic and industry judges: Nicholas Fourie (VP ICT, Fisher & Paykel Healthcare), Dr Mahsa Mohaghegh (Head of Computer & Information Sciences at AUT, Chair of the AI Forum NZ, founder of She Sharp), Abby Dowd (Senior Director, AI Strategy & Transformation at AUT), and Ming Cheuk (CTO & Co-founder of ElementX).',
+  },
+  {
+    id: 'prizes',
+    category: 'awards',
+    question: 'What are the prizes?',
+    answer:
+      'Each venue winner receives NZ$250. Four national finalists then pitch at the Aotearoa AI Summit on 18 September 2026, competing for the national TAIAO Prize (NZ$1,000, audience vote) and the Technological Brilliance Award (NZ$1,000, judging panel). Prizes are supported by AWS via the AI Forum.',
+  },
+  {
+    id: 'pitch-scoring',
+    category: 'awards',
+    question: 'How are pitches scored?',
+    answer:
+      'Each team gives a live 5-minute pitch to the 3-person panel. Four equally weighted criteria are each scored 1-5: Inspiration (a well-defined, high-impact problem), Technology (must use AI; a working prototype is recommended), Design & Innovation (originality and UX), and Presentation (a clear pitch that answers questions in time).',
+  },
+  {
+    id: 'problem-statements',
+    category: 'event-info',
+    question: 'Are there featured problem statements?',
+    answer:
+      'Yes. Two featured challenges: a Food Waste problem with Woolworths NZ and Kai Commitment (reducing waste from farm to fork), and a Fisher & Paykel Healthcare "Facilities Helpdesk Agent" for maintenance request intake, framed around "Care by Design". Full statements and videos are in the Community Hub.',
+  },
+  {
+    id: 'training',
+    category: 'mentors',
+    question: 'How can I prepare and what resources are there?',
+    answer:
+      'Seen Ventures runs a free "Hack Fit" series - seven 60-minute online sessions through July (4:00-5:00pm NZST) on storytelling, design thinking, agentic workflows, data and multi-modal AI. The AI Forum also shares problem statements, tools, datasets and tech credits via the Community Hub. Register through the Hub.',
   },
   {
     id: 'register',
     category: 'logistics',
     question: 'How do I register and stay updated?',
     answer:
-      'Register at aihackathon.nz. Join the AUT City Campus Community Hub for updates and live Q&A session dates. Bring your own laptop and charger - power, Wi-Fi, mentoring and refreshments are provided.',
+      'Register at aihackathon.nz - check there for current ticket pricing. Join the AUT City Campus Community Hub for updates and live Q&A dates. In-person capacity is limited to 100 places, so sign up early.',
   },
   {
-    id: 'pricing',
-    category: 'logistics',
-    question: 'How much does it cost?',
+    id: 'teams',
+    category: 'teams',
+    question: 'Can beginners join, and how do teams work?',
     answer:
-      'Tickets are NZ$15 for students and NZ$25 for everyone else, and mentors attend free. Some venues also offer free student entry by arrangement. Entry is for the registered individual only, but you can send a substitute in your place.',
-  },
-  {
-    id: 'what-to-bring',
-    category: 'logistics',
-    question: 'What should I bring?',
-    answer:
-      'Just bring your own laptop and charger. Power, Wi-Fi, mentoring and technical support, and refreshments are all provided on site across both days.',
+      'Yes - beginners are welcome and about a third of participants are new to hackathons. Teams are 3-7 people. Register as a team or as an individual; solo registrants are helped to find a team on the day.',
   },
   {
     id: 'find-team',
@@ -80,25 +101,11 @@ const presetQuestions: PresetQuestion[] = [
       "No problem. Register as an individual and let us know you're solo - you can be matched with a team via the AUT City Campus Community Hub or on the day. Teams are 3-7 people, and mixing skills helps.",
   },
   {
-    id: 'pitch-format',
-    category: 'awards',
-    question: 'How does pitching and judging work?',
+    id: 'what-to-bring',
+    category: 'logistics',
+    question: 'What should I bring?',
     answer:
-      'Each team gives a 5-minute pitch to a local panel (typically 3-4 judges, including at least one AI Forum judge) on Day 2. The build wraps about 30 minutes before judging so you can finalise, and all pitches are recorded for national judging.',
-  },
-  {
-    id: 'ip',
-    category: 'general',
-    question: 'Who owns what we build?',
-    answer:
-      'You do. Intellectual property created during the event stays with the participants - neither the AI Forum nor sponsors claim ownership. Just make sure you respect any third-party IP for tools or content you use.',
-  },
-  {
-    id: 'training',
-    category: 'mentors',
-    question: 'How can I prepare and what resources are there?',
-    answer:
-      'The AI Forum runs online training sessions and shares problem statements, tools, datasets and tech credits. Problem statements and judging criteria are posted in the Community Hub (Circle) by the end of July, along with participant guidance and example pitch decks.',
+      'Just bring your own laptop and charger. Power, Wi-Fi, mentoring and technical support, and refreshments are all provided on site across both days.',
   },
 ];
 
@@ -113,12 +120,12 @@ const testimonials: Testimonial[] = [];
 // ============================================================================
 
 const chatSuggestions: ChatSuggestion[] = [
-  { icon: 'Calendar', text: 'When and where is the hackathon?', category: 'Event' },
+  { icon: 'Calendar', text: "What's the schedule for each day?", category: 'Schedule' },
   { icon: 'Lightbulb', text: 'What are the challenge themes?', category: 'Themes' },
   { icon: 'Users', text: 'I have no team - can I still join?', category: 'Teams' },
-  { icon: 'Briefcase', text: 'How much does it cost?', category: 'Tickets' },
-  { icon: 'BookOpen', text: 'What should I bring and how do I prepare?', category: 'Prepare' },
-  { icon: 'Trophy', text: 'How does pitching and judging work?', category: 'Judging' },
+  { icon: 'Award', text: 'Who are the judges?', category: 'Judges' },
+  { icon: 'Trophy', text: 'What are the prizes?', category: 'Prizes' },
+  { icon: 'Target', text: 'How are pitches scored?', category: 'Judging' },
   { icon: 'MapPin', text: 'How do I register?', category: 'Register' },
 ];
 

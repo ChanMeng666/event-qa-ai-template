@@ -44,7 +44,7 @@ export const limitsConfig = {
 
   budget: {
     dailyTokenBudget: envInt('LIMITS_DAILY_TOKEN_BUDGET', 500_000),
-    perClientDailyTokenBudget: envInt('LIMITS_PER_CLIENT_DAILY_TOKEN_BUDGET', 10_000),
+    perClientDailyTokenBudget: envInt('LIMITS_PER_CLIENT_DAILY_TOKEN_BUDGET', 30_000),
   },
 } as const;
 

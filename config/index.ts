@@ -21,6 +21,8 @@ export type {
   Organizer,
   // AI types
   AIConfig,
+  // Knowledge types
+  KnowledgeSection,
   // Content types
   ContentConfig,
   PresetQuestion,
@@ -41,6 +43,7 @@ export type {
 // ============================================================================
 
 export { siteConfig } from './site.config';
+export { knowledgeSections, renderKnowledge } from './knowledge.config';
 export { aiConfig, getSystemPrompt, generateSystemPrompt } from './ai.config';
 export { contentConfig } from './content.config';
 export { brandingConfig } from './branding.config';
