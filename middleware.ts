@@ -5,7 +5,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { limitsConfig } from '@/config/limits.config';
-import { checkRateLimit, getClientId, isRateLimitEnabled } from '@/lib/ratelimit';
+import { checkRateLimit, getClientKey, isRateLimitEnabled } from '@/lib/ratelimit';
 
 const AI_API_PREFIXES = [
   '/api/realtime',
@@ -33,13 +33,21 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const clientId = getClientId(request);
-  const rl = await checkRateLimit(
-    'api-burst',
-    clientId,
-    limitsConfig.apiBurstPerMinute,
-    60
-  );
+  // Two independent buckets: a per-browser burst limit (the venue shares one
+  // NAT IP, so this cannot key on the address) and a much larger per-IP
+  // ceiling, because `x-client-id` is client-supplied and forgeable.
+  const { key, ip } = getClientKey(request);
+  const [clientRl, ipRl] = await Promise.all([
+    checkRateLimit('api-burst', key, limitsConfig.apiBurstPerMinute, 60),
+    checkRateLimit(
+      'api-burst-ip',
+      `ip:${ip}`,
+      limitsConfig.apiBurstPerIpPerMinute,
+      60
+    ),
+  ]);
+
+  const rl = !clientRl.success ? clientRl : ipRl;
 
   if (!rl.success) {
     return NextResponse.json(

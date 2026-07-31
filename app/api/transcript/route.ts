@@ -11,11 +11,7 @@ import {
   moderateTranscriptTurns,
 } from '@/lib/guardrails';
 import { persistMessages } from '@/lib/transcripts';
-import {
-  checkRateLimit,
-  getClientId,
-  rateLimitResponse,
-} from '@/lib/ratelimit';
+import { checkRateLimit, getClientKey } from '@/lib/ratelimit';
 import {
   checkAndIncrementTurn,
   estimateTurnTokens,
@@ -33,7 +29,7 @@ const TURN_LIMIT_MESSAGES: Record<string, string> = {
 
 export async function POST(req: Request) {
   try {
-    const clientId = getClientId(req);
+    const { key: clientId } = getClientKey(req);
 
     const rl = await checkRateLimit(
       'transcript',

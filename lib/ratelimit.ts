@@ -166,12 +166,54 @@ export async function getJson<T>(key: string): Promise<T | null> {
 }
 
 /**
- * Best-effort client identifier from request headers.
+ * Strict UUID v4. Anything else is rejected so attacker-controlled text can
+ * never reach a Redis key. Must stay in sync with lib/client-id.ts.
  */
-export function getClientId(req: Request): string {
+const UUID_V4 =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+/** Characters legal in an IPv4/IPv6 literal (incl. zone id and mapped form). */
+const IP_CHARS = /[^0-9a-fA-F:.%]/g;
+const MAX_IP_LENGTH = 45; // longest legal IPv6 textual form
+
+export interface ClientKey {
+  /** Namespaced quota key: `cid:<uuid>` or `ip:<addr>`. */
+  key: string;
+  /** Sanitized source address, for the per-IP anti-abuse ceiling. */
+  ip: string;
+  source: 'cid' | 'ip';
+}
+
+/**
+ * Sanitized source IP from proxy headers. Vercel overwrites
+ * `x-forwarded-for`, but the value is treated as untrusted regardless.
+ */
+export function getClientIp(req: Request): string {
   const fwd = req.headers.get('x-forwarded-for');
-  if (fwd) return fwd.split(',')[0].trim();
-  return req.headers.get('x-real-ip') || 'anonymous';
+  const raw = fwd ? fwd.split(',')[0] : req.headers.get('x-real-ip');
+  if (!raw) return 'anonymous';
+
+  const cleaned = raw.trim().replace(IP_CHARS, '').slice(0, MAX_IP_LENGTH);
+  return cleaned || 'anonymous';
+}
+
+/**
+ * Derives the quota key for a request.
+ *
+ * Prefers the browser's durable `x-client-id` so a shared venue IP does not
+ * collapse ~100 attendees into one bucket. Falls back to the source IP when
+ * the header is absent or not a well-formed UUID v4. Callers that need an
+ * abuse ceiling should additionally limit on `ip` (see the mint route).
+ */
+export function getClientKey(req: Request): ClientKey {
+  const ip = getClientIp(req);
+  const cid = req.headers.get('x-client-id');
+
+  if (cid && UUID_V4.test(cid.trim())) {
+    return { key: `cid:${cid.trim().toLowerCase()}`, ip, source: 'cid' };
+  }
+
+  return { key: `ip:${ip}`, ip, source: 'ip' };
 }
 
 /** Retry-After hint from window length (conservative). */
