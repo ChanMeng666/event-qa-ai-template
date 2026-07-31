@@ -77,21 +77,31 @@ npx vercel link --project aihackathon-2026 --scope she-sharp1 --yes
 # 3. Deploy to production
 npx vercel deploy --prod --scope she-sharp1 --yes
 
-# 4. Smoke test (expect 403 - see below)
+# 4. Smoke test (expect 200)
 curl -s -o /dev/null -w "%{http_code}" -X POST https://aihackathon-2026.vercel.app/api/realtime/session
 ```
 
-> **The mint route is protected by Vercel BotID, so `curl` gets 403 in
-> production - that is the protection working, not an outage.** A `403` with
-> `"reason":"bot_detected"` means the deploy is healthy. To verify the route
-> end-to-end you must call it from a real browser on the site (open the page and
-> press the orb), because BotID requires the client challenge that only a real
-> page session runs. A `200` from `curl` means BotID is *not* enforcing - check
-> whether `BOTID_ENABLED` was set to `false`.
+> **BotID is currently DISABLED**, so the mint route returns `200` to `curl`.
+> That is the healthy state.
 >
-> **Kill switch:** if BotID ever misfires for attendees, set `BOTID_ENABLED=false`
-> in the project's environment variables and redeploy. The check also fails open
-> on any internal error, so a BotID outage cannot take the voice agent down.
+> BotID is wired up (`lib/botid.ts`, `instrumentation-client.ts`, pinned to the
+> free `basic` check level) but `BOTID_ENABLED=false` in production and the code
+> default is also `false`. It was enabled once, on 2026-07-31, and returned
+> `403` to **real browsers**, not just to scripted callers - the client bundle
+> and the Kasada challenge script both loaded, but the solution was not reaching
+> the mint route, so genuine attendees were judged to be bots. Production was
+> restored with the kill switch.
+>
+> A likely cause worth checking first: the project's Firewall page still shows
+> *"Install the `botid` package to start using BotID"* even though the package is
+> installed and deployed, which suggests BotID was never fully registered
+> project-side.
+>
+> **Do not set `BOTID_ENABLED=true` again** without first proving, on a preview
+> deployment, that a real browser can still start a voice session. If you do
+> enable it, this smoke test flips to expecting `403` with
+> `"reason":"bot_detected"`, and the route can then only be verified from a real
+> browser session. The check fails open on internal errors either way.
 
 ### Pre-deploy checklist
 
