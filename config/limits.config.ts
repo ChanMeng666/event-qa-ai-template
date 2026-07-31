@@ -20,13 +20,20 @@ export const limitsConfig = {
   /**
    * Vercel BotID on the realtime session mint route.
    *
-   * Kill switch for the event: set BOTID_ENABLED=false and redeploy to stop
-   * enforcing without reverting code, should the challenge ever misfire for
-   * attendees on the day. The check always fails open on error - only an
-   * explicit `isBot: true` verdict blocks a request.
+   * DEFAULT OFF, deliberately. When first enabled in production on 2026-07-31
+   * it returned 403 to real browsers, not just to scripted callers: the client
+   * bundle and the challenge script both loaded, but the solution was not being
+   * attached to the mint request, so checkBotId() judged genuine attendees to be
+   * bots. Production was restored by setting BOTID_ENABLED=false.
+   *
+   * Do NOT flip this to true again without first verifying, on a preview
+   * deployment, that a real browser can still start a voice session. Enabling it
+   * blindly takes the voice agent offline for everyone.
+   *
+   * The check fails open on error - only an explicit `isBot: true` blocks.
    */
   botid: {
-    enabled: envBool('BOTID_ENABLED', true),
+    enabled: envBool('BOTID_ENABLED', false),
   },
 
   /**

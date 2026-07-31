@@ -1,0 +1,111 @@
+name: Deploy to Vercel
+
+# Token-based deploys. The Vercel project is deliberately NOT connected to this
+# GitHub repository, because the GitHub account that owns the repo and the one
+# behind the Vercel team are different logins. Instead we authenticate with a
+# Vercel access token and address the project by id, which needs no link at all.
+#
+# Required repository secrets (Settings -> Secrets and variables -> Actions):
+#   VERCEL_TOKEN       Vercel access token (vercel.com/account/tokens).
+#                      Scope it to the she-sharp1 team.
+#   VERCEL_ORG_ID      Team id      - see .vercel/project.json -> orgId
+#   VERCEL_PROJECT_ID  Project id   - see .vercel/project.json -> projectId
+#
+# Pushes to master deploy to production. Pull requests get a preview URL.
+# CI (typecheck/lint/build) runs separately in ci.yml and must pass first.
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+# Never let two deploys of the same ref race each other. In-progress runs are
+# cancelled so the newest commit always wins.
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      IS_PROD: ${{ github.ref == 'refs/heads/master' && github.event_name != 'pull_request' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # The `secrets` context cannot be used in a job-level `if`, so the presence
+      # check runs as a step and gates the rest. A repo without VERCEL_TOKEN
+      # reports a clear notice and stays green rather than failing red.
+      - name: Check deploy credentials
+        id: creds
+        run: |
+          missing=""
+          for v in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID; do
+            if [ -z "${!v}" ]; then missing="$missing $v"; fi
+          done
+          if [ -n "$missing" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Deploy skipped - missing repository secret(s):$missing. See the header of .github/workflows/deploy.yml."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+            echo "Deploying project $VERCEL_PROJECT_ID (prod=$IS_PROD)"
+          fi
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Install Vercel CLI
+        if: steps.creds.outputs.configured == 'true'
+        run: npm install --global vercel@latest
+
+      # Pulls project settings AND environment variables for the target
+      # environment, so the build sees the same env as a dashboard deploy.
+      # This is why no OPENAI_API_KEY secret is needed in GitHub.
+      - name: Pull Vercel environment
+        if: steps.creds.outputs.configured == 'true'
+        run: |
+          vercel pull --yes \
+            --environment=$([ "$IS_PROD" = "true" ] && echo production || echo preview) \
+            --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build
+        if: steps.creds.outputs.configured == 'true'
+        run: vercel build $([ "$IS_PROD" = "true" ] && echo --prod) --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy
+        id: deploy
+        if: steps.creds.outputs.configured == 'true'
+        run: |
+          url=$(vercel deploy --prebuilt $([ "$IS_PROD" = "true" ] && echo --prod) \
+            --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Deployed: $url"
+
+      # The mint route is the one endpoint that must work for the event. It is
+      # verified through the alias for production, and through the deployment
+      # URL for previews. Note that if BOTID_ENABLED is ever set back to true,
+      # this check will see 403 by design - see AGENTS.md.
+      - name: Smoke test
+        if: steps.creds.outputs.configured == 'true'
+        run: |
+          target=$([ "$IS_PROD" = "true" ] && echo "https://aihackathon-2026.vercel.app" || echo "${{ steps.deploy.outputs.url }}")
+          echo "Smoke testing $target"
+          home=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$target/")
+          echo "  homepage -> $home"
+          [ "$home" = "200" ] || { echo "::error::Homepage returned $home"; exit 1; }
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "### Vercel deploy" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Target: \`$([ "$IS_PROD" = "true" ] && echo production || echo preview)\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- URL: ${{ steps.deploy.outputs.url }}" >> "$GITHUB_STEP_SUMMARY"
