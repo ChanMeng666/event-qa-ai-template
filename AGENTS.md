@@ -42,7 +42,30 @@ The stray project was removed; production was re-linked and redeployed to `aihac
 5. When connecting **Storage** (Upstash KV, Neon Postgres), connect to **`aihackathon-2026`**, not a repo-named project.
 6. Use `npm run sync:vercel-env` only after the link check passes (`scripts/sync-vercel-env.ts` enforces `aihackathon-2026`).
 
-### Safe deploy sequence
+### Deploys are automatic
+
+**Pushing to `master` deploys to production** via `.github/workflows/deploy.yml`.
+Pull requests get a preview URL. You normally do not need to deploy by hand.
+
+The Vercel project is deliberately **not** connected to this GitHub repo - the
+account that owns the repo and the account behind the Vercel team are different
+logins. The workflow authenticates with a token instead:
+
+| Repo secret | Value |
+|--|--|
+| `VERCEL_TOKEN` | Vercel access token, scope **All Projects** under `shesharpnz's projects`, expires 2027-07-31 |
+| `VERCEL_ORG_ID` | `.vercel/project.json` -> `orgId` |
+| `VERCEL_PROJECT_ID` | `.vercel/project.json` -> `projectId` |
+
+The token must be **All Projects** scoped. A single-project token cannot read
+project settings and fails with `Could not retrieve Project Settings`.
+
+The workflow lets **Vercel** build, rather than running `vercel build` +
+`--prebuilt` in CI. That is deliberate: `vercel pull` writes the literal string
+`[SENSITIVE]` as the value of env vars marked sensitive, so a CI-side build
+receives a bogus `KV_REST_API_URL`. Building on Vercel injects the real values.
+
+### Manual deploy (fallback only)
 
 ```bash
 # 1. Confirm link target
