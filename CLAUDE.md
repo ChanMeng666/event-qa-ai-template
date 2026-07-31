@@ -163,7 +163,7 @@ className="border-white/30 text-white/80 bg-transparent hover:bg-white/20"
 │   ├── seed-knowledge.ts         # Seeds the Postgres knowledge table (npm run db:seed)
 │   ├── verify-kv.ts              # Confirms Upstash KV wiring (npm run verify:kv)
 │   └── sync-vercel-env.ts        # Syncs Vercel env vars
-├── middleware.ts                 # Edge burst rate limiting for AI API routes
+├── proxy.ts                      # Edge burst rate limiting for AI API routes
 └── public/images/                # Static assets
     ├── event/                    # Event logos
     ├── organizers/               # Organizer logos
@@ -249,11 +249,11 @@ Local dev with KV: `vercel env pull .env.local`
 
 ### Rate limiting & token guardrails
 
-Multi-layer protection (see `config/limits.config.ts`, `lib/ratelimit.ts`, `lib/usage.ts`, `lib/guardrails.ts`, `middleware.ts`):
+Multi-layer protection (see `config/limits.config.ts`, `lib/ratelimit.ts`, `lib/usage.ts`, `lib/guardrails.ts`, `proxy.ts`):
 
 | Layer | What it does |
 |-------|----------------|
-| Edge middleware | Burst limit across all AI API routes (30/min/IP default) |
+| Edge proxy | Burst limit across all AI API routes (30/min/IP default) |
 | Session mint | Multi-window limits (5/min, 20/hr, 50/day) + daily token budget check |
 | Transcript | Turn quotas per session/day, input validation, OpenAI Moderation |
 | Client hook | Max session duration, reconnect cooldown, text send throttle |
@@ -296,7 +296,7 @@ config/*.config.ts → components import from @/config → dynamic content
 - `app/api/realtime/session/route.ts` - mints the ephemeral Realtime token
 - `app/api/chat/route.ts` - text chat (Vercel AI SDK + OpenAI)
 - `lib/knowledge.ts`, `lib/db.ts`, `lib/transcripts.ts`, `lib/ratelimit.ts`, `lib/usage.ts`, `lib/guardrails.ts`
-- `middleware.ts` - Edge burst rate limiting for AI API routes
+- `proxy.ts` - Edge burst rate limiting for AI API routes
 - `config/limits.config.ts` - centralized quotas and token budgets
 - `config/ai.config.ts` - prompt/knowledge + realtime model & voice
 

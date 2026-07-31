@@ -37,13 +37,13 @@ export const limitsConfig = {
   },
 
   /**
-   * Edge middleware burst limit across all AI API routes, per *client*
+   * Edge proxy burst limit across all AI API routes, per *client*
    * (per-browser `x-client-id`, falling back to IP).
    */
   apiBurstPerMinute: envInt('LIMITS_API_BURST_PER_MINUTE', 60),
 
   /**
-   * Edge middleware ceiling per source IP. Must stay well above
+   * Edge proxy ceiling per source IP. Must stay well above
    * `apiBurstPerMinute` because a whole venue shares one NAT address
    * (~100 attendees on AUT campus wifi).
    */

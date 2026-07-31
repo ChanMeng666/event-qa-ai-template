@@ -1,5 +1,9 @@
 /**
- * Edge middleware: coarse burst rate limit across AI API routes.
+ * Edge proxy: coarse burst rate limit across AI API routes.
+ *
+ * This is the Next 16 `proxy` file convention, which replaced `middleware`.
+ * Same runtime, same matcher semantics - only the file name and the exported
+ * function name changed.
  */
 
 import { NextResponse } from 'next/server';
@@ -19,7 +23,7 @@ function isAiApiRoute(pathname: string): boolean {
   );
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   if (request.method !== 'POST') {
     return NextResponse.next();
   }

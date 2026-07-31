@@ -123,7 +123,7 @@ vercel deploy --prod --scope she-sharp1 --yes
 
 - Single-page voice-first AI agent (Next.js 16, OpenAI Realtime + optional text chat).
 - Event config lives in `config/*.config.ts` — edit those, don’t hardcode event copy.
-- Rate limits / token budgets: `config/limits.config.ts`, `lib/ratelimit.ts`, `lib/usage.ts`, `middleware.ts`.
+- Rate limits / token budgets: `config/limits.config.ts`, `lib/ratelimit.ts`, `lib/usage.ts`, `proxy.ts`.
 - UI: read `docs/UI-DESIGN-SYSTEM.md` before visual changes (Stagger system, no rounded corners).
 
 Full stack and file map: [CLAUDE.md](CLAUDE.md).
