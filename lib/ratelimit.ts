@@ -13,9 +13,31 @@ const REST_URL =
 const REST_TOKEN =
   process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || '';
 
+/**
+ * The Upstash client throws on a malformed URL, and this module is evaluated
+ * while Next.js collects page data, so a bad value takes down the whole build
+ * rather than just disabling rate limiting. That is not hypothetical: `vercel
+ * pull` writes the literal string "[SENSITIVE]" for env vars marked sensitive,
+ * which is exactly what CI receives for KV_REST_API_URL.
+ *
+ * Validate first and degrade to "rate limiting disabled" instead of crashing.
+ */
+function isUsableRestUrl(url: string): boolean {
+  try {
+    return new URL(url).protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 let redis: Redis | null = null;
-if (REST_URL && REST_TOKEN) {
+if (isUsableRestUrl(REST_URL) && REST_TOKEN) {
   redis = new Redis({ url: REST_URL, token: REST_TOKEN });
+} else if (REST_URL || REST_TOKEN) {
+  console.warn(
+    '[ratelimit] KV credentials present but unusable; rate limiting is DISABLED. ' +
+      'Check that KV_REST_API_URL is a https:// URL and is not a sensitive env var.'
+  );
 }
 
 const limiters = new Map<string, Ratelimit>();

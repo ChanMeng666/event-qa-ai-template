@@ -66,25 +66,17 @@ jobs:
         if: steps.creds.outputs.configured == 'true'
         run: npm install --global vercel@latest
 
-      # Pulls project settings AND environment variables for the target
-      # environment, so the build sees the same env as a dashboard deploy.
-      # This is why no OPENAI_API_KEY secret is needed in GitHub.
-      - name: Pull Vercel environment
-        if: steps.creds.outputs.configured == 'true'
-        run: |
-          vercel pull --yes \
-            --environment=$([ "$IS_PROD" = "true" ] && echo production || echo preview) \
-            --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Build
-        if: steps.creds.outputs.configured == 'true'
-        run: vercel build $([ "$IS_PROD" = "true" ] && echo --prod) --token=${{ secrets.VERCEL_TOKEN }}
-
+      # Builds on Vercel rather than in CI (no `vercel build` + `--prebuilt`).
+      # This is deliberate: `vercel pull` writes the literal string "[SENSITIVE]"
+      # for env vars marked sensitive, so a CI-side build gets a bogus
+      # KV_REST_API_URL and fails. Building on Vercel injects the real values and
+      # matches exactly what a manual `vercel deploy --prod` does.
+      # It also means no application secret has to be duplicated into GitHub.
       - name: Deploy
         id: deploy
         if: steps.creds.outputs.configured == 'true'
         run: |
-          url=$(vercel deploy --prebuilt $([ "$IS_PROD" = "true" ] && echo --prod) \
+          url=$(vercel deploy --yes $([ "$IS_PROD" = "true" ] && echo --prod) \
             --token=${{ secrets.VERCEL_TOKEN }})
           echo "url=$url" >> "$GITHUB_OUTPUT"
           echo "Deployed: $url"
