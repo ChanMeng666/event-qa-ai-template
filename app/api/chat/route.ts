@@ -7,7 +7,12 @@
  */
 
 import { openai } from '@ai-sdk/openai';
-import { convertToCoreMessages, streamText } from 'ai';
+import {
+  createUIMessageStreamResponse,
+  streamText,
+  toUIMessageStream,
+  type ModelMessage,
+} from 'ai';
 import { aiConfig, limitsConfig } from '@/config';
 import { getChatInstructions } from '@/lib/knowledge';
 import { persistMessages } from '@/lib/transcripts';
@@ -68,9 +73,11 @@ export async function POST(req: Request) {
       );
     }
 
-    const cleanedMessages = messages
+    // Already plain {role, content} pairs, i.e. valid ModelMessages -- no
+    // UIMessage conversion needed (nothing on the client uses useChat).
+    const cleanedMessages: ModelMessage[] = messages
       .filter((msg) => msg.id !== 'system')
-      .map((msg) => ({ role: msg.role, content: msg.content }));
+      .map((msg) => ({ role: msg.role, content: msg.content }) as ModelMessage);
 
     const instructions = await getChatInstructions();
     const model = openai(aiConfig.model.name);
@@ -79,23 +86,27 @@ export async function POST(req: Request) {
       .reverse()
       .find((m) => m.role === 'user');
 
-    const result = await streamText({
+    const result = streamText({
       model,
-      system: instructions,
-      messages: convertToCoreMessages(cleanedMessages),
+      instructions,
+      messages: cleanedMessages,
       temperature: aiConfig.model.temperature,
-      maxTokens: aiConfig.model.maxTokens,
-      onFinish: async ({ text, usage }) => {
+      maxOutputTokens: aiConfig.model.maxTokens,
+      // v7: onEnd replaces onFinish, and its `usage` is cumulative across all
+      // steps (what v6 called `totalUsage`). Token fields are inputTokens /
+      // outputTokens; lib/usage.ts keeps its own prompt/completion naming to
+      // match the usage_events columns.
+      onEnd: async ({ text, usage }) => {
         const totalTokens =
           usage?.totalTokens ??
-          (usage?.promptTokens ?? 0) + (usage?.completionTokens ?? 0);
+          (usage?.inputTokens ?? 0) + (usage?.outputTokens ?? 0);
 
         if (totalTokens > 0) {
           await recordUsage(clientId, totalTokens, {
             route: 'chat',
             exact: true,
-            promptTokens: usage?.promptTokens,
-            completionTokens: usage?.completionTokens,
+            promptTokens: usage?.inputTokens,
+            completionTokens: usage?.outputTokens,
           });
         }
 
@@ -108,7 +119,11 @@ export async function POST(req: Request) {
       },
     });
 
-    return result.toDataStreamResponse();
+    // v7 deprecates result.toUIMessageStreamResponse() in favour of the
+    // standalone helpers over result.stream (v7 renamed fullStream -> stream).
+    return createUIMessageStreamResponse({
+      stream: toUIMessageStream({ stream: result.stream }),
+    });
   } catch (error) {
     console.error('Chat API Error:', error);
     return new Response('Internal Server Error', { status: 500 });
