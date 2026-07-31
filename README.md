@@ -5,7 +5,14 @@
 A single-page, voice-first AI agent for the **Aotearoa AI Hackathon Festival 2026** (AUT City Campus).
 Talk or type to an interactive orb that answers questions about the event - speech in, speech out, with live captions.
 
-Built with **Next.js 16**, the **OpenAI Realtime API** (speech-to-speech), the **Vercel AI SDK**, and **Vercel** platform services (Postgres/Neon, KV/Upstash, Analytics, Speed Insights).
+Built with **Next.js 16**, the **OpenAI Realtime API** (speech-to-speech), the **Vercel AI SDK**, and **Vercel** platform services (KV/Upstash, Analytics, Speed Insights). Postgres is supported but optional.
+
+> **Note for the live deployment** (and for AI agents working on this repo): the production
+> site runs **without a database** — the knowledge base is served straight from
+> `config/knowledge.config.ts`, and publishing a change means pushing to `master`. The
+> Postgres sections below describe an optional capability of the template, not how this
+> site is configured. See [CLAUDE.md](CLAUDE.md), [docs/DECISIONS.md](docs/DECISIONS.md)
+> and [docs/EVENT-RUNBOOK.md](docs/EVENT-RUNBOOK.md).
 
 [![Live](https://img.shields.io/badge/%F0%9F%9A%80-Live%20site-00C851?style=for-the-badge&logo=vercel&logoColor=white)](https://aihackathon-2026.vercel.app)
 

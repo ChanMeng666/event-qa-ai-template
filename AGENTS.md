@@ -2,6 +2,8 @@
 
 This file is the **authoritative deployment and operations guide** for agents working in this repository. Read it before any Vercel, env-var, or production change.
 
+Companion docs: [docs/DECISIONS.md](docs/DECISIONS.md) (deliberate non-decisions — read before "fixing" an apparent oversight) · [docs/EVENT-RUNBOOK.md](docs/EVENT-RUNBOOK.md) (event-day kill switches and quota dials) · [CLAUDE.md](CLAUDE.md) (architecture and config).
+
 ## Project identity (do not confuse these names)
 
 | What | Name | Notes |
@@ -107,8 +109,9 @@ curl -s -o /dev/null -w "%{http_code}" -X POST https://aihackathon-2026.vercel.a
 
 - [ ] `.vercel/project.json` → `projectName` is `aihackathon-2026`
 - [ ] Not creating or deploying to `event-qa-ai-template`
-- [ ] KV/Postgres integrations attached to `aihackathon-2026` (if touching storage)
+- [ ] KV integration attached to `aihackathon-2026` (no Postgres is attached, by decision)
 - [ ] `npm run verify:kv` passes locally when changing rate-limit code
+- [ ] Rate-limit changes still key on `x-client-id`, not the raw IP — see CLAUDE.md
 
 ---
 
