@@ -23,6 +23,9 @@ export type {
   AIConfig,
   // Knowledge types
   KnowledgeSection,
+  // People types
+  Person,
+  PersonRole,
   // Content types
   ContentConfig,
   PresetQuestion,
@@ -44,6 +47,7 @@ export type {
 
 export { siteConfig } from './site.config';
 export { knowledgeSections, renderKnowledge } from './knowledge.config';
+export { judges, mentors, renderPeople } from './people.config';
 export { aiConfig, getSystemPrompt, generateSystemPrompt } from './ai.config';
 export { contentConfig } from './content.config';
 export { brandingConfig } from './branding.config';

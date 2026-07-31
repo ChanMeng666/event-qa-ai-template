@@ -132,6 +132,32 @@ export interface KnowledgeSection {
 }
 
 // ============================================================================
+// People Configuration Types
+// ============================================================================
+
+/** How a person is involved in this venue's event. */
+export type PersonRole = 'judge' | 'mentor';
+
+export interface Person {
+  /** Full display name, exactly as it should be written and spoken. */
+  name: string;
+  /** Involvement at the AUT City Campus venue. */
+  role: PersonRole;
+  /** Employer, university, or affiliation. Use '' for independent. */
+  organisation: string;
+  /** Job title, or for mentors their area of expertise. */
+  title?: string;
+  /**
+   * One-sentence public bio or credential the agent may share. Rendered only
+   * when renderPeople is called with includeBio: true, so long bios do not
+   * silently inflate the system prompt.
+   */
+  bio?: string;
+  /** Sort order within the person's group; numbered in steps of 10. */
+  sort: number;
+}
+
+// ============================================================================
 // Content Configuration Types
 // ============================================================================
 
