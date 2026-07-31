@@ -28,7 +28,8 @@ config/
 ├── site.config.ts            # Event info (name, dates, venue, organizers)
 ├── ai.config.ts              # AI system prompt, model & voice; derives static knowledge
 ├── knowledge.config.ts       # ⭐ Single source of truth for knowledge base sections
-├── content.config.ts         # Preset Q&A + chat suggestions shown around the orb
+├── people.config.ts          # Judges & mentors (public named people only)
+├── content.config.ts         # Chat suggestions shown around the orb
 ├── branding.config.ts        # Logos, developer credits
 ├── limits.config.ts          # Rate-limit quotas + token budgets
 └── sprite-affection.config.ts # Orb "affection" reactions to user behavior
@@ -41,7 +42,8 @@ config/
 | `site.config.ts` | Event name, dates, venue, organizers, SEO | Setting up new event |
 | `ai.config.ts` | Response style, realtime model & voice | Customizing AI behavior |
 | `knowledge.config.ts` | Knowledge base sections (drives prompt **and** DB seed) | Adding/editing what the AI knows |
-| `content.config.ts` | Preset questions, chat suggestions | Adding on-screen prompts |
+| `people.config.ts` | Judges & mentors; feeds the generated people sections | Roster changes |
+| `content.config.ts` | Chat suggestions | Adding on-screen prompts |
 | `branding.config.ts` | Logos, developer info, project links | Branding changes |
 | `limits.config.ts` | Rate limits, turn quotas, token budgets | Tuning guardrails |
 
@@ -67,7 +69,11 @@ const suggestions = contentConfig.chatSuggestions;
 - `config/ai.config.ts` calls `renderKnowledge()` to build the static `additionalContext` that is appended to the system prompt (the fallback used when no database is configured).
 - `scripts/seed-knowledge.ts` imports the **same** array and upserts + prunes the Postgres `knowledge` table (`npm run db:seed`).
 
-> **IMPORTANT: whenever `config/knowledge.config.ts` changes, re-run `npm run db:seed` against production.** In production the DB-backed `knowledge` table fully overrides the static config, so editing the config alone will not change live answers until the seed runs.
+The `Judges (AUT City Campus)` and `Mentors (AUT City Campus)` sections are **generated** from `config/people.config.ts` via `renderPeople()` - edit the roster there, never the section text. Judge bios are rendered with `includeBio: true`; mentors render as name/title/organisation only. Only judges and mentors may be named: no organiser, staff, volunteer or participant names, and no contact details for anyone.
+
+Both config modules must stay dependency-free apart from relative imports of each other and `./types` - `scripts/seed-knowledge.ts` loads the whole chain under `tsx`, where the `@/` alias does not resolve.
+
+> **IMPORTANT: whenever `config/knowledge.config.ts` or `config/people.config.ts` changes, re-run `npm run db:seed` against production.** In production the DB-backed `knowledge` table fully overrides the static config, so editing the config alone will not change live answers until the seed runs.
 
 ## UI Design System
 
@@ -169,8 +175,9 @@ className="border-white/30 text-white/80 bg-transparent hover:bg-white/20"
 ### Template Configuration
 - `config/site.config.ts` - Event name, dates, venue, organizers
 - `config/knowledge.config.ts` - Single source of truth for the knowledge base
+- `config/people.config.ts` - Judges & mentors; generates the two people sections
 - `config/ai.config.ts` - System prompt, realtime model & voice; derives static knowledge
-- `config/content.config.ts` - Preset questions + chat suggestions
+- `config/content.config.ts` - Chat suggestions
 - `config/branding.config.ts` - Logos, developer credits
 
 ### Core Application
