@@ -54,9 +54,21 @@ npx vercel link --project aihackathon-2026 --scope she-sharp1 --yes
 # 3. Deploy to production
 npx vercel deploy --prod --scope she-sharp1 --yes
 
-# 4. Smoke test (expect 200)
+# 4. Smoke test (expect 403 - see below)
 curl -s -o /dev/null -w "%{http_code}" -X POST https://aihackathon-2026.vercel.app/api/realtime/session
 ```
+
+> **The mint route is protected by Vercel BotID, so `curl` gets 403 in
+> production - that is the protection working, not an outage.** A `403` with
+> `"reason":"bot_detected"` means the deploy is healthy. To verify the route
+> end-to-end you must call it from a real browser on the site (open the page and
+> press the orb), because BotID requires the client challenge that only a real
+> page session runs. A `200` from `curl` means BotID is *not* enforcing - check
+> whether `BOTID_ENABLED` was set to `false`.
+>
+> **Kill switch:** if BotID ever misfires for attendees, set `BOTID_ENABLED=false`
+> in the project's environment variables and redeploy. The check also fails open
+> on any internal error, so a BotID outage cannot take the voice agent down.
 
 ### Pre-deploy checklist
 

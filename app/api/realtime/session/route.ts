@@ -16,6 +16,7 @@ import {
   rateLimitResponse,
 } from '@/lib/ratelimit';
 import { checkBudget, registerSession } from '@/lib/usage';
+import { isBotRequest } from '@/lib/botid';
 
 export const maxDuration = 30;
 
@@ -49,7 +50,7 @@ export async function POST(req: Request) {
   // The per-client windows are the real quota; the per-IP windows are a much
   // larger anti-abuse ceiling so a single address cannot farm ephemeral
   // OpenAI tokens by rotating a forged x-client-id.
-  const [budget, rl, ipRl] = await Promise.all([
+  const [budget, rl, ipRl, isBot] = await Promise.all([
     checkBudget(clientId),
     checkMultiWindowLimit('realtime-session', clientId, [
       { limit: realtime.sessionsPerMinute, windowSeconds: 60 },
@@ -60,7 +61,18 @@ export async function POST(req: Request) {
       { limit: realtime.sessionsPerIpPerMinute, windowSeconds: 60 },
       { limit: realtime.sessionsPerIpPerDay, windowSeconds: 86400 },
     ]),
+    // Free (checkLevel 'basic'), fails open, and inert in local development.
+    isBotRequest(),
   ]);
+
+  // Checked before the quota verdicts so a bot cannot burn a real attendee's
+  // shared per-IP ceiling just by hammering the endpoint.
+  if (isBot) {
+    return Response.json(
+      { error: 'Access denied.', reason: 'bot_detected' },
+      { status: 403 }
+    );
+  }
 
   if (!budget.allowed) {
     const message =

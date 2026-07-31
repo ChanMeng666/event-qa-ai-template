@@ -1,3 +1,5 @@
+const { withBotId } = require('botid/next/config');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // App directory is stable in Next.js 15, no need for experimental flag
@@ -9,4 +11,6 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig
+// withBotId adds the proxy rewrites BotID needs so the challenge script is
+// served from our own origin and cannot be blocked by ad blockers.
+module.exports = withBotId(nextConfig)

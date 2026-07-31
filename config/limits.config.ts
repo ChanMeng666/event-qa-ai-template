@@ -18,6 +18,18 @@ function envBool(key: string, fallback: boolean): boolean {
 
 export const limitsConfig = {
   /**
+   * Vercel BotID on the realtime session mint route.
+   *
+   * Kill switch for the event: set BOTID_ENABLED=false and redeploy to stop
+   * enforcing without reverting code, should the challenge ever misfire for
+   * attendees on the day. The check always fails open on error - only an
+   * explicit `isBot: true` verdict blocks a request.
+   */
+  botid: {
+    enabled: envBool('BOTID_ENABLED', true),
+  },
+
+  /**
    * Edge middleware burst limit across all AI API routes, per *client*
    * (per-browser `x-client-id`, falling back to IP).
    */
