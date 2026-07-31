@@ -12,7 +12,7 @@ import { realtimeConfig } from '@/config/ai.config';
 import { getVoiceInstructions } from '@/lib/knowledge';
 import {
   checkMultiWindowLimit,
-  getClientId,
+  getClientKey,
   rateLimitResponse,
 } from '@/lib/ratelimit';
 import { checkBudget, registerSession } from '@/lib/usage';
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const clientId = getClientId(req);
+  const { key: clientId, ip } = getClientKey(req);
   const { realtime } = limitsConfig;
 
   // Kick off instruction loading (may hit Postgres) in parallel with the KV
@@ -46,12 +46,19 @@ export async function POST(req: Request) {
   const instructionsPromise = getVoiceInstructions();
   void instructionsPromise.catch(() => {});
 
-  const [budget, rl] = await Promise.all([
+  // The per-client windows are the real quota; the per-IP windows are a much
+  // larger anti-abuse ceiling so a single address cannot farm ephemeral
+  // OpenAI tokens by rotating a forged x-client-id.
+  const [budget, rl, ipRl] = await Promise.all([
     checkBudget(clientId),
     checkMultiWindowLimit('realtime-session', clientId, [
       { limit: realtime.sessionsPerMinute, windowSeconds: 60 },
       { limit: realtime.sessionsPerHour, windowSeconds: 3600 },
       { limit: realtime.sessionsPerDay, windowSeconds: 86400 },
+    ]),
+    checkMultiWindowLimit('realtime-session-ip', `ip:${ip}`, [
+      { limit: realtime.sessionsPerIpPerMinute, windowSeconds: 60 },
+      { limit: realtime.sessionsPerIpPerDay, windowSeconds: 86400 },
     ]),
   ]);
 
@@ -70,6 +77,13 @@ export async function POST(req: Request) {
     return rateLimitResponse(
       rl,
       'Too many voice sessions. Please wait a moment and try again.'
+    );
+  }
+
+  if (!ipRl.success) {
+    return rateLimitResponse(
+      ipRl,
+      'This network is starting too many voice sessions. Please try again shortly.'
     );
   }
 

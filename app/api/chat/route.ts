@@ -13,7 +13,7 @@ import { getChatInstructions } from '@/lib/knowledge';
 import { persistMessages } from '@/lib/transcripts';
 import {
   checkMultiWindowLimit,
-  getClientId,
+  getClientKey,
   rateLimitResponse,
 } from '@/lib/ratelimit';
 import {
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const clientId = getClientId(req);
+    const { key: clientId } = getClientKey(req);
 
     const budget = await checkBudget(clientId);
     if (!budget.allowed) {

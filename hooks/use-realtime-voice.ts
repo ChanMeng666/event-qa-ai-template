@@ -10,6 +10,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { limitsConfig } from '@/config/limits.config';
+import { clientIdHeaders } from '@/lib/client-id';
 
 export type AgentState =
   | 'idle'
@@ -216,7 +217,7 @@ export function useRealtimeVoice() {
 
       fetch('/api/transcript', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: clientIdHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           conversationId: conversationIdRef.current,
           sessionId: sessionIdRef.current,
@@ -384,7 +385,10 @@ export function useRealtimeVoice() {
     setCaption({ user: '', assistant: '' });
 
     try {
-      const tokenRes = await fetch('/api/realtime/session', { method: 'POST' });
+      const tokenRes = await fetch('/api/realtime/session', {
+        method: 'POST',
+        headers: clientIdHeaders(),
+      });
       const body = await tokenRes.json().catch(() => ({}));
 
       if (!tokenRes.ok) {
