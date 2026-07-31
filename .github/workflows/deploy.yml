@@ -12,7 +12,10 @@ name: Deploy to Vercel
 #   VERCEL_PROJECT_ID  Project id   - see .vercel/project.json -> projectId
 #
 # Pushes to master deploy to production. Pull requests get a preview URL.
-# CI (typecheck/lint/build) runs separately in ci.yml and must pass first.
+#
+# Nothing deploys unless the `verify` job below is green. The checks live here
+# rather than in ci.yml so that a push to master runs them exactly once - ci.yml
+# is scoped to pull requests only.
 
 on:
   push:
@@ -27,7 +30,35 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Gate. `deploy` needs this, so a failing typecheck/lint/build can never reach
+  # production. OPENAI_API_KEY is a dummy - the build only needs the variable to
+  # be present, it never calls the API.
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+        env:
+          OPENAI_API_KEY: ci-dummy
+
   deploy:
+    needs: verify
     runs-on: ubuntu-latest
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
