@@ -124,14 +124,30 @@ jobs:
       # verified through the alias for production, and through the deployment
       # URL for previews. Note that if BOTID_ENABLED is ever set back to true,
       # this check will see 403 by design - see AGENTS.md.
+      # Preview URLs sit behind Vercel Deployment Protection and answer 302 to
+      # vercel.com/sso-api for anyone without a team session, CI included. That
+      # redirect is proof the deployment exists and is being served, which is
+      # all a preview can prove without a bypass token — so previews accept it
+      # and production keeps the strict 200. Before this, every pull request
+      # was permanently red on a deploy that had in fact succeeded.
       - name: Smoke test
         if: steps.creds.outputs.configured == 'true'
         run: |
           target=$([ "$IS_PROD" = "true" ] && echo "https://aihackathon-2026.vercel.app" || echo "${{ steps.deploy.outputs.url }}")
           echo "Smoke testing $target"
-          home=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$target/")
-          echo "  homepage -> $home"
-          [ "$home" = "200" ] || { echo "::error::Homepage returned $home"; exit 1; }
+          read -r home location < <(curl -s -o /dev/null \
+            -w '%{http_code} %{redirect_url}' --max-time 30 "$target/")
+          echo "  homepage -> $home ${location:+(-> $location)}"
+          if [ "$home" = "200" ]; then
+            exit 0
+          fi
+          if [ "$IS_PROD" != "true" ] && [ "$home" = "302" ] \
+            && [ "${location#https://vercel.com/sso-api}" != "$location" ]; then
+            echo "  preview is behind Vercel Deployment Protection — deploy is live"
+            exit 0
+          fi
+          echo "::error::Homepage returned $home"
+          exit 1
 
       - name: Summary
         if: always()
