@@ -16,9 +16,9 @@
  * Sort orders are numbered in steps of 10 to leave room for insertions.
  */
 
-import type { Person } from './types';
+import type { MentorDomain, Person } from './types';
 
-export type { Person };
+export type { MentorDomain, Person };
 
 // ============================================================================
 // Judges (AUT City Campus)
@@ -68,86 +68,194 @@ export const judges: Person[] = [
 // ============================================================================
 
 /**
- * The 2026 mentor roster for this venue, grouped by organisation via `sort`.
+ * The confirmed 2026 mentor roster for this venue: the fourteen mentors on the
+ * AUT mentor briefing v1.0 (3 August 2026), grouped by `domain` via `sort`.
  *
- * A `title` is set only where an area of involvement can be stated honestly
- * from the source roster; expertise is never inferred from a name or employer.
- * Mentors taking part independently have `organisation: ''`, which renders as
- * the name alone.
+ * Naming a mentor who does not turn up is worse than naming fewer, so this list
+ * is the confirmed roster only - it is deliberately shorter than the earlier
+ * expressions-of-interest list it replaced.
+ *
+ * `title`, `domain` and `availability` all come from the briefing's own
+ * columns; nothing is inferred from a name or an employer. Where the briefing
+ * left the organisation blank and the She Sharp event page named one, the
+ * She Sharp value is used.
  */
 export const mentors: Person[] = [
-  // -- Fisher & Paykel Healthcare -------------------------------------------
+  // -- Business ---------------------------------------------------------------
   {
-    name: 'Fathima Fazeena Jamaldeen',
+    name: 'Christine Yip',
     role: 'mentor',
-    organisation: 'Fisher & Paykel Healthcare',
+    organisation: 'Independent (Advisor & Educator)',
+    title:
+      'Director; AI Ethics & Governance, Business Analysis & Requirements, Entrepreneurship & Pitching',
+    domain: 'business',
+    availability: 'Friday and Saturday afternoon',
     sort: 10,
   },
-  { name: 'Mark Modricker', role: 'mentor', organisation: 'Fisher & Paykel Healthcare', sort: 20 },
-  { name: 'Colin Coutts', role: 'mentor', organisation: 'Fisher & Paykel Healthcare', sort: 30 },
-  { name: 'Sune Rogers', role: 'mentor', organisation: 'Fisher & Paykel Healthcare', sort: 40 },
   {
-    name: 'Annabel Valdez-Chiong',
+    name: 'Colin Coutts',
     role: 'mentor',
     organisation: 'Fisher & Paykel Healthcare',
-    sort: 50,
+    title: 'Head of ICT Operations; Business Analysis & Requirements',
+    domain: 'business',
+    availability: 'Friday, Saturday morning and Saturday afternoon',
+    sort: 20,
   },
-  { name: 'Chase Bloch', role: 'mentor', organisation: 'Fisher & Paykel Healthcare', sort: 60 },
-  { name: 'Will Bendall', role: 'mentor', organisation: 'Fisher & Paykel Healthcare', sort: 70 },
-  { name: 'Swaren Veygal', role: 'mentor', organisation: 'Fisher & Paykel Healthcare', sort: 80 },
-  { name: 'Harpreet Singh', role: 'mentor', organisation: 'Fisher & Paykel Healthcare', sort: 90 },
-
-  // -- She Sharp ------------------------------------------------------------
-  { name: 'Yesha Kaniyawala', role: 'mentor', organisation: 'She Sharp', sort: 100 },
-  { name: 'Nirmala C', role: 'mentor', organisation: 'She Sharp', sort: 110 },
-  { name: 'Mike McCauley', role: 'mentor', organisation: 'She Sharp', sort: 120 },
-  { name: 'Lesley Gao', role: 'mentor', organisation: 'She Sharp', sort: 130 },
-  { name: 'Tharaneetharan Thavarasan', role: 'mentor', organisation: 'She Sharp', sort: 140 },
-  { name: 'Moksha Shah', role: 'mentor', organisation: 'She Sharp', sort: 150 },
-  { name: 'Nikita Kumari', role: 'mentor', organisation: 'She Sharp', sort: 160 },
-  { name: 'Chan Meng', role: 'mentor', organisation: 'She Sharp', sort: 170 },
-  { name: 'Len Estioko', role: 'mentor', organisation: 'She Sharp', sort: 180 },
-  { name: 'Gurleen Kaur', role: 'mentor', organisation: 'She Sharp', sort: 190 },
-  { name: 'Sara G', role: 'mentor', organisation: 'She Sharp', sort: 200 },
-
-  // -- AUT ------------------------------------------------------------------
+  {
+    name: 'Fazeena Jamaldeen',
+    role: 'mentor',
+    organisation: 'Fisher & Paykel Healthcare',
+    title:
+      'Validation Engineer; Business Analysis & Requirements, Entrepreneurship & Pitching',
+    domain: 'business',
+    availability: 'Friday only',
+    sort: 30,
+  },
   {
     name: 'Prasanth Pavithran',
     role: 'mentor',
     organisation: 'AUT',
-    title: 'Mentoring Lead',
-    sort: 210,
+    title: 'Senior Business Analyst, Strategy and Transformation; Mentoring Lead',
+    domain: 'business',
+    availability: 'Friday, Saturday morning and Saturday afternoon',
+    sort: 40,
   },
-  { name: 'Alan Dent', role: 'mentor', organisation: 'AUT', sort: 220 },
 
-  // -- Red Hat --------------------------------------------------------------
-  { name: 'Justin Harrington', role: 'mentor', organisation: 'Red Hat', sort: 230 },
-  { name: 'Mandi Buswell', role: 'mentor', organisation: 'Red Hat', sort: 240 },
-  { name: 'Mike Hepburn', role: 'mentor', organisation: 'Red Hat', sort: 250 },
+  // -- Technical --------------------------------------------------------------
+  {
+    name: 'Harpreet Singh',
+    role: 'mentor',
+    organisation: 'Fisher & Paykel Healthcare',
+    title:
+      'Software Engineer; Software Engineering & Architecture, UX/UI & Design, Cloud & Infrastructure',
+    domain: 'technical',
+    availability: 'Friday and Saturday morning',
+    sort: 50,
+  },
+  {
+    name: 'Jacob Mathew',
+    role: 'mentor',
+    organisation: 'Southern Cross Health Society',
+    title:
+      'Principal Lead, Platform Engineering; Data & Machine Learning, Software Engineering & Architecture, Cloud & Infrastructure',
+    domain: 'technical',
+    availability: 'Friday and Saturday morning',
+    sort: 60,
+  },
 
-  // -- AI Forum New Zealand -------------------------------------------------
-  { name: 'Madeline Newman', role: 'mentor', organisation: 'AI Forum New Zealand', sort: 260 },
+  // -- Business and technical -------------------------------------------------
+  {
+    name: 'Annabel Valdez-Chiong',
+    role: 'mentor',
+    organisation: 'Fisher & Paykel Healthcare',
+    title:
+      'Business Solutions Manager; Software Engineering & Architecture, Business Analysis & Requirements',
+    domain: 'both',
+    availability: 'Friday only',
+    sort: 70,
+  },
 
-  // -- Independent ----------------------------------------------------------
-  { name: 'Christine Yip', role: 'mentor', organisation: '', sort: 270 },
-  { name: 'Andro "Andy" Mikhail', role: 'mentor', organisation: '', sort: 280 },
-  { name: 'Jacob Mathew', role: 'mentor', organisation: '', sort: 290 },
-  { name: 'Keming Wang', role: 'mentor', organisation: '', sort: 300 },
+  // -- All areas --------------------------------------------------------------
+  {
+    name: 'Alan Dent',
+    role: 'mentor',
+    organisation: 'AUT',
+    title:
+      'Director, Data, Technology Risk & Policy; AI Ethics & Governance, Cybersecurity & Privacy',
+    domain: 'all',
+    availability: 'Friday and Saturday morning',
+    sort: 80,
+  },
+  {
+    name: 'Chan Meng',
+    role: 'mentor',
+    organisation: 'Independent (ArchCanvas / ArchLang)',
+    title:
+      'Founding Engineer; AI Product & Strategy, Data & Machine Learning, Software Engineering & Architecture',
+    domain: 'all',
+    availability: 'Friday, Saturday morning and Saturday afternoon',
+    sort: 90,
+  },
+  {
+    name: 'Chase Bloch',
+    role: 'mentor',
+    organisation: 'Fisher & Paykel Healthcare',
+    title:
+      'Data Science and Analytics Lead; AI Product & Strategy, Data & Machine Learning, AI Ethics & Governance',
+    domain: 'all',
+    availability: 'Friday, Saturday morning and Saturday afternoon',
+    sort: 100,
+  },
+  {
+    name: 'Ji Ruan',
+    role: 'mentor',
+    organisation: 'AUT',
+    title:
+      'Senior Lecturer in Artificial Intelligence; AI Product & Strategy, Data & Machine Learning, AI Ethics & Governance',
+    domain: 'all',
+    availability: 'Friday, Saturday morning and Saturday afternoon',
+    sort: 110,
+  },
+  {
+    name: 'Keming Wang',
+    role: 'mentor',
+    organisation: 'Klugent Limited',
+    title:
+      'Founder and Principal Consultant; AI Product & Strategy, Data & Machine Learning, AI Ethics & Governance',
+    domain: 'all',
+    availability: 'Friday and Saturday afternoon',
+    sort: 120,
+  },
+  {
+    name: 'Mark Modricker',
+    role: 'mentor',
+    organisation: 'AUT',
+    title:
+      'Senior ICT Manager, Development & Web Services; UX/UI & Design, Business Analysis & Requirements, Entrepreneurship & Pitching',
+    domain: 'all',
+    availability: 'Friday only',
+    sort: 130,
+  },
+  {
+    name: 'Yesha Kaniyawala',
+    role: 'mentor',
+    organisation: 'Possibl.ai',
+    title:
+      'AI Software Engineer; AI Product & Strategy, Data & Machine Learning, Software Engineering & Architecture',
+    domain: 'all',
+    availability: 'Friday, Saturday morning and Saturday afternoon',
+    sort: 140,
+  },
 ];
 
 // ============================================================================
 // Renderers
 // ============================================================================
 
+/** Spoken-language phrase for each mentor domain on the venue roster. */
+const DOMAIN_LABELS: Record<MentorDomain, string> = {
+  business: 'Business mentoring',
+  technical: 'Technical mentoring',
+  both: 'Business and technical mentoring',
+  all: 'Mentoring across all areas',
+};
+
 /**
  * Renders a single person as `Name - Title - Organisation`. Missing pieces are
- * dropped rather than left as empty separators, so an independent mentor with
- * no stated title renders as just the name. When `includeBio` is set, the bio
- * is appended as a following sentence.
+ * dropped rather than left as empty separators, so a mentor with no stated
+ * title renders as just the name and organisation. A mentor's domain and
+ * availability follow as a second sentence, and when `includeBio` is set the
+ * bio is appended after that.
  */
 export function formatPerson(person: Person, includeBio = false): string {
   const line = [person.name, person.title, person.organisation].filter(Boolean).join(' - ');
-  return includeBio && person.bio ? `${line}. ${person.bio}` : line;
+  const notes = [
+    person.domain ? DOMAIN_LABELS[person.domain] : '',
+    person.availability ? `available ${person.availability}` : '',
+  ]
+    .filter(Boolean)
+    .join('; ');
+  return [line, notes, includeBio && person.bio ? person.bio : ''].filter(Boolean).join('. ');
 }
 
 /**

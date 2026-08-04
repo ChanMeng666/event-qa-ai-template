@@ -55,7 +55,7 @@ export const knowledgeSections: KnowledgeSection[] = [
     section: 'Rooms & wayfinding',
     sort: 40,
     content:
-      "All rooms are in the WG building at AUT City Campus, 55 Wellesley Street East. The venue uses WG308, WG128, WG128A, WG129 and WG100D across both days. WG308 opens from 4:30pm on Friday 7 August for registration, dinner, the opening and the keynote. Your team's working room is allocated at the Saturday opening and posted in Discord. Signage and helpers guide you from the Wellesley Street East entrance; if you get lost, ask any hackathon helper or post in Discord.",
+      "Everything is in the Sir Paul Reeves Building - the WG Building - at AUT City Campus, 55 Wellesley Street East. WG306 is the room for registration and all catering across both days. WG308 is where the event kicks off on Friday 7 August, and where the pitches and awards take place on Saturday. Doors open from 4:30pm on Friday. Team workspaces - WG128, WG128A, WG129 and WG100D - are allocated at the Saturday opening and posted in Discord. Signage and helpers guide you from the Wellesley Street East entrance; if you get lost, ask any hackathon helper or post in Discord.",
   },
   {
     section: 'The challenge - five real-world themes',
@@ -67,13 +67,13 @@ export const knowledgeSections: KnowledgeSection[] = [
     section: 'Featured problem statements',
     sort: 60,
     content:
-      "Two featured problem statements teams can take on: (1) Food Waste - supported by Woolworths NZ and Kai Commitment; focused on reducing food waste from farm to fork, with a problem-statement video in the Community Hub. (2) Fisher & Paykel Healthcare 'Facilities Helpdesk Agent' - an AI agent for facilities and maintenance request intake: plain-language intake, consistent prioritisation, escalation, and status updates; it maps to UN SDGs 3, 8, 9, 10 and 12 and is framed around 'Care by Design' (judges value a culture of care - people and process ahead of technology); intro video: https://youtu.be/n9UPiqziB9c. Full problem statements live in the Community Hub.",
+      "Four featured problem statements teams can take on: (1) Food Waste - supported by Woolworths NZ and Kai Commitment; focused on reducing food waste from farm to fork, with a problem-statement video in the Community Hub. (2) Fisher & Paykel Healthcare 'Facilities Helpdesk Agent' - an AI agent for facilities and maintenance request intake: plain-language intake, consistent prioritisation, escalation, and status updates; it maps to UN SDGs 3, 8, 9, 10 and 12 and is framed around 'Care by Design' (judges value a culture of care - people and process ahead of technology); intro video: https://youtu.be/n9UPiqziB9c. (3) Fisher & Paykel Healthcare 'Restoration Intelligence', from F&P's sustainability team - at F&P's new Karaka campus, volunteers have planted more than 3,000 native plants across 22 species since 2023 to restore the Oiroa Stream and surrounding wetlands; the challenge is an AI solution that analyses periodic drone imagery and video to quantify ecological outcomes - tree survival, native species richness, canopy and weed cover, natural regeneration, riparian shade and change over time - instead of relying on manual specialist ecological and GIS fieldwork; it aligns with SDG 15 (Life on Land) and SDG 12 (Responsible Consumption and Production). (4) My Life My Voice 'Accessible UI Generation' - an AI tool that embeds accessibility into the development workflow, checking UI components against WCAG in real time and generating accessible layout options at the point of design rather than auditing what is already broken; it aligns with SDGs 4, 8 and 10; intro video: https://youtu.be/THqS1kZbdjo. Full problem statements live in the Community Hub.",
   },
   {
     section: 'Teams & who can attend',
     sort: 70,
     content:
-      'Open to all experience levels; beginners are welcome. Teams of 3-7 people. You can register as a team or as an individual - solo registrants are helped to find a team on the day. In-person capacity is limited to 100 places, and this venue expects around 10 teams. Concession and complimentary places are available for AUT students, mentors and supporting staff (details via the AUT City Campus Community Hub).',
+      'Open to all experience levels; beginners are welcome. Teams of 3-6 people, with mixed skill sets. You can register as a team or as an individual - solo registrants are helped to find a team on the day. In-person capacity is limited to 100 places, and this venue expects around 10 teams. Concession and complimentary places are available for AUT students, mentors and supporting staff (details via the AUT City Campus Community Hub).',
   },
   {
     section: 'Schedule - Friday 7 August',
@@ -97,7 +97,7 @@ export const knowledgeSections: KnowledgeSection[] = [
     section: 'Discord & on-the-day comms',
     sort: 110,
     content:
-      'Discord is the live channel for this venue across both days: announcements, room allocations, mentor calls and team questions. Each team gets its own private channel, and the pitch order, the afternoon agenda and lunch reminders are announced in the general channel. The invite is shared with registered participants at Friday registration and via the AUT City Campus Community Hub. The Community Hub (Circle) remains the home for pre-event resources, problem statements, recordings and team-finding; Discord is for real-time help on the day.',
+      'Discord is the live channel for this venue across both days: announcements, room allocations, mentor calls and team questions. Each team gets its own private channel, and the pitch order, the afternoon agenda and lunch reminders are announced in the general channel. The invite to the general event channel is https://discord.gg/Z5heYsa7W, and it is also shared with registered participants at Friday registration and via the AUT City Campus Community Hub. The Community Hub (Circle) remains the home for pre-event resources, problem statements, recordings and team-finding; Discord is for real-time help on the day.',
   },
   {
     section: 'Pitch & judging format',
@@ -131,25 +131,25 @@ export const knowledgeSections: KnowledgeSection[] = [
   {
     section: 'Mentors (AUT City Campus)',
     sort: 170,
-    content: `Mentors from AUT and industry circulate throughout Saturday to help with ideas, technology, data and pitch practice; the pitch practice session on Saturday afternoon pairs a mentor with each team. No booking is needed - flag a mentor down on the floor or ask in Discord. Mentors attend free and are there for every team, especially first-timers. Mentors listed below without an organisation take part independently.\n${renderPeople(mentors)}`,
+    content: `Mentors from AUT and industry circulate throughout Saturday to help with ideas, technology, data and pitch practice; the pitch practice session on Saturday afternoon pairs a mentor with each team. No booking is needed - flag a mentor down on the floor or ask in Discord. Mentors attend free and are there for every team, especially first-timers. Each mentor below is listed with the areas they can help with and the sessions they are available for - Friday evening, Saturday morning, Saturday afternoon - so you know who to look for and when.\n${renderPeople(mentors)}`,
   },
   {
     section: 'Prizes',
     sort: 180,
     content:
-      'Each venue winner receives NZ$250. AUT City Campus also awards a runner-up prize, and all participants receive certificates. Four national finalists pitch at the Aotearoa AI Summit (18 September 2026). The national TAIAO Prize is NZ$1,000 (decided by the Summit audience vote) and the national Technological Brilliance Award is NZ$1,000 (decided by the national judging panel). Prizes are supported by AWS and provided via the AI Forum. Individual venues may add extra prizes and categories.',
+      'Each venue winner receives NZ$250. AUT City Campus also awards a runner-up prize, and all participants receive certificates. Four national finalists pitch at the Aotearoa AI Summit (8-9 September 2026, Tākina Wellington Convention and Exhibition Centre). The national TAIAO Prize is NZ$1,000 (decided by the Summit audience vote) and the national Technical Brilliance Award is NZ$1,000 (decided by the national judging panel). Prizes are supported by AWS and provided via the AI Forum. Individual venues may add extra prizes and categories.',
   },
   {
     section: 'How the national festival works',
     sort: 190,
     content:
-      'A series of 48-hour hackathons hosted at venues across NZ between 3 and 10 August 2026. Every venue records its team pitches and selects a local winner. A national judging panel reviews the winning pitches and selects finalists. Four national finalists are invited to pitch live at the Aotearoa AI Summit on 18 September 2026 in Auckland, where the Summit audience votes for the winning solution.',
+      'A series of 48-hour hackathons hosted at venues across NZ between 3 and 10 August 2026. Every venue records its team pitches and selects a local winner. A national judging panel reviews the winning pitches and selects finalists. Four national finalists are invited to pitch live at the Aotearoa AI Summit on 8-9 September 2026, held at the Tākina Wellington Convention and Exhibition Centre in Wellington, where the Summit audience votes for the winning solution.',
   },
   {
     section: 'National judging & progression',
     sort: 200,
     content:
-      'Venue winners are reviewed by a national judging panel, chaired by Professor Albert Bifet, which reviews the recorded winning pitches. The panel selects four national finalists, announced around 20 August 2026 (finalists then have two days to confirm availability; if a team declines, the next-ranked team is invited). Finalists pitch live at the Aotearoa AI Summit on 18 September 2026 in Auckland, where the Summit audience votes for the winning solution.',
+      'Venue winners are reviewed by a national judging panel chaired by David Knox (Topologic), with Albert Bifet (University of Waikato) as deputy chair, which reviews the recorded winning pitches. The panel selects four national finalists, announced around 20 August 2026 (finalists then have two days to confirm availability; if a team declines, the next-ranked team is invited). Finalists pitch live at the Aotearoa AI Summit on 8-9 September 2026, held at the Tākina Wellington Convention and Exhibition Centre in Wellington, where the Summit audience votes for the winning solution.',
   },
   {
     section: '2026 venues',

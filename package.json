@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "db:seed": "tsx scripts/seed-knowledge.ts",
     "verify:kv": "tsx scripts/verify-kv.ts",
+    "check:facts": "tsx scripts/check-facts.ts",
     "sync:vercel-env": "tsx scripts/sync-vercel-env.ts"
   },
   "dependencies": {
