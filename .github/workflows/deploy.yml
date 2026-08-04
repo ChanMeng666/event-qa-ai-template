@@ -52,6 +52,14 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # Asserts the knowledge base still carries every fact on the list shared
+      # with the She Sharp website repo. The two describe the same event and had
+      # silently disagreed on the Summit date and city, the registration room,
+      # the team size and the panel chair. Runs before the build because it is
+      # instant and the failure it reports is a content problem, not a code one.
+      - name: Check shared event facts
+        run: npm run check:facts
+
       - name: Build
         run: npm run build
         env:

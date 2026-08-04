@@ -26,6 +26,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Check shared event facts
+        run: npm run check:facts
+
       - name: Build
         run: npm run build
         env:

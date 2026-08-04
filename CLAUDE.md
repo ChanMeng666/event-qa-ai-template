@@ -75,15 +75,15 @@ const suggestions = contentConfig.chatSuggestions;
 - `config/ai.config.ts` calls `renderKnowledge()` to build the static `additionalContext` appended to the system prompt. **In this deployment that is the only path** — there is no database, so the config *is* what the agent knows.
 - `scripts/seed-knowledge.ts` imports the **same** array and would upsert + prune a Postgres `knowledge` table (`npm run db:seed`). It is kept working for template users but **is not used here**.
 
-As of 2026-07-31 there are **31 sections**, and the rendered system prompt is ~20,800 chars (~5,200 tokens), sent once per Realtime session (not per turn).
+As of 2026-08-04 there are **31 sections**, and the rendered system prompt is ~24,500 chars (~6,100 tokens), sent once per Realtime session (not per turn).
 
-The `Judges (AUT City Campus)` and `Mentors (AUT City Campus)` sections are **generated** from `config/people.config.ts` via `renderPeople()` - edit the roster there, never the section text. Judge bios are rendered with `includeBio: true`; mentors render as name/title/organisation only. Only judges and mentors may be named: no organiser, staff, volunteer or participant names, and no contact details for anyone.
+The `Judges (AUT City Campus)` and `Mentors (AUT City Campus)` sections are **generated** from `config/people.config.ts` via `renderPeople()` - edit the roster there, never the section text. Judge bios are rendered with `includeBio: true`; mentors render as name/title/organisation plus their mentoring domain and which sessions they are on site for. Only judges and mentors may be named: no organiser, staff, volunteer or participant names, and no contact details for anyone.
 
 Both config modules must stay dependency-free apart from relative imports of each other and `./types` - `scripts/seed-knowledge.ts` loads the whole chain under `tsx`, where the `@/` alias does not resolve.
 
 > **To change what the agent knows: edit `config/knowledge.config.ts` (or `config/people.config.ts`) and push to `master`.** That deploys automatically and is all that is required. Do **not** run `npm run db:seed` — there is no production database for it to write to.
 >
-> **Privacy rules baked into this knowledge base** (a user decision, not an accident): judges and mentors are the only named people; no organiser, staff, volunteer or participant names; no contact details for anyone, including judges and mentors; no promo/discount codes ever; no Discord invite URL. The `## Confidentiality` and `## Promo codes (hard rule)` blocks in `config/ai.config.ts` enforce this and were verified against the live model — do not relax them.
+> **Privacy rules baked into this knowledge base** (a user decision, not an accident): judges and mentors are the only named people; no organiser, staff, volunteer or participant names; no contact details for anyone, including judges and mentors; no promo/discount codes ever. The **general** event Discord invite is publishable and is in the knowledge base (added 2026-08-04); the mentors-only and contact-mentors invites are **not** and must never appear in this repo. The `## Confidentiality` and `## Promo codes (hard rule)` blocks in `config/ai.config.ts` enforce this and were verified against the live model — do not relax them.
 
 ## UI Design System
 

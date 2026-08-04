@@ -138,6 +138,12 @@ export interface KnowledgeSection {
 /** How a person is involved in this venue's event. */
 export type PersonRole = 'judge' | 'mentor';
 
+/**
+ * Which kind of help a mentor offers, as stated on the venue mentor roster.
+ * 'both' and 'all' are kept distinct because the roster does.
+ */
+export type MentorDomain = 'business' | 'technical' | 'both' | 'all';
+
 export interface Person {
   /** Full display name, exactly as it should be written and spoken. */
   name: string;
@@ -153,6 +159,17 @@ export interface Person {
    * silently inflate the system prompt.
    */
   bio?: string;
+  /**
+   * Mentors only: the kind of help they offer, from the venue mentor roster.
+   * Rendered as a short phrase after the name line.
+   */
+  domain?: MentorDomain;
+  /**
+   * Mentors only: which sessions the person is on site for, written out in
+   * full (e.g. 'Friday, Saturday morning and Saturday afternoon') so the voice
+   * agent reads it naturally.
+   */
+  availability?: string;
   /** Sort order within the person's group; numbered in steps of 10. */
   sort: number;
 }

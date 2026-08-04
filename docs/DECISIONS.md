@@ -94,9 +94,12 @@ history may otherwise re-derive the wrong conclusion.
 The source workbook (`AI Forum Aug 2026 - Run Sheet.xlsx`) is the **2025** run sheet with a
 partial 2026 update. Both years coexist in it. Only these tabs are 2026-current: the
 `Run Sheet` header block, `Mentor List`, and `Registrations_20th July`. The `Agenda` tab,
-the `Run Sheet` schedule body ("Friday 15th August"), `Judging Process` (which says the
-Summit is "8/9 September in Wellington" — it is **18 September in Auckland**) and all seven
+the `Run Sheet` schedule body ("Friday 15th August"), `Judging Process` and all seven
 attendee tabs are 2025 and must not be imported.
+
+Corrected 2026-08-04: the workbook's "8/9 September in Wellington" for the Summit was
+right and the "18 September in Auckland" claim recorded here was wrong. aotearoaai.nz
+confirms **8–9 September 2026 at Tākina, Wellington**, and the knowledge base now says so.
 
 `Final Teams` is empty: 2026 teams don't exist until Friday night, so per-participant Q&A
 cannot be built from this file at all.
