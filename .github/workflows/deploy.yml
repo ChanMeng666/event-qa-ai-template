@@ -135,8 +135,14 @@ jobs:
         run: |
           target=$([ "$IS_PROD" = "true" ] && echo "https://aihackathon-2026.vercel.app" || echo "${{ steps.deploy.outputs.url }}")
           echo "Smoke testing $target"
-          read -r home location < <(curl -s -o /dev/null \
+          # Split with parameter expansion rather than `read`: this step runs
+          # under `bash -e`, and `read` returns non-zero on input with no
+          # trailing newline, which curl's -w format does not emit. That would
+          # abort the step before it printed anything.
+          probe=$(curl -s -o /dev/null \
             -w '%{http_code} %{redirect_url}' --max-time 30 "$target/")
+          home=${probe%% *}
+          location=${probe#* }
           echo "  homepage -> $home ${location:+(-> $location)}"
           if [ "$home" = "200" ]; then
             exit 0
