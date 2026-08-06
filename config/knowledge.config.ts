@@ -149,7 +149,7 @@ export const knowledgeSections: KnowledgeSection[] = [
     section: 'National judging & progression',
     sort: 200,
     content:
-      'Venue winners are reviewed by a national judging panel chaired by David Knox (Topologic), with Albert Bifet (University of Waikato) as deputy chair, which reviews the recorded winning pitches. The panel selects four national finalists, announced around 20 August 2026 (finalists then have two days to confirm availability; if a team declines, the next-ranked team is invited). Finalists pitch live at the Aotearoa AI Summit on 8-9 September 2026, held at the Tākina Wellington Convention and Exhibition Centre in Wellington, where the Summit audience votes for the winning solution.',
+      'Venue winners are reviewed by a national judging panel chaired by Albert Bifet (University of Waikato), with David Knox (Topologic) as deputy chair, which reviews the recorded winning pitches. The panel selects four national finalists, announced around 20 August 2026 (finalists then have two days to confirm availability; if a team declines, the next-ranked team is invited). Finalists pitch live at the Aotearoa AI Summit on 8-9 September 2026, held at the Tākina Wellington Convention and Exhibition Centre in Wellington, where the Summit audience votes for the winning solution.',
   },
   {
     section: '2026 venues',
